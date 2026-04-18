@@ -1,0 +1,544 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_approval</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Approval</name>
+        <author></author>
+        <notes>Recursive Approval Process.
+
+When supplied a list or array of approvals, each team or individual will receive an approval in series.</notes>
+        <lastID>49</lastID>
+        <taskDefinition id="routine_approval" name="Approval" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Originating Submission Id" label="Originating Submission Id" required="true" tooltip="The Submission Id of the Originating Submission"></parameter>
+                <parameter id="Approvers" label="Approvers" required="true" tooltip="List or array of Approvers. (Teams and/or Individuals)"></parameter>
+                <parameter id="Submission Details" label="Submission Details" required="true" tooltip="Details of the Submission"></parameter>
+                <parameter id="Approval Summary" label="Approval Summary" required="true" tooltip="Summary of the Approval"></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml">
+                <result name="Approval Decision" tooltip=""></result>
+                <result name="Approval Values" tooltip=""></result>
+                <result name="Approval Reason" tooltip=""></result>
+                <result name="Approval Notes" tooltip=""></result>
+            </results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_echo_v1_13</task>
+                </dependents>
+            </task>
+            <task definition_id="system_submission_create_v1" id="system_submission_create_v1_2" name="Create Approval" x="593" y="292.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="kappSlug" label="Kapp Slug" menu="" required="false" tooltip="">service-portal</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="formSlug" label="Form Slug" menu="" required="false" tooltip="">approval</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="coreState" label="Core State" menu="" required="false" tooltip="">Draft</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="currentPage" label="Current Page" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="origin" label="Origin" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parent" label="Parent" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Decision" label="Decision" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Reason" label="Reason" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Notes for Customer" label="Notes for Customer" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Individual" label="Assigned Individual" menu="" required="false" tooltip="">&lt;%= @results['Validate Assignment']['Username'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Individual Display Name" label="Assigned Individual Display Name" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Team" label="Assigned Team" menu="" required="false" tooltip="">&lt;%= @results['Validate Assignment']['Team'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Team Display Name" label="Assigned Team Display Name" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Deferral Token" label="Deferral Token" menu="" required="false" tooltip="">&lt;%= @results['Wait for Approval']['deferral_token'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Status" label="Status" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Summary" label="Summary" menu="" required="false" tooltip="">&lt;%= @inputs['Approval Summary'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Due Date" label="Due Date" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Details" label="Details" menu="" required="false" tooltip="">&lt;%= @inputs['Submission Details'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_17</task>
+                    <task label="" type="Complete" value="">system_wait_v1_26</task>
+                    <task label="" type="Complete" value="">system_integration_v1_37</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_defer_v1" id="utilities_defer_v1_4" name="Wait for Approval" x="225" y="293.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="deferral_value" label="Initial Deferral Value" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Create" type="Create" value="">system_submission_create_v1_2</task>
+                    <task label="Complete" type="Complete" value="">system_integration_v1_40</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_5" name="Check for More Approvers" x="224" y="538.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+# The first Approver in the array has been used, drop it from the array.
+JSON.parse(@results['Convert Approvers to Array']['output']).drop(1) 
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="No More Approvals || Denied" type="Complete" value="JSON.parse(@results['Check for More Approvers']['output']).length == 0">system_integration_v1_46</task>
+                    <task label="More Approvals" type="Complete" value="JSON.parse(@results['Check for More Approvers']['output']).length &gt; 0 &amp;&amp; JSON.parse(@results['Wait for Approval']['approval_values'])['Decision'].downcase != &quot;denied&quot;">routine_approval_15</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_validate_assignment" id="routine_validate_assignment_11" name="Validate Assignment" x="226" y="145.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Assignment" label="Assignment" menu="" required="false" tooltip="">&lt;%= 
+# Use only the first approver in the array
+JSON.parse(@results['Convert Approvers to Array']['output']).first
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_defer_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_13" name="Convert Approvers to Array" x="225.22471923628805" y="13.508809500476024">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+# Ensure the Approvers input is formatted correctly and without leading or trailing spaces.
+
+begin
+   # Test to see if input is an array
+  approvers = JSON.parse(@inputs['Approvers'])
+rescue
+  # If Approvers is not an Array, convert into an Array
+  approvers = @inputs['Approvers'].split(',')
+end
+
+# Strip any leading or ending spaces from array values.
+approvers.collect(&amp;:strip)
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_validate_assignment_11</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_14" name="Return" x="928" y="535.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Decision" label="Approval Decision" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Decision'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Values" label="Approval Values" menu="" required="false" tooltip="">&lt;%= @results['Wait for Approval']['approval_values'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Reason" label="Approval Reason" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Reason'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Notes" label="Approval Notes" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Notes for Customer'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="routine_approval" id="routine_approval_15" name="Next Approver" x="223" y="663.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Originating Submission Id" label="Originating Submission Id" menu="" required="true" tooltip="The Submission Id of the Originating Submission">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approvers" label="Approvers" menu="" required="true" tooltip="List or array of Approvers. (Teams and/or Individuals)">&lt;%= @results['Check for More Approvers']['output'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Submission Details" label="Submission Details" menu="" required="true" tooltip="Details of the Submission">&lt;%= @inputs['Submission Details'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Summary" label="Approval Summary" menu="" required="true" tooltip="Summary of the Approval">&lt;%= @inputs['Approval Summary'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_tree_return_v1_24</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_16" name="Validate Note" x="377.86679556324293" y="97.63663037210398">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">This is way simpler than than the "Queue Assignment Validate" Routine from Kinips. However it also has some valid checking.</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_17" name="Create Submission Activity - Awaiting Approval" x="921" y="290.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">92b6a327-5f5a-4377-80f7-b7223bd787ac</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%=
+{
+"Assigned Team"=&gt;"#{@results['Validate Assignment']['Team']}",
+"Assigned Individual"=&gt;"#{@results['Validate Assignment']['Username']}",
+"Status"=&gt;"In Progress",
+"Comments"=&gt;""
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">An Approval was created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Approval Created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Approval</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_24" name="Return - More Approvals" x="222" y="784.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Decision" label="Approval Decision" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Decision'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Values" label="Approval Values" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Reason" label="Approval Reason" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Reason'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Notes" label="Approval Notes" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Notes for Customer'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_wait_v1" id="system_wait_v1_26" name="Wait 3 days" x="923" y="158.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Time to wait" label="Wait time:" menu="" required="true" tooltip="Time you want to wait for deferred task">3</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Time unit" label="Time unit:" menu="Second,Minute,Hour,Day,Week" required="true" tooltip="Unit of measurement for time (Seconds, Minutes, Hours, Days, Weeks)">Second</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_27</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_27" name="Get Approval Status" x="1237" y="158.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @results['Create Approval']['Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Not Complete &amp; Assigned to Individual" type="Complete" value="@results['Get Approval Status']['Core State'] != &quot;Submitted&quot; &amp;&amp; !JSON.parse(@results['Get Approval Status']['Values'])['Assigned Individual'].nil?">routine_email_approval_reminder_30</task>
+                    <task label="Not Complete &amp; Assigned to Team" type="Complete" value="@results['Get Approval Status']['Core State'] != &quot;Submitted&quot; &amp;&amp; !JSON.parse(@results['Get Approval Status']['Values'])['Assigned Team'].nil?">system_integration_v1_31</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_email_approval_reminder" id="routine_email_approval_reminder_30" name="Send Reminder Email" x="1645" y="170.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Original Submission Id" label="Original Submission Id" menu="" required="true" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;%= @inputs['Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="To" label="To" menu="" required="true" tooltip="">&lt;%= @results['Validate Assignment']['Username'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="BCC" label="BCC" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Details" label="Details" menu="" required="false" tooltip="">&lt;%= @inputs['Submission Details'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Assigned To" label="Assigned To" menu="" required="false" tooltip="">&lt;%=JSON.parse(@results['Get Approval Status']['Values'])['Assigned Individual']%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_31" name="Get Team Membership" x="1651" y="47.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">e20b8b5d-da67-410b-a527-bd3ae1cfe07b</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Team Slug" label="Team Slug" menu="" required="false" tooltip="">&lt;%= Digest::MD5.hexdigest JSON.parse(@results['Get Approval Status']['Values'])['Assigned Team'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_email_approval_reminder_34</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_email_approval_reminder" id="routine_email_approval_reminder_34" name="Send Reminder Email - Team Member" x="1988" y="49.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Original Submission Id" label="Original Submission Id" menu="" required="true" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;%= @inputs['Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="To" label="To" menu="" required="true" tooltip="">&lt;%= 
+#@results['Collect Team Emails']['output'] 
+@results['Get Team Membership']['Member Email List'].delete_prefix('"').delete_suffix('"')
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="BCC" label="BCC" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Details" label="Details" menu="" required="false" tooltip="">&lt;%= @inputs['Submission Details'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Assigned To" label="Assigned To" menu="" required="false" tooltip="">&lt;%= JSON.parse(@results['Get Approval Status']['Values'])['Assigned Team']%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_36" name="Update Originating Submission with Observers" x="1574" y="423.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">0ef69bcb-c052-4b16-9814-166c3eef85ed</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Values" label="Values" menu="" required="false" tooltip="">&lt;%= @results['Update Observers']['output'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_37" name="Get Originating Submission" x="924" y="425.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_echo_v1_38</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_38" name="Update Observers" x="1256" y="425.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+  #Create Hash variable for the Observing Individuals and Team values to be passed into the original submission
+  values = {}
+  
+  # Get current Observers from the "Get Originatign Submission" results
+  observing_individuals = JSON.parse(@results['Get Originating Submission']['Values'])['Observing Individuals']
+  observing_teams = JSON.parse(@results['Get Originating Submission']['Values'])['Observing Teams']
+  
+  #Add the Assigned Individual of the Approval to the "Observing Individuals" if one exist and is not currently in the list.
+  if @results['Validate Assignment']['Username'] &amp;&amp; !observing_individuals.include?(@results['Validate Assignment']['Username'])
+    values['Observing Individuals'] = observing_individuals.push(@results['Validate Assignment']['Username']) 
+  end
+
+  #Add the Assigned Team of the Approval to the "Observing Teams" if one exist and is not currently in the list.
+  if @results['Validate Assignment']['Team'] &amp;&amp; !observing_teams.include?(@results['Validate Assignment']['Team'])
+    values['Observing Teams'] = observing_teams.push(@results['Validate Assignment']['Team']) 
+  end
+  
+  #Convert the Hash to JSON and return the result
+  values.to_json
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_36</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_40" name="Get Approval Values" x="227" y="411.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">b5e75933-339d-4d6a-8c58-da509be53e1b</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @results['Create Approval']['Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Denied" type="Complete" value="@results['Get Approval Values']['Decision']==&quot;Denied&quot;">system_integration_v1_41</task>
+                    <task label="Approved" type="Complete" value="@results['Get Approval Values']['Decision']!=&quot;Denied&quot;">utilities_echo_v1_5</task>
+                    <task label="" type="Complete" value="">system_integration_v1_48</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_41" name="Get Submission Details for Denial Email" x="-147" y="415.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_43</task>
+                    <task label="" type="Complete" value="">system_tree_return_v1_45</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_email_submission_approved" id="routine_email_submission_approved_42" name="Send Denial Email" x="-144" y="664.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Original Submission Id" label="Original Submission Id" menu="" required="true" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="To" label="To" menu="" required="true" tooltip="">&lt;%= @results['Get Submitters Email for Denial Email']['Email'].delete_prefix('"').delete_suffix('"')  %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="BCC" label="BCC" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Denial Reason" label="Denial Reason" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Reason'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Notes for Customer'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_43" name="Get Submitters Email for Denial Email" x="-145" y="539.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">771f279a-988d-4b91-9b8f-85861c5c13fe</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Username" label="Username" menu="" required="false" tooltip="">&lt;%= @results['Get Submission Details for Denial Email']['Created By'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_email_submission_approved_42</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_45" name="Return - Denied" x="-458" y="415.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Decision" label="Approval Decision" menu="" required="false" tooltip="">Denied</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Values" label="Approval Values" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Reason" label="Approval Reason" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Approval Notes" label="Approval Notes" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_46" name="Get Submission Details for Approval Email" x="595" y="532.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_47</task>
+                    <task label="" type="Complete" value="">system_tree_return_v1_14</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_47" name="Get Submitters Email for Approved Email" x="597" y="669.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">771f279a-988d-4b91-9b8f-85861c5c13fe</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Username" label="Username" menu="" required="false" tooltip="">&lt;%= @results['Get Submission Details for Approval Email']['Created By'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_email_submission_approved_49</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_48" name="Update Submission Activity - Approval Complete" x="596" y="413.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">023fbddc-ec6e-49dd-9729-d1f64af70deb</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Activity Id" label="Activity Id" menu="" required="false" tooltip="">&lt;%= @results['Create Submission Activity - Awaiting Approval']['Activity Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%=
+{
+"Status"=&gt;"#{@results['Get Approval Values']['Decision']}",
+"Comments"=&gt;"#{@results['Get Approval Values']['Notes for Customer']}",
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">Approval was &lt;%=@results['Get Approval Values']['Decision']%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Approval &lt;%=@results['Get Approval Values']['Decision']%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Approval</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="routine_email_submission_approved" id="routine_email_submission_approved_49" name="Send Approved Email" x="599" y="788.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Original Submission Id" label="Original Submission Id" menu="" required="true" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="To" label="To" menu="" required="true" tooltip="">&lt;%= @results['Get Submitters Email for Approved Email']['Email'].delete_prefix('"').delete_suffix('"')  %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="BCC" label="BCC" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip="">&lt;%= @results['Get Approval Values']['Notes for Customer'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

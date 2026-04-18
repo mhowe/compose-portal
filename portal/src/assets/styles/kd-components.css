@@ -1,0 +1,42 @@
+/*
+ * Custom component classes for form designers.
+ *
+ * Purpose: provide single-class, semantic utilities that form designers can
+ * paste into a Kinetic form field's CSS Classes attribute — the same way they
+ * would use DaisyUI's `kbtn kbtn-primary` or `kalert kalert-success` — without
+ * learning Tailwind utility chains.
+ *
+ * Naming: every class here is prefixed with `kd-` to distinguish these
+ * bundle-provided utilities from DaisyUI's `k*` classes and from Tailwind
+ * utilities themselves. If a form designer sees `kd-` they know the class
+ * comes from this bundle; if they see `k*` (no dash) they know it's DaisyUI.
+ *
+ * Each class should:
+ *   - do ONE semantic thing (section header, field group, callout, etc.)
+ *   - compose from Tailwind/DaisyUI utilities inside @apply, not raw CSS
+ *   - work as a single class name with no required siblings
+ *
+ * Keep this file small on purpose. Gaps found while using the bundle get
+ * promoted to classes here; do not pre-invent classes for hypothetical needs.
+ */
+
+@layer components {
+  /* Section header: an h-level-ish heading with a bottom rule. Use on any
+   * element (div, h2, header) where a form needs a visual section break. */
+  .kd-section-header {
+    @apply flex items-center gap-3 border-b border-base-300 pb-2 mb-4 text-h3 font-semibold;
+  }
+
+  /* Field group: a vertically-spaced, padded block that visually groups
+   * related fields on a form. */
+  .kd-field-group {
+    @apply flex flex-col gap-3 p-4 bg-base-200 rounded-box;
+  }
+
+  /* Callout: a neutral highlighted block for guidance text on a form. Use
+   * DaisyUI's `kalert kalert-*` variants for status-colored alerts; use this
+   * for plain informational boxes that shouldn't look like a system alert. */
+  .kd-callout {
+    @apply p-4 border-l-4 border-primary bg-base-200 rounded-r-box text-base-content;
+  }
+}

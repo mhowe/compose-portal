@@ -1,0 +1,13 @@
+{
+  "attributes": [
+    {
+      "name": "Manager",
+      "values": [
+        "it.manager@kineticdata.com"
+      ]
+    }
+  ],
+  "description": "",
+  "name": "Departments::IT",
+  "slug": "780d0700839d75cae7d2101db5f6ca50"
+}

@@ -1,0 +1,743 @@
+{
+  "builderVersion": "",
+  "schemaVersion": "1.0",
+  "version": "",
+  "processOwnerEmail": "",
+  "lastId": 20,
+  "name": "Exercises - Workflow 04 - Submitted",
+  "notes": "",
+  "connectors": [
+    {
+      "from": "start",
+      "to": "utilities_echo_v1_7",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_approval_1",
+      "to": "utilities_defer_v1_4",
+      "label": "Approval Complete",
+      "value": "@results['Create Approval']['Approval Decision'] != \"Denied\"",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_defer_v1_4",
+      "to": "system_submission_create_v1_2",
+      "label": "Task Created",
+      "value": "",
+      "type": "Create"
+    },
+    {
+      "from": "utilities_defer_v1_4",
+      "to": "system_integration_v1_14",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_7",
+      "to": "utilities_echo_v1_18",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "system_integration_v1_14",
+      "to": "system_integration_v1_15",
+      "label": "Task Complete",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "system_integration_v1_15",
+      "to": "smtp_email_send_v1_16",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "smtp_email_send_v1_16",
+      "to": "system_integration_v1_5",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_18",
+      "to": "routine_approval_1",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    }
+  ],
+  "nodes": [
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Start",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_7"
+          }
+        ]
+      },
+      "id": "start",
+      "position": {
+        "x": 10,
+        "y": 10
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_start_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": true,
+      "name": "Create Approval",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Approval Complete",
+            "type": "Complete",
+            "value": "@results['Create Approval']['Approval Decision'] != \"Denied\"",
+            "content": "utilities_defer_v1_4"
+          }
+        ]
+      },
+      "id": "routine_approval_1",
+      "position": {
+        "x": 232,
+        "y": 246.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Approvers",
+          "label": "Approvers",
+          "menu": "",
+          "value": "<%= @results['Get Approver']['output'] %>, brian.peterson@kinticdata.com",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Details of the Submission",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission  Details']['output'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Summary of the Approval",
+          "id": "Approval Summary",
+          "label": "Approval Summary",
+          "menu": "",
+          "value": "Approval for <%= @form['Name'] %> Submission (<%= @submission['Handle'] %>)",
+          "required": true
+        }
+      ],
+      "definitionId": "routine_approval"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Create Task",
+      "messages": [],
+      "dependents": "",
+      "id": "system_submission_create_v1_2",
+      "position": {
+        "x": 659,
+        "y": 532.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "kappSlug",
+          "label": "Kapp Slug",
+          "menu": "",
+          "value": "service-portal",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "formSlug",
+          "label": "Form Slug",
+          "menu": "",
+          "value": "task",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "coreState",
+          "label": "Core State",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "currentPage",
+          "label": "Current Page",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "origin",
+          "label": "Origin",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parent",
+          "label": "Parent",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Status",
+          "label": "Status",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Notes",
+          "label": "Notes",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Assigned Individual",
+          "label": "Assigned Individual",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Assigned Individual Display Name",
+          "label": "Assigned Individual Display Name",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Assigned Team",
+          "label": "Assigned Team",
+          "menu": "",
+          "value": "Information Technology",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Assigned Team Display Name",
+          "label": "Assigned Team Display Name",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Deferral Token",
+          "label": "Deferral Token",
+          "menu": "",
+          "value": "<%= @results['Wait for Task to be Complete']['deferral_token'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Details",
+          "label": "Details",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "values.Summary",
+          "label": "Summary",
+          "menu": "",
+          "value": "Complete a task for <%= @form['Name'] %> submission (<%= @submission['Handle'] %>)",
+          "required": false
+        }
+      ],
+      "definitionId": "system_submission_create_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": true,
+      "name": "Wait for Task to be Complete",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Task Created",
+            "type": "Create",
+            "value": "",
+            "content": "system_submission_create_v1_2"
+          },
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_14"
+          }
+        ]
+      },
+      "id": "utilities_defer_v1_4",
+      "position": {
+        "x": 232,
+        "y": 524.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "deferral_value",
+          "label": "Initial Deferral Value",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "utilities_defer_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Close Submission",
+      "messages": [],
+      "dependents": "",
+      "id": "system_integration_v1_5",
+      "position": {
+        "x": 233,
+        "y": 1151.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "3ad53519-e058-48a1-b114-5745533526ad",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Core State",
+          "label": "Core State",
+          "menu": "",
+          "value": "Closed",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Submission Id",
+          "label": "Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Values",
+          "label": "Values",
+          "menu": "",
+          "value": "<%=\n  {\"Status\"=>\"Complete\"}.to_json\n%>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Approver",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_18"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_7",
+      "position": {
+        "x": 231,
+        "y": 19.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= @form_attributes['Approvers'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Retrieve Task Values",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Task Complete",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_15"
+          }
+        ]
+      },
+      "id": "system_integration_v1_14",
+      "position": {
+        "x": 232,
+        "y": 674.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Submission Id",
+          "label": "Submission Id",
+          "menu": "",
+          "value": "<%= @results['Create Task']['Submission Id'] %>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Submitter Email - Task Complete",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "smtp_email_send_v1_16"
+          }
+        ]
+      },
+      "id": "system_integration_v1_15",
+      "position": {
+        "x": 231,
+        "y": 846.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "771f279a-988d-4b91-9b8f-85861c5c13fe",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Username",
+          "label": "Username",
+          "menu": "",
+          "value": "<%= @submission['Created By'] %>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Send Submission Outcome Email to Submitter",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_5"
+          }
+        ]
+      },
+      "id": "smtp_email_send_v1_16",
+      "position": {
+        "x": 232,
+        "y": 995.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Determine what to return if an error is encountered.",
+          "id": "error_handling",
+          "label": "Error Handling",
+          "menu": "Error Message,Raise Error",
+          "value": "Error Message",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the simulated sender.",
+          "id": "from",
+          "label": "From (Email Address)",
+          "menu": "",
+          "value": "wally@kinops.io",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the intended recipient.",
+          "id": "to",
+          "label": "To (Email Address)",
+          "menu": "",
+          "value": "<%= @results['Get Submitter Email - Task Complete']['Email'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the intended recipient.",
+          "id": "bcc",
+          "label": "Bcc (Email Address)",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The subject of the email.",
+          "id": "subject",
+          "label": "Subject",
+          "menu": "",
+          "value": "Submission <%= @submission['Handle'] %> is complete",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "HTML representing the body of a rich email.",
+          "id": "htmlbody",
+          "label": "HTML Body",
+          "menu": "",
+          "value": "<!DOCTYPE html>\n<html>\n<head>\n<title></title>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n\n\n<style type=\"text/css\">\n\n</style>\n</head>\n<body style=\"margin: 0 !important; padding: 0 !important; background-color: #eeeeee;\" bgcolor=\"#eeeeee\">\n\n<h1><%= @form['Name'] %> - Complete</h1>\n<p>Confirmation #: <%= @submission['Handle'] %> </p>\n\n<p>Your recent is <%= JSON.parse(@results['Retrieve Task Values']['Values'])['Status'] %> </p>\n\n<p>Notes: <%= JSON.parse(@results['Retrieve Task Values']['Values'])['Status'] %> </p> \n\n</body>\n</html>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "A plaintext message that will be displayed if the recipient can't display multipart HTML emails.",
+          "id": "textbody",
+          "label": "Alternate (text) Body",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "smtp_email_send_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Submission  Details",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_approval_1"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_18",
+      "position": {
+        "x": 232,
+        "y": 124.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Requested For: <%= @values['Requested for Display Name'] %>\nDescription: <%= @values['Description'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    }
+  ]
+}

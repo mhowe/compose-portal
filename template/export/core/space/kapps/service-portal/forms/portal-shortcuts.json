@@ -1,0 +1,264 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [],
+  "customHeadContent": null,
+  "description": "Used for defining shortcuts that will appear on the home page of the Momentum Portal.",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Description]",
+      "parts": [
+        "values[Description]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Icon Name]",
+      "parts": [
+        "values[Icon Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Sort Order]",
+      "parts": [
+        "values[Sort Order]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Status]",
+      "parts": [
+        "values[Status]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Title]",
+      "parts": [
+        "values[Title]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[URL]",
+      "parts": [
+        "values[URL]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [],
+  "name": "Portal Shortcuts",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Status",
+          "choicesResourceName": null,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "radio",
+          "pattern": null,
+          "defaultValue": "Active",
+          "visible": true,
+          "choices": [
+            {
+              "label": "Active",
+              "value": "Active"
+            },
+            {
+              "label": "Inactive",
+              "value": "Inactive"
+            }
+          ],
+          "label": "Status",
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "constraints": [],
+          "choicesDataSource": "custom",
+          "events": [],
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "d6ebc3ca62ab4dbf94e8b3c721e68b43",
+          "required": true
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Title",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Title",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "c1f5aa463b7f4b32bef143e1d1ba02ba",
+          "required": true
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Description",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Description",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "f756f224a34641baaee1ec8972c08744",
+          "required": false
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "URL",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "URL",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "5d210d1e57c44156b3a5d4e90ea207ef",
+          "required": true
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Icon Name",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Icon Name",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "8633bd5de8a647d5ad2ad780be571767",
+          "required": false
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Sort Order",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": {
+            "regex": "\\d+",
+            "message": "Sort Order must be a numeric value"
+          },
+          "defaultValue": null,
+          "visible": true,
+          "label": "Sort Order",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "a91d151e8fff4ce5be6bd0be5e16880d",
+          "required": false
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [
+    {
+      "endpoint": "Submission Access",
+      "name": "Authenticated Users"
+    }
+  ],
+  "slug": "portal-shortcuts",
+  "status": "Active",
+  "submissionLabelExpression": "${values('Sort Order') || 999}. ${values('Title')} ${values('Status') === 'Inactive' ? '[Inactive]' : ''}",
+  "type": "Data"
+}

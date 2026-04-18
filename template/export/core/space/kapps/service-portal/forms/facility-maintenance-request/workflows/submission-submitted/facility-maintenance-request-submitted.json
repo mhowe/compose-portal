@@ -1,0 +1,276 @@
+{
+  "builderVersion": "",
+  "schemaVersion": "1.0",
+  "version": "",
+  "processOwnerEmail": "",
+  "lastId": 23,
+  "name": "Facility Maintenance Request Submitted",
+  "notes": "",
+  "connectors": [
+    {
+      "from": "start",
+      "to": "system_integration_v1_23",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_task_2",
+      "to": "routine_complete_submission_20",
+      "label": "Task Complete",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_18",
+      "to": "routine_task_2",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "system_integration_v1_23",
+      "to": "utilities_echo_v1_18",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    }
+  ],
+  "nodes": [
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Start",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_23"
+          }
+        ]
+      },
+      "id": "start",
+      "position": {
+        "x": 10,
+        "y": 10
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_start_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": true,
+      "name": "Create Task",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Task Complete",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_complete_submission_20"
+          }
+        ]
+      },
+      "id": "routine_task_2",
+      "position": {
+        "x": 234.28118538938662,
+        "y": 566.2456926257747
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Assignees",
+          "label": "Assignees",
+          "menu": "",
+          "value": "Facilities",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission  Details']['output'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Task Summary",
+          "label": "Task Summary",
+          "menu": "",
+          "value": "Facilities Maintenance Request for <%= @values['Issue Type'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "routine_task"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Submission  Details",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_task_2"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_18",
+      "position": {
+        "x": 241,
+        "y": 266.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Requested For: <%= @values['Requested for Display Name'] %>\nIssue Type: <%= @values['Issue Type'] %>\nDescription: <%= @values['Description'] %>\nPriority: <%= @values['Priority'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Complete Submission",
+      "messages": [],
+      "dependents": "",
+      "id": "routine_complete_submission_20",
+      "position": {
+        "x": 232.25145041847475,
+        "y": 764.0569402017276
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Original Submission Id",
+          "label": "Original Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Outcome",
+          "label": "Outcome",
+          "menu": "",
+          "value": "<%= @results['Create Task']['Status'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "routine_complete_submission"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Employee",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_18"
+          }
+        ]
+      },
+      "id": "system_integration_v1_23",
+      "position": {
+        "x": 242,
+        "y": 15.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "771f279a-988d-4b91-9b8f-85861c5c13fe",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Username",
+          "label": "Username",
+          "menu": "",
+          "value": "<%= @values['Requested for Username']%>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    }
+  ]
+}

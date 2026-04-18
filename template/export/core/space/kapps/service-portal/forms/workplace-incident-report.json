@@ -1,0 +1,533 @@
+{
+  "anonymous": false,
+  "attributes": [
+    {
+      "name": "Approvers",
+      "values": [
+        "Executive Team"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "<i class=\"fa fa-lightbulb\"></i>"
+      ]
+    }
+  ],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "operations-facilities-services"
+      }
+    }
+  ],
+  "customHeadContent": null,
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Date]",
+      "parts": [
+        "values[Date]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Department]",
+      "parts": [
+        "values[Department]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Injury Details]",
+      "parts": [
+        "values[Injury Details]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Location]",
+      "parts": [
+        "values[Location]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Manager]",
+      "parts": [
+        "values[Manager]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Individuals]",
+      "parts": [
+        "values[Observing Individuals]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Teams]",
+      "parts": [
+        "values[Observing Teams]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Display Name]",
+      "parts": [
+        "values[Requested for Display Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Username]",
+      "parts": [
+        "values[Requested for Username]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Status]",
+      "parts": [
+        "values[Status]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Departments",
+      "operationId": "9c3a3309-536e-4e3d-a3b3-be072d652a51"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "Slug": "${values('Department')}"
+      },
+      "name": "Get Team",
+      "operationId": "e20b8b5d-da67-410b-a527-bd3ae1cfe07b"
+    }
+  ],
+  "name": "Workplace Incident Report",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Employee Section",
+          "title": "Employee Search",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Employee Search Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": []
+            },
+            {
+              "type": "content",
+              "renderType": "html",
+              "name": "Employee Details",
+              "text": "<table class=\"emp_details\">    \n    <tr>\n            <td class = \"emp_title\">Phone: </td>\n            <td class = \"emp_value\" id = \"emp_phone\"></td>\n    </tr>\n    <tr>\n        <td class = \"emp_title\">Email: </td>\n        <td class = \"emp_value\" id = \"emp_email\"></td>\n    </tr>\n</table>",
+              "visible": "values('Requested for Display Name') != null",
+              "renderAttributes": {}
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Department Manager Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Department",
+                  "choicesResourceName": "Departments",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "dropdown",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": {
+                    "label": "${integration('Name')}",
+                    "value": "${integration('Slug')}"
+                  },
+                  "label": "Department",
+                  "choicesResourceProperty": "Departments",
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "integration",
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Manager",
+                          "value": "${integration('Manager')}",
+                          "visible": null
+                        }
+                      ],
+                      "name": "Set Manager",
+                      "integrationResourceName": "Get Team",
+                      "action": "Set Fields",
+                      "integrationResourceProperty": null,
+                      "type": "Change"
+                    }
+                  ],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "cf7ddc02c25144d3af908c2b68dd51e7",
+                  "required": false
+                },
+                {
+                  "enabled": false,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Manager",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Manager",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "53857d2d86184c9e95664a8cda1522e1",
+                  "required": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Details",
+          "title": "Details",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Description of Incident",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Description of Incident",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "5430709dc35f4b88ab3c3d1c4d30149e",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Location",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Location",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "768e35b6230347838cdbeaa05095b2bb",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Date",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "date",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Date",
+              "constraints": [],
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "ce59450f32bb41559ba87ec8a074d61f",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Injury Details",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Injury Details",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "63b6d1fad62940b0a9feafc0729e055d",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "file",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Attachment",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "attachment",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Attachment",
+              "constraints": [],
+              "allowMultiple": false,
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "f8d538777e1d4545abc01a5cb7c33534",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Hidden System Questions",
+          "title": null,
+          "visible": false,
+          "omitWhenHidden": false,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Requested for Display Name",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Display Name",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "bf9c4e66e27740a0b9913e7db8c499a3",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": "Employee is Required",
+              "name": "Requested for Username",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Username",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "33d763af4b864c15a0ad52f886261397",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Individuals",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Individuals",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "4737d734bdfa483785c0617d68d5d70b",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Teams",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Teams",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "f26217bc01484a2187ff727879b917b6",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Status",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Status",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "dcd0ca57d7b6447fb2658b395c87f9f0",
+              "required": false
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [
+        {
+          "name": "Load Search Widget",
+          "code": "const searchWidget = bundle.widgets.Search({\n  container: K('section[Employee Search Section]').element(),\n  config: {\n    integration:{\n      kappSlug: \"service-portal\",\n      formSlug: \"purchase-request\",\n      integrationName: \"Search Users\",\n      listProperty: \"users\",\n      parameters: [{ name: 'Requested for Display Name' }]\n    },\n    optionToValue: function(o) { return o.username; },\n    optionToLabel: function(o) { return o.displayName || o.username; },\n    optionToDescription: function(o) { return o.email; },\n    onChange: function(obj, value) {\n      // Set values on Hiddend Fields\n      K('field[Requested for Display Name]').value(obj ? obj.displayName : '');\n      K('field[Requested for Username]').value(obj ? obj.username : '');      \n      // Set values on html employee details\n      document.getElementById(\"emp_phone\").innerHTML = obj['profileAttributesMap']['Phone'][0] ? obj['profileAttributesMap']['Phone'][0] : \"n/a\";\n      document.getElementById(\"emp_email\").innerHTML = obj['email'] ? obj['email'] : \"n/a\"\n    },\n    minSearchLength: 3,\n    messages:{\n      short: \"Enter 3 character to begin search.\",\n      empty: \"No users found.\"\n    },\n    placeholder: 'Search...'\n  },  \n  id: 'employee-search',\n});\n\n\n",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        }
+      ],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "workplace-incident-report",
+  "status": "Active",
+  "submissionLabelExpression": "${form('name')} request for ${values('Requested for Display Name')}",
+  "type": "Service"
+}

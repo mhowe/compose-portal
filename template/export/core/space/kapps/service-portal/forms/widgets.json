@@ -1,0 +1,306 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "access-requests"
+      }
+    },
+    {
+      "category": {
+        "slug": "it--technical-services"
+      }
+    },
+    {
+      "category": {
+        "slug": "it-devices"
+      }
+    },
+    {
+      "category": {
+        "slug": "popular-services"
+      }
+    }
+  ],
+  "customHeadContent": "",
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Markdown Content]",
+      "parts": [
+        "values[Markdown Content]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested For]",
+      "parts": [
+        "values[Requested For]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "query": "${values('Requested For')}"
+      },
+      "name": "Search Users",
+      "operationId": "625584c3-32e0-415f-a181-4405057e5fca"
+    }
+  ],
+  "name": "Widgets",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Search Widget",
+          "title": "Search Widget",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Requested For Widget",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": [
+                {
+                  "type": "content",
+                  "renderType": "html",
+                  "name": "Search Not Supported",
+                  "text": "<em>The search widget is not supported by this front end code.</em>",
+                  "visible": true,
+                  "renderAttributes": {}
+                }
+              ]
+            },
+            {
+              "enabled": false,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Requested For",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Requested For",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "b4ac03a83a5f427d8633e3102b09bc72",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Signature Widget",
+          "title": "Signature Widget",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Signature",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": [
+                {
+                  "type": "content",
+                  "renderType": "html",
+                  "name": "Signature Not Supported",
+                  "text": "<em>The signature widget is not supported by this front end code.</em>",
+                  "visible": true,
+                  "renderAttributes": {}
+                }
+              ]
+            },
+            {
+              "enabled": false,
+              "dataType": "file",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Signature File",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "attachment",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Signature File",
+              "constraints": [],
+              "allowMultiple": false,
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "a8791c7ba929475ba84060927bfc6707",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Markdown Widget",
+          "title": "Markdown Widget",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Markdown",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": [
+                {
+                  "type": "content",
+                  "renderType": "html",
+                  "name": "Markdown Not Supported",
+                  "text": "<em>The markdown widget is not supported by this front end code.</em>",
+                  "visible": true,
+                  "renderAttributes": {}
+                }
+              ]
+            },
+            {
+              "enabled": false,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Markdown Content",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Markdown Content",
+              "constraints": [],
+              "events": [],
+              "rows": 3,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "769a1727b1074070b3441c0a7fe741f8",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "renderType": "save",
+          "name": "Save",
+          "label": "Save",
+          "visible": true,
+          "enabled": true,
+          "renderAttributes": {}
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [
+        {
+          "name": "Load Search Widget",
+          "code": "bundle.widgets.Search?.({ \n  container: K('section[Requested For Widget]').element(), \n  config: {\n    integration: {\n      kappSlug: K('kapp').slug(),\n      formSlug: K('form').slug(),\n      integrationName: 'Search Users',\n      listProperty: 'users',\n      parameters: [{ name: 'Requested For' }]\n    },\n    optionToValue: function(o) { return o.username; },\n    optionToLabel: function(o) { return o.displayName || o.username; },\n    onChange: function(obj, value) {\n      console.log('search change', obj, value);\n      K('field[Requested For]').value(value);\n    },\n    placeholder: 'Search users...'\n  }, \n  id: 'requested-for' \n});",
+          "integrationResourceName": "",
+          "action": "Custom",
+          "integrationResourceProperty": null,
+          "type": "Load"
+        },
+        {
+          "name": "Load Markdown Widget",
+          "code": "bundle.widgets.Markdown?.({ \n  container: K('section[Markdown]').element(), \n  field: K('field[Markdown Content]'), \n  config: {}, \n  id: 'markdown' \n});",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        },
+        {
+          "name": "Load Signature Widget",
+          "code": "bundle.widgets.Signature?.({\n  container: K('section[Signature]').element(), \n  field: K('field[Signature File]'), \n  config: {\n    modalTitle: 'Provide Your Signature',\n    signaturePadLabel: 'Your Signature Please',\n    agreementText: null,\n    savedButtonLabel: 'Save Signature',\n    savedFileName: 'my_signature',\n    buttonLabel: 'Sign Here'\n  }, \n  id: 'signature'\n});",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        }
+      ],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "widgets",
+  "status": "Active",
+  "submissionLabelExpression": "",
+  "type": "Service"
+}

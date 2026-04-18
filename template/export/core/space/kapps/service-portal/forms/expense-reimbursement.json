@@ -1,0 +1,573 @@
+{
+  "anonymous": false,
+  "attributes": [
+    {
+      "name": "Approvers",
+      "values": [
+        "Executive Team"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "<i class=\"fa fa-lightbulb\"></i>"
+      ]
+    }
+  ],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "finance--procurement-services"
+      }
+    }
+  ],
+  "customHeadContent": null,
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Amount]",
+      "parts": [
+        "values[Amount]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Date of Expense]",
+      "parts": [
+        "values[Date of Expense]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Department]",
+      "parts": [
+        "values[Department]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Expense Type]",
+      "parts": [
+        "values[Expense Type]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Manager]",
+      "parts": [
+        "values[Manager]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Individuals]",
+      "parts": [
+        "values[Observing Individuals]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Teams]",
+      "parts": [
+        "values[Observing Teams]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Display Name]",
+      "parts": [
+        "values[Requested for Display Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Username]",
+      "parts": [
+        "values[Requested for Username]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Status]",
+      "parts": [
+        "values[Status]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Departments",
+      "operationId": "9c3a3309-536e-4e3d-a3b3-be072d652a51"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "Slug": "${values('Department')}"
+      },
+      "name": "Get Team",
+      "operationId": "e20b8b5d-da67-410b-a527-bd3ae1cfe07b"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Users",
+      "operationId": "16f70295-86eb-4624-b2f8-7bc2fa62de96"
+    }
+  ],
+  "name": "Expense Reimbursement",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Employee Section",
+          "title": "Employee Search",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Employee Search Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": []
+            },
+            {
+              "type": "content",
+              "renderType": "html",
+              "name": "Employee Details",
+              "text": "<table class=\"emp_details\">    \n    <tr>\n            <td class = \"emp_title\">Phone: </td>\n            <td class = \"emp_value\" id = \"emp_phone\"></td>\n    </tr>\n    <tr>\n        <td class = \"emp_title\">Email: </td>\n        <td class = \"emp_value\" id = \"emp_email\"></td>\n    </tr>\n</table>",
+              "visible": "values('Requested for Display Name') != null",
+              "renderAttributes": {}
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Department Manager Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Department",
+                  "choicesResourceName": "Departments",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "dropdown",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": {
+                    "label": "${integration('Name')}",
+                    "value": "${integration('Slug')}"
+                  },
+                  "label": "Department",
+                  "choicesResourceProperty": "Departments",
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "integration",
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Manager",
+                          "value": "${integration('Manager')}",
+                          "visible": null
+                        }
+                      ],
+                      "name": "Set Manager",
+                      "integrationResourceName": "Get Team",
+                      "action": "Set Fields",
+                      "integrationResourceProperty": null,
+                      "type": "Change"
+                    }
+                  ],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "e571f42ae98b4b73b5a99cffdfc5b19c",
+                  "required": false
+                },
+                {
+                  "enabled": false,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Manager",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Manager",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "1f912ac2bbd649b8bb7419bd501996ab",
+                  "required": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Details",
+          "title": "Details",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Item Details Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Expense Type",
+                  "choicesResourceName": null,
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "dropdown",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": [
+                    {
+                      "label": "Office supplies",
+                      "value": "Office supplies"
+                    },
+                    {
+                      "label": "Travel expenses",
+                      "value": "Travel expenses"
+                    },
+                    {
+                      "label": "Repairs and maintenance",
+                      "value": "Repairs and maintenance"
+                    },
+                    {
+                      "label": "Education",
+                      "value": "Education"
+                    },
+                    {
+                      "label": "Dues and subscriptions",
+                      "value": "Dues and subscriptions"
+                    }
+                  ],
+                  "label": "Expense Type",
+                  "choicesResourceProperty": null,
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "custom",
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "cebdbb7180d94503834d102157fda952",
+                  "required": false
+                },
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Amount",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": "${\"$\"}",
+                  "visible": true,
+                  "label": "Amount",
+                  "constraints": [],
+                  "events": [
+                    {
+                      "name": "Format Dollar Value",
+                      "code": "// Set the value to value formatted for dollars using the 'formatUSD' function.\nelement.value(formatUSD(element.value()));",
+                      "integrationResourceName": null,
+                      "action": "Custom",
+                      "integrationResourceProperty": "",
+                      "type": "Change"
+                    }
+                  ],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "1db44221b6af454eb41de1527f9c3dc9",
+                  "required": false
+                },
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Date of Expense",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "date",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Date of Expense",
+                  "constraints": [],
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "03cb1263f0fe417d9c1ab5e32be35f58",
+                  "required": false
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "dataType": "file",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Attachment",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "attachment",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Attachment (Receipt)",
+              "constraints": [],
+              "allowMultiple": false,
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "f8d538777e1d4545abc01a5cb7c33534",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Hidden System Questions",
+          "title": null,
+          "visible": false,
+          "omitWhenHidden": false,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Requested for Display Name",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Display Name",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "58442566626f4d3ba75a3303e152f449",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": "Employee is Required",
+              "name": "Requested for Username",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Username",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "fd261369b4ae46c38e3e17eefd8f176a",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Individuals",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Individuals",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "ef4e599d185c40d4ab0a57ee5fada0cb",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Teams",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Teams",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "4d6456aeaec44e9497a85fab08abaf8c",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Status",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Status",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "78d57c7582f440b69913bc994c1a4ed7",
+              "required": false
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [
+        {
+          "name": "Load Search Widget",
+          "code": "const searchWidget = bundle.widgets.Search({\n  container: K('section[Employee Search Section]').element(),\n  config: {\n    integration:{\n      kappSlug: \"service-portal\",\n      formSlug: \"purchase-request\",\n      integrationName: \"Search Users\",\n      listProperty: \"users\",\n      parameters: [{ name: 'Requested for Display Name' }]\n    },\n    optionToValue: function(o) { return o.username; },\n    optionToLabel: function(o) { return o.displayName || o.username; },\n    optionToDescription: function(o) { return o.email; },\n    onChange: function(obj, value) {\n      // Set values on Hiddend Fields\n      K('field[Requested for Display Name]').value(obj ? obj.displayName : '');\n      K('field[Requested for Username]').value(obj ? obj.username : '');      \n      // Set values on html employee details\n      document.getElementById(\"emp_phone\").innerHTML = obj['profileAttributesMap']['Phone'][0] ? obj['profileAttributesMap']['Phone'][0] : \"n/a\";\n      document.getElementById(\"emp_email\").innerHTML = obj['email'] ? obj['email'] : \"n/a\"\n    },\n    minSearchLength: 3,\n    messages:{\n      short: \"Enter 3 character to begin search.\",\n      empty: \"No users found.\"\n    },\n    placeholder: 'Search...'\n  },  \n  id: 'employee-search',\n});\n\n\n",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        },
+        {
+          "name": "Initialize formatUSD",
+          "code": "formatUSD = function(value) {\n  // Remove any non-digit characters except decimal point\n  const cleanValue = value.replace(/[^\\d.]/g, '');\n  \n  // Convert to number and format with 2 decimal places\n  const amount = Number(cleanValue);\n  \n  // Return formatted string with $ symbol and commas\n  return new Intl.NumberFormat('en-US', {\n    style: 'currency',\n    currency: 'USD'\n  }).format(amount);\n}",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        }
+      ],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "expense-reimbursement",
+  "status": "Active",
+  "submissionLabelExpression": "${form('name')} request for ${values('Requested for Display Name')}",
+  "type": "Service"
+}

@@ -1,0 +1,115 @@
+[
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "lock"
+        ]
+      },
+      {
+        "name": "Parent",
+        "values": [
+          "it--technical-services"
+        ]
+      }
+    ],
+    "name": "Access Requests",
+    "slug": "access-requests"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "devices"
+        ]
+      },
+      {
+        "name": "Parent",
+        "values": [
+          "it--technical-services"
+        ]
+      }
+    ],
+    "name": "Devices",
+    "slug": "it-devices"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "pig-money"
+        ]
+      }
+    ],
+    "name": "Finance & Procurement Services",
+    "slug": "finance--procurement-services"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "briefcase"
+        ]
+      }
+    ],
+    "name": "General Business Services",
+    "slug": "general-business-services"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "users-group"
+        ]
+      }
+    ],
+    "name": "HR & Employee Services",
+    "slug": "hr--employee-services"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "devices-2"
+        ]
+      }
+    ],
+    "name": "IT & Technical Services",
+    "slug": "it--technical-services"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Icon",
+        "values": [
+          "contract"
+        ]
+      }
+    ],
+    "name": "Legal & Compliance Services",
+    "slug": "legal--compliance-services"
+  },
+  {
+    "attributes": [],
+    "name": "Operations & Facilities Services",
+    "slug": "operations-facilities-services"
+  },
+  {
+    "attributes": [
+      {
+        "name": "Hidden",
+        "values": [
+          "true"
+        ]
+      }
+    ],
+    "name": "Popular Services",
+    "slug": "popular-services"
+  }
+]

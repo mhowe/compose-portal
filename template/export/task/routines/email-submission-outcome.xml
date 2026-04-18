@@ -1,0 +1,299 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_email_submission_outcome</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Email Submission Outcome</name>
+        <author></author>
+        <notes></notes>
+        <lastID>13</lastID>
+        <taskDefinition id="routine_email_submission_outcome" name="Email Submission Outcome" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Original Submission Id" label="Original Submission Id" required="true" tooltip=""></parameter>
+                <parameter id="To" label="To" required="true" tooltip=""></parameter>
+                <parameter id="BCC" label="BCC" required="false" tooltip=""></parameter>
+                <parameter id="Submission Outcome" label="Submission Outcome" required="true" tooltip=""></parameter>
+                <parameter id="Notes" label="Notes" required="false" tooltip=""></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml"></results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_12</task>
+                </dependents>
+            </task>
+            <task definition_id="smtp_email_send_v1" id="smtp_email_send_v1_7" name="Send Outcome Email" x="198.47368421052659" y="327.13157894736827">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="error_handling" label="Error Handling" menu="Error Message,Raise Error" required="true" tooltip="Determine what to return if an error is encountered.">Error Message</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="from" label="From (Email Address)" menu="" required="true" tooltip="The email address of the simulated sender.">wally@kinops.io</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="to" label="To (Email Address)" menu="" required="true" tooltip="The email address of the intended recipient.">&lt;%= @inputs['To'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="bcc" label="Bcc (Email Address)" menu="" required="false" tooltip="The email address of the intended recipient.">&lt;%= @inputs['BCC'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="subject" label="Subject" menu="" required="false" tooltip="The subject of the email.">Approval Outcome</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="htmlbody" label="HTML Body" menu="" required="false" tooltip="HTML representing the body of a rich email.">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;&lt;/title&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;meta http-equiv="X-UA-Compatible" content="IE=edge" /&gt;
+&lt;style type="text/css"&gt;
+/* CLIENT-SPECIFIC STYLES */
+body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+img { -ms-interpolation-mode: bicubic; }
+
+/* RESET STYLES */
+img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+table { border-collapse: collapse !important; }
+body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+
+/* iOS BLUE LINKS */
+a[x-apple-data-detectors] {
+    color: inherit !important;
+    text-decoration: none !important;
+    font-size: inherit !important;
+    font-family: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+}
+
+/* MEDIA QUERIES */
+@media screen and (max-width: 480px) {
+    .mobile-hide {
+        display: none !important;
+    }
+    .mobile-center {
+        text-align: center !important;
+    }
+}
+
+/* ANDROID CENTER FIX */
+div[style*="margin: 16px 0;"] { margin: 0 !important; }
+&lt;/style&gt;
+
+&lt;style type="text/css"&gt;
+
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body style="margin: 0 !important; padding: 0 !important; background-color: #eeeeee;" bgcolor="#eeeeee"&gt;
+
+&lt;div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: Open Sans, Helvetica, Arial, sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;"&gt;
+&lt;%= @results['Get Submission Details']['Label'] %&gt; --
+&lt;/div&gt;
+
+&lt;table border="0" cellpadding="0" cellspacing="0" width="100%"&gt;
+    &lt;tr&gt;
+        &lt;td align="center" style="background-color: #eeeeee;" bgcolor="#eeeeee"&gt;
+            &lt;!--[if (gte mso 9)|(IE)]&gt;
+        &lt;table align="center" border="0" cellspacing="0" cellpadding="0" width="600"&gt;
+        &lt;tr&gt;
+        &lt;td align="center" valign="top" width="600"&gt;
+        &lt;![endif]--&gt;
+            &lt;table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;"&gt;
+                &lt;tr&gt;
+                    &lt;td align="center" valign="top" style="font-size:0; padding: 20px;" &gt;
+                        &lt;!--[if (gte mso 9)|(IE)]&gt;
+                &lt;table align="center" border="0" cellspacing="0" cellpadding="0" width="600"&gt;
+                &lt;tr&gt;
+                &lt;td align="left" valign="top" width="300"&gt;
+                &lt;![endif]--&gt;
+                        &lt;div style="display:inline-block; max-width:70%; min-width:100px; vertical-align:top; width:100%;"&gt;
+                            &lt;table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:300px;"&gt;
+                                &lt;tr&gt;
+                                    &lt;td align="left" valign="top" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; line-height: 30px;" class="mobile-center"&gt;
+                                        &lt;h1 style="font-size: 20px; font-weight: 700; margin: 0; color: #ffffff;"&gt;&lt;%= @results['Get Space Config']['Web Server Url'] %&gt;&lt;/h1&gt;
+                                    &lt;/td&gt;
+                                &lt;/tr&gt;
+                            &lt;/table&gt;
+                        &lt;/div&gt;
+                        &lt;!--[if (gte mso 9)|(IE)]&gt;
+                &lt;/td&gt;
+                &lt;td align="right" width="300"&gt;
+                &lt;![endif]--&gt;
+                        &lt;div style="display:inline-block; max-width:30%; min-width:100px; vertical-align:top; width:100%;" class="mobile-hide"&gt;
+                            &lt;table align="left" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:300px;"&gt;
+                                &lt;tr&gt;
+                                    &lt;td align="right" valign="top" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 30x; font-weight: 400; line-height: 30px;"&gt;
+                                        &lt;table cellspacing="0" cellpadding="0" border="0" align="right"&gt;
+                                            &lt;tr&gt;
+                                                &lt;td style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400;"&gt;
+                                                    &lt;p style="font-size: 16px; font-weight: 400; margin: 0; color: #ffffff;"&gt;&lt;a href="&lt;%= @results['Get Space Config']['Web Server Url'] %&gt;" target="_blank" style="color: #ffffff; text-decoration: none;"&gt;kinops &amp;nbsp;&lt;/a&gt;&lt;/p&gt;
+                                                &lt;/td&gt;
+                                                &lt;td style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 24px;"&gt;
+                                                    &lt;a href="&lt;%= @results['Get Space Config']['Web Server Url'] %&gt;" target="_blank" style="color: #ffffff; text-decoration: none;"&gt;&lt;img src="https://s3.amazonaws.com/kinops-public/notification-images/kinops-32x32.png" width="27" height="23" style="display: block; border: 0px;" /&gt;&lt;/a&gt;
+                                                &lt;/td&gt;
+                                            &lt;/tr&gt;
+                                        &lt;/table&gt;
+                                    &lt;/td&gt;
+                                &lt;/tr&gt;
+                            &lt;/table&gt;
+                        &lt;/div&gt;
+                        &lt;!--[if (gte mso 9)|(IE)]&gt;
+                &lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;/table&gt;
+                &lt;![endif]--&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td align="center" style="padding: 25px; background-color: #ffffff;" bgcolor="#ffffff"&gt;
+                        &lt;!--[if (gte mso 9)|(IE)]&gt;
+                &lt;table align="center" border="0" cellspacing="0" cellpadding="0" width="600"&gt;
+                &lt;tr&gt;
+                &lt;td align="center" valign="top" width="600"&gt;
+                &lt;![endif]--&gt;
+                        &lt;table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;"
+
+&lt;tr&gt;
+   &lt;td align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding-top: 15px; padding-bottom: 15px;"&gt;
+      &lt;h2 style="font-size: 24px; font-weight: 700; line-height: 30px; color: #333333; margin: 0;"&gt;
+         &lt;%= @results['Get Submission Details']['Form Name'] %&gt; - Outcome
+      &lt;/h2&gt;
+      &lt;p&gt;
+         &lt;!--
+         &lt;span style="font-size: 16px; font-weight: 400; line-height: 24px; color: #777777; font-style: italic; "&gt;Summary: &lt;/span&gt;
+         &lt;span style="font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;"&gt;&lt;%= @results['Get Submission Details']['Label'] %&gt;&lt;/span&gt;&lt;br/&gt;
+         --&gt;
+         &lt;span style="font-size: 16px; font-weight: 400; line-height: 24px; color: #777777; font-style: italic; "&gt;Confirmation #: &lt;/span&gt;
+         &lt;span style="font-size: 16px; font-weight: 600; line-height: 24px; color: #777777;"&gt;&lt;%= @results['Get Submission Details']['Handle'] %&gt;&lt;/span&gt;
+      &lt;/p&gt;
+
+      &lt;p style="font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;"&gt;
+         We wanted to let you know that your request has been &lt;%= @inputs['Submission Outcome'] %&gt;
+      &lt;/p&gt;
+      &lt;p style="font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;"&gt;
+        &lt;span style="font-weight: 600;"&gt;Comments: &lt;/span&gt;&lt;br/&gt;
+       &lt;span style="white-space: pre-wrap;"&gt;&lt;%= @inputs['Notes'] %&gt; &lt;/span&gt;
+      &lt;/p&gt;
+   &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+   &lt;td align="center" style="padding: 35px 0 35px 0;"&gt;
+      &lt;table border="0" cellspacing="0" cellpadding="0"&gt;
+         &lt;tr&gt;
+            &lt;td align="center" style="border-radius: 5px;" bgcolor="#ff7700"&gt;
+               &lt;a href="&lt;%= @results['Get Space Config']['Web Server Url'] %&gt;/submissions/&lt;%= @inputs['Original Submission Id'] %&gt;"
+                  style="font-size: 16px; font-family: Open Sans, Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 5px; background-color: #ff7700; padding: 10px 24px; border: none; display: block;"
+                  target="_blank"&gt;Review Your Request&lt;/a&gt;
+            &lt;/td&gt;
+         &lt;/tr&gt;
+      &lt;/table&gt;
+   &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+   &lt;td align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 24px;"&gt;
+      &lt;p style="font-size: 18px; font-weight: 800; line-height: 24px; color: #333333;"&gt;Love,&lt;br/&gt;The kinops Team&lt;/p&gt;
+   &lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;/table&gt;
+&lt;!--[if (gte mso 9)|(IE)]&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;![endif]--&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+    &lt;td align="center" style="padding: 25px; background-color: #ffffff;border-top:1px solid #eee" bgcolor="#ffffff"&gt;
+        &lt;!--[if (gte mso 9)|(IE)]&gt;
+&lt;table align="center" border="0" cellspacing="0" cellpadding="0" width="600"&gt;
+&lt;tr&gt;
+&lt;td align="center" valign="top" width="600"&gt;
+&lt;![endif]--&gt;
+        &lt;table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;"&gt;
+            &lt;tr&gt;
+                &lt;td align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 5px 0 5px 0;"&gt;
+
+                    &lt;p style="font-size: 14px; font-weight: 400; line-height: 18px; color: #333333;"&gt;
+                        &lt;img src="https://s3.amazonaws.com/kinops-public/notification-images/kinops-32x32.png" width="18" height="18" style="display: inline-block; border: 0px;vertical-align:top;" /&gt;
+                       Sent from the &lt;%= @results['Get Space Config']['Name'] %&gt; kinops System
+                    &lt;/p&gt;
+                &lt;/td&gt;
+            &lt;/tr&gt;
+        &lt;/table&gt;
+        &lt;!--[if (gte mso 9)|(IE)]&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;![endif]--&gt;
+    &lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;!--[if (gte mso 9)|(IE)]&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;![endif]--&gt;
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="textbody" label="Alternate (text) Body" menu="" required="false" tooltip="A plaintext message that will be displayed if the recipient can't display multipart HTML emails.">&lt;%= @results['Get Submission Details']['Form Name'] %&gt; - Outcome
+Summary: &lt;%= @results['Get Submission Details']['Label'] %&gt;
+Confirmation #: &lt;%= @results['Get Submission Details']['Handle'] %&gt;
+
+We wanted to let you know that your request has been &lt;%= @inputs['Submission Outcome'] %&gt;
+
+
+</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_12" name="Get Space Config" x="197.4117647058824" y="21.382352941176467">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">7ad51a20-8bab-422b-a0f7-247e082dccd5</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_13</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_13" name="Get Submission Details" x="198.41176470588243" y="172.38235294117646">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Original Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">smtp_email_send_v1_7</task>
+                </dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

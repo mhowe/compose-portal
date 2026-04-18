@@ -1,0 +1,215 @@
+{
+  "afterLogoutPath": null,
+  "attributes": [
+    {
+      "name": "Department Head",
+      "values": [
+        "services.manager@kineticdata.com"
+      ]
+    }
+  ],
+  "bundlePath": null,
+  "defaultFormConfirmationPage": null,
+  "defaultFormDisplayPage": null,
+  "defaultSubmissionLabelExpression": null,
+  "displayType": "Display Page",
+  "displayValue": null,
+  "fields": [
+    {
+      "name": "Assigned Individual",
+      "renderType": "text"
+    },
+    {
+      "name": "Assigned Team",
+      "renderType": "text"
+    },
+    {
+      "name": "Requested For",
+      "renderType": "text"
+    }
+  ],
+  "indexDefinitions": [
+    {
+      "name": "type",
+      "parts": [
+        "type"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,createdBy",
+      "parts": [
+        "type",
+        "coreState",
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,submittedBy",
+      "parts": [
+        "type",
+        "coreState",
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,submittedBy,createdBy,values[Requested For]",
+      "parts": [
+        "type",
+        "coreState",
+        "submittedBy",
+        "createdBy",
+        "values[Requested For]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,values[Assigned Individual]",
+      "parts": [
+        "type",
+        "coreState",
+        "values[Assigned Individual]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,values[Assigned Team]",
+      "parts": [
+        "type",
+        "coreState",
+        "values[Assigned Team]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,coreState,values[Requested For]",
+      "parts": [
+        "type",
+        "coreState",
+        "values[Requested For]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,createdBy",
+      "parts": [
+        "type",
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,submittedBy",
+      "parts": [
+        "type",
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,values[Assigned Individual]",
+      "parts": [
+        "type",
+        "values[Assigned Individual]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,values[Assigned Team]",
+      "parts": [
+        "type",
+        "values[Assigned Team]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "type,values[Requested For]",
+      "parts": [
+        "type",
+        "values[Requested For]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "b080b901-bb64-4be6-9853-edd15c47ca45",
+      "inputMappings": {
+        "SYS ID": "${values('id')}",
+        "Work Notes": "${values('note')}"
+      },
+      "name": "Create SNOW Incident Work Note",
+      "operationId": "ca6d3c30-d335-46a9-86fb-8f57fed0fffb",
+      "securityPolicies": [
+        {
+          "endpoint": "Execution",
+          "name": "Authenticated Users"
+        }
+      ]
+    },
+    {
+      "connectionId": "b080b901-bb64-4be6-9853-edd15c47ca45",
+      "inputMappings": {
+        "Journal Element": "work_notes",
+        "System ID": "${values('id')}"
+      },
+      "name": "Get SNOW Incident Work Notes",
+      "operationId": "b06d71f6-78d6-4d86-be76-18a6f7f0456c",
+      "securityPolicies": [
+        {
+          "endpoint": "Execution",
+          "name": "Authenticated Users"
+        }
+      ]
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "query": "${values('Text')}"
+      },
+      "name": "Search Users",
+      "operationId": "625584c3-32e0-415f-a181-4405057e5fca",
+      "securityPolicies": []
+    }
+  ],
+  "loginPage": null,
+  "name": "Service Portal",
+  "resetPasswordPage": null,
+  "securityPolicies": [
+    {
+      "endpoint": "Display",
+      "name": "Authenticated Users"
+    },
+    {
+      "endpoint": "Modification",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Form Creation",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Default Form Modification",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Default Form Display",
+      "name": "Authenticated Users"
+    },
+    {
+      "endpoint": "Default Submission Access",
+      "name": "Submitter"
+    },
+    {
+      "endpoint": "Default Submission Modification",
+      "name": "Submitter"
+    },
+    {
+      "endpoint": "Submission Support",
+      "name": "Admins"
+    }
+  ],
+  "slug": "service-portal"
+}

@@ -1,0 +1,229 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "access-requests"
+      }
+    },
+    {
+      "category": {
+        "slug": "it--technical-services"
+      }
+    },
+    {
+      "category": {
+        "slug": "it-devices"
+      }
+    },
+    {
+      "category": {
+        "slug": "popular-services"
+      }
+    }
+  ],
+  "customHeadContent": null,
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Text]",
+      "parts": [
+        "values[Text]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Textarea]",
+      "parts": [
+        "values[Textarea]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "query": "${values('Text')}"
+      },
+      "name": "Search Users",
+      "operationId": "625584c3-32e0-415f-a181-4405057e5fca"
+    }
+  ],
+  "name": "Request a Laptop",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Text",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Text",
+          "constraints": [],
+          "events": [],
+          "rows": 1,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "b4ac03a83a5f427d8633e3102b09bc72",
+          "required": false
+        },
+        {
+          "enabled": true,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Textarea",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Textarea",
+          "constraints": [],
+          "events": [],
+          "rows": 3,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "769a1727b1074070b3441c0a7fe741f8",
+          "required": false
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Widget",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": []
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Signature Widget",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "file",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Signature",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "attachment",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Signature",
+              "constraints": [],
+              "allowMultiple": false,
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "ac4a6f518cba48d891c56f476567ab92",
+              "required": false
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "renderType": "save",
+          "name": "Save",
+          "label": "Save",
+          "visible": true,
+          "enabled": true,
+          "renderAttributes": {}
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [
+        {
+          "name": "Load Widgets",
+          "code": "bundle.widgets.Search({ \n  container: K('section[Widget]').element(), \n  config: {\n    integration: {\n      kappSlug: K('kapp').slug(),\n      formSlug: K('form').slug(),\n      integrationName: 'Search Users',\n      listProperty: 'users',\n      parameters: [{ name: 'Text' }]\n    },\n    optionToValue: function(o) { return o.username; },\n    optionToLabel: function(o) { return o.displayName || o.username; },\n    onChange: function(obj, value) {\n      K('field[Textarea]').value(value ? 'Selected user: ' + value : '');\n    },\n    placeholder: 'Search users...'\n  }, \n  id: 'user-search-widget' \n});",
+          "integrationResourceName": "",
+          "action": "Custom",
+          "integrationResourceProperty": null,
+          "type": "Load"
+        },
+        {
+          "name": "Signature Widget",
+          "code": "bundle.widgets.Signature({\n  container: K('section[Signature Widget]').element(),\n  field: K('field[Signature]'),\n  config: {\n    // Disable in review mode\n    disabled: K('form').reviewMode(),\n    // Modal Title\n    modalTitle: 'Sign your form',\n    // Label above signature pad\n    signaturePadLabel: 'Signature',\n    // Agreement text\n    agreementText: 'I understand this is a legal representation of my signature.',\n    // Button label for Save\n    savedButtonLabel: 'Save',\n    // Saved File Name\n    savedFileName: 'signature_widget',\n    // Button label for signature field\n    buttonLabel: 'Signature',\n    // Button label for Clear\n    clearButtonLabel: 'clear',\n  },\n  id: 'sig'\n});\n",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        }
+      ],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "mz-laptop-request",
+  "status": "Active",
+  "submissionLabelExpression": "",
+  "type": "Service"
+}

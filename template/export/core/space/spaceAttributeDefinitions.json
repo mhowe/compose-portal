@@ -1,0 +1,22 @@
+[
+  {
+    "allowsMultiple": false,
+    "description": "The slug of the service portal kapp to use for the momentum portal. If omitted, will default to \"service-portal\".",
+    "name": "Service Portal Kapp Slug"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The slug of the system kapp to use for the momentum portal. If omitted, will default to \"system\".",
+    "name": "System Kapp Slug"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The configuration for custom theming of the portal. Do not edit this value manually.",
+    "name": "Theme"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "",
+    "name": "Web Server Url"
+  }
+]

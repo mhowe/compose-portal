@@ -1,0 +1,222 @@
+{
+  "anonymous": false,
+  "attributes": [],
+  "bridgedResources": [],
+  "categorizations": [],
+  "customHeadContent": null,
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Related Data JSON]",
+      "parts": [
+        "values[Related Data JSON]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Related Submission Ids]",
+      "parts": [
+        "values[Related Submission Ids]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [],
+  "name": "Parent Form",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": "",
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "button",
+          "renderType": "custom",
+          "name": "Open Subform",
+          "label": "Open Subform - JSON",
+          "visible": true,
+          "enabled": true,
+          "renderAttributes": {},
+          "events": [
+            {
+              "name": "Open Subform",
+              "code": "bundle.widgets.Subform({\n  container: K('section[Subform Container]').element(),\n  config: {\n    kappSlug: kapp('slug'),\n    formSlug: 'subform',\n    values: { State: 'MN' },\n    modalTitle: \"Address Information\",\n    onSave: function(subform, actions){\n      const validation = subform.validate();\n      if (Object.keys(validation).length === 0) {\n        const arr = JSON.parse(K('field[Related Data JSON]').value()) || [];\n        arr.push(subform.serialize());\n        K('field[Related Data JSON]').value(JSON.stringify(arr));\n        bundle.widgets.Toast.success({ title: 'Address added successfully' });\n        actions.close();\n      } else {\n        bundle.widgets.Subform.get('subform').toastError({\n          title: 'The form is invalid',\n          description: Object.values(validation)\n            .map(function(error){ return error && error[0]; })\n            .filter(Boolean)\n            .join('\\n')\n        });\n      }\n    }\n  },\n  id: 'subform'\n});",
+              "integrationResourceName": null,
+              "action": "Custom",
+              "integrationResourceProperty": "",
+              "type": "Click"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "renderType": "custom",
+          "name": "Open Subform 2",
+          "label": "Open Subform  - Submission",
+          "visible": true,
+          "enabled": true,
+          "renderAttributes": {},
+          "events": [
+            {
+              "name": "Open Subform",
+              "code": "bundle.widgets.Subform({\n  container: K('section[Subform2 Container]').element(),\n  config: {\n    kappSlug: kapp('slug'),\n    formSlug: 'subform',\n    values: { State: 'MN' },\n    modalTitle: \"Address Information\",\n    saveLabel: 'Submit',\n    onSave: function(subform, actions){\n      subform.submitPage(function(result){\n        console.log('after submit', result);\n        const arr = K('field[Related Submission Ids]').value();\n        arr.push(result.submission.id);\n        K('field[Related Submission Ids]').options(arr.map(\n          function(id){ return { label: id, value: id }; }\n        ));\n        K('field[Related Submission Ids]').value(arr);\n        bundle.widgets.Toast.success({ title: 'Address added successfully' });\n        actions.close();\n      });\n    }\n  },\n  id: 'subform2'\n});",
+              "integrationResourceName": null,
+              "action": "Custom",
+              "integrationResourceProperty": "",
+              "type": "Click"
+            }
+          ]
+        },
+        {
+          "type": "button",
+          "renderType": "custom",
+          "name": "Inline Subform",
+          "label": "Inline Subform",
+          "visible": true,
+          "enabled": true,
+          "renderAttributes": {},
+          "events": [
+            {
+              "name": "Open Subform",
+              "code": "bundle.widgets.Subform({\n  container: K('section[Subform3 Container]').element(),\n  config: {\n    kappSlug: kapp('slug'),\n    formSlug: 'subform',\n    values: { State: 'MN' },\n    inline: true\n  },\n  id: 'subform3'\n});",
+              "integrationResourceName": null,
+              "action": "Custom",
+              "integrationResourceProperty": "",
+              "type": "Click"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Subform Container",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": []
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Subform2 Container",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": []
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Subform3 Container",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": []
+        },
+        {
+          "enabled": false,
+          "dataType": "string",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Related Data JSON",
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "text",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "label": "Related Data JSON",
+          "constraints": [],
+          "events": [],
+          "rows": 3,
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "b78000005c22437ab103afa8896d6c99",
+          "required": false
+        },
+        {
+          "enabled": false,
+          "dataType": "json",
+          "defaultDataSource": "none",
+          "requiredMessage": null,
+          "name": "Related Submission Ids",
+          "choicesResourceName": null,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "renderType": "checkbox",
+          "pattern": null,
+          "defaultValue": null,
+          "visible": true,
+          "choices": [],
+          "label": "Related Submission Ids",
+          "choicesResourceProperty": null,
+          "choicesRunIf": null,
+          "constraints": [],
+          "choicesDataSource": "custom",
+          "events": [],
+          "defaultResourceName": null,
+          "type": "field",
+          "key": "a67abc117e0c4192b702dd4da4e5e364",
+          "required": false
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "parent-form",
+  "status": "Active",
+  "submissionLabelExpression": null,
+  "type": "Service"
+}

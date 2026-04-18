@@ -1,0 +1,17 @@
+[
+  {
+    "allowsMultiple": false,
+    "description": "",
+    "name": "Approvers"
+  },
+  {
+    "allowsMultiple": true,
+    "description": "",
+    "name": "Departments"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The name of the icon to use for this form, from the Tabler Icons library.",
+    "name": "Icon"
+  }
+]

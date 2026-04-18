@@ -1,0 +1,590 @@
+{
+  "anonymous": false,
+  "attributes": [
+    {
+      "name": "Approvers",
+      "values": [
+        "Executive Team"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "bulb"
+      ]
+    }
+  ],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "general-business-services"
+      }
+    },
+    {
+      "category": {
+        "slug": "popular-services"
+      }
+    }
+  ],
+  "customHeadContent": null,
+  "description": "This form is designed to capture key details about your proposed project to help us evaluate its goals, feasibility, and alignment with organizational priorities.",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Department]",
+      "parts": [
+        "values[Department]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Description]",
+      "parts": [
+        "values[Description]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[End Date]",
+      "parts": [
+        "values[End Date]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Manager]",
+      "parts": [
+        "values[Manager]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Individuals]",
+      "parts": [
+        "values[Observing Individuals]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Observing Teams]",
+      "parts": [
+        "values[Observing Teams]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Project Title]",
+      "parts": [
+        "values[Project Title]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Proposed Budget]",
+      "parts": [
+        "values[Proposed Budget]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Display Name]",
+      "parts": [
+        "values[Requested for Display Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Requested for Username]",
+      "parts": [
+        "values[Requested for Username]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Start date]",
+      "parts": [
+        "values[Start date]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Status]",
+      "parts": [
+        "values[Status]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Departments",
+      "operationId": "9c3a3309-536e-4e3d-a3b3-be072d652a51"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Get Departments",
+      "operationId": "9c3a3309-536e-4e3d-a3b3-be072d652a51"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "Slug": "${values('Department')}"
+      },
+      "name": "Get Team",
+      "operationId": "e20b8b5d-da67-410b-a527-bd3ae1cfe07b"
+    }
+  ],
+  "name": "Project Proposal Submission",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Employee Section",
+          "title": "Employee Search",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Employee Search Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": []
+            },
+            {
+              "type": "content",
+              "renderType": "html",
+              "name": "Employee Details",
+              "text": "<table class=\"emp_details\">    \n    <tr>\n            <td class = \"emp_title\">Phone: </td>\n            <td class = \"emp_value\" id = \"emp_phone\"></td>\n    </tr>\n    <tr>\n        <td class = \"emp_title\">Email: </td>\n        <td class = \"emp_value\" id = \"emp_email\"></td>\n    </tr>\n</table>",
+              "visible": "values('Requested for Display Name') != null",
+              "renderAttributes": {}
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Department Manager Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Department",
+                  "choicesResourceName": "Departments",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "dropdown",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": {
+                    "label": "${integration('Name')}",
+                    "value": "${integration('Slug')}"
+                  },
+                  "label": "Department",
+                  "choicesResourceProperty": "Departments",
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "integration",
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Manager",
+                          "value": "${integration('Manager')}",
+                          "visible": null
+                        }
+                      ],
+                      "name": "Set Manager",
+                      "integrationResourceName": "Get Team",
+                      "action": "Set Fields",
+                      "integrationResourceProperty": null,
+                      "type": "Change"
+                    }
+                  ],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "faaf03777a054f16acf4f223561b4c2b",
+                  "required": false
+                },
+                {
+                  "enabled": false,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Manager",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Manager",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "9a10f056b88b4e9e893994534c625555",
+                  "required": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Details",
+          "title": "Details",
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Project Title",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Project Title",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "87b3d7fada7849c898f68c8b038d607f",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Description",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Description",
+              "constraints": [],
+              "events": [],
+              "rows": 3,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "dba1cd0843484b07b3e8c2a33554be9f",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Proposed Budget",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": {
+                "regex": "^[0-9]*$",
+                "message": "Proposed Budget must be numbers only"
+              },
+              "defaultValue": "${\"$\"}",
+              "visible": true,
+              "label": "Proposed Budget",
+              "constraints": [],
+              "events": [
+                {
+                  "name": "Format Dollar Value",
+                  "code": "// Set the value to value formatted for dollars using the 'formatUSD' function.\nelement.value(formatUSD(element.value()));\n",
+                  "integrationResourceName": null,
+                  "action": "Custom",
+                  "integrationResourceProperty": "",
+                  "type": "Change"
+                }
+              ],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "78beec25cd824eeb89c61bfca6cf8b83",
+              "required": true
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Date",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {
+            "class": "cols-2"
+          },
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Start date",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "datetime",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Start date",
+              "constraints": [],
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "80ee828f5ba44f7ab9b68a987dac0a4e",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "End Date",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "datetime",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "End Date",
+              "constraints": [],
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "afeffe97d1cb4422b323e73711427520",
+              "required": true
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Hidden System Questions",
+          "title": null,
+          "visible": false,
+          "omitWhenHidden": false,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Requested for Display Name",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Display Name",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "f557878860254c38b9a166e96042a2bd",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": "Employee is Required",
+              "name": "Requested for Username",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "",
+              "visible": true,
+              "label": "Requested for Username",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "66694157f1f742c5a62df2bb96ea3354",
+              "required": true
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Individuals",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Individuals",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "d4c5ed7328324f51b89e196d6c70ad7a",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Teams",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Teams",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "fae0ed9516da4b0f91521196f8c0aa6c",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Status",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Status",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "0fc9db4781d7491fb3fcffde68ef6a6a",
+              "required": false
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [
+        {
+          "name": "Load Search Widget",
+          "code": "const searchWidget = bundle.widgets.Search({\n  container: K('section[Employee Search Section]').element(),\n  config: {\n    integration:{\n      kappSlug: \"service-portal\",\n      formSlug: \"purchase-request\",\n      integrationName: \"Search Users\",\n      listProperty: \"users\",\n      parameters: [{ name: 'Requested for Display Name' }]\n    },\n    optionToValue: function(o) { return o.username; },\n    optionToLabel: function(o) { return o.displayName || o.username; },\n    optionToDescription: function(o) { return o.email; },\n    onChange: function(obj, value) {\n      // Set values on Hiddend Fields\n      K('field[Requested for Display Name]').value(obj ? obj.displayName : '');\n      K('field[Requested for Username]').value(obj ? obj.username : '');      \n      // Set values on html employee details\n      document.getElementById(\"emp_phone\").innerHTML = obj['profileAttributesMap']['Phone'][0] ? obj['profileAttributesMap']['Phone'][0] : \"n/a\";\n      document.getElementById(\"emp_email\").innerHTML = obj['email'] ? obj['email'] : \"n/a\"\n    },\n    minSearchLength: 3,\n    messages:{\n      short: \"Enter 3 character to begin search.\",\n      empty: \"No users found.\"\n    },\n    placeholder: 'Search...'\n  },  \n  id: 'employee-search',\n});\n\n\n",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        },
+        {
+          "name": "Initialize formatUSD",
+          "code": "formatUSD = function(value) {\n  // Remove any non-digit characters except decimal point\n  const cleanValue = value.replace(/[^\\d.]/g, '');\n  \n  // Convert to number and format with 2 decimal places\n  const amount = Number(cleanValue);\n  \n  // Return formatted string with $ symbol and commas\n  return new Intl.NumberFormat('en-US', {\n    style: 'currency',\n    currency: 'USD'\n  }).format(amount);\n}",
+          "integrationResourceName": null,
+          "action": "Custom",
+          "integrationResourceProperty": "",
+          "type": "Load"
+        }
+      ],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "project-proposal-submission",
+  "status": "New",
+  "submissionLabelExpression": "${form('name')} request for ${values('Requested for Display Name')}",
+  "type": "Service"
+}

@@ -1,0 +1,104 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_complete_submission</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Complete Submission</name>
+        <author></author>
+        <notes></notes>
+        <lastID>4</lastID>
+        <taskDefinition id="routine_complete_submission" name="Complete Submission" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Original Submission Id" label="Original Submission Id" required="true" tooltip=""></parameter>
+                <parameter id="Outcome" label="Outcome" required="true" tooltip=""></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml"></results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_1</task>
+                    <task label="" type="Complete" value="">system_integration_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_1" name="Get Original Submission Details" x="217" y="14.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Original Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_2" name="Get Submitters Email Address" x="560" y="15.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">771f279a-988d-4b91-9b8f-85861c5c13fe</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Username" label="Username" menu="" required="false" tooltip="">&lt;%= @results['Get Original Submission Details']['Created By'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_email_submission_outcome_3</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_email_submission_outcome" id="routine_email_submission_outcome_3" name="Email Outcome to Submitter" x="898" y="15.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Original Submission Id" label="Original Submission Id" menu="" required="true" tooltip="">&lt;%= @inputs['Original Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="To" label="To" menu="" required="true" tooltip="">&lt;%= @results['Get Submitters Email Address']['Email'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="BCC" label="BCC" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Submission Outcome" label="Submission Outcome" menu="" required="true" tooltip="">&lt;%= @inputs['Outcome'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_4" name="Close Submission" x="211" y="123.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">3ad53519-e058-48a1-b114-5745533526ad</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Core State" label="Core State" menu="" required="false" tooltip="">Closed</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Original Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Values" label="Values" menu="" required="false" tooltip="">&lt;%=
+  {"Status"=&gt;"#{@inputs['Outcome']}"}.to_json
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

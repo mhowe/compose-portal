@@ -1,0 +1,236 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_task__snow</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Task - SNOW</name>
+        <author></author>
+        <notes>Recursive Approval Process.
+
+When supplied a list or array of approvals, each team or individual will receive an approval in series.</notes>
+        <lastID>27</lastID>
+        <taskDefinition id="routine_task__snow" name="Task - SNOW" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Originating Submission Id" label="Originating Submission Id" required="true" tooltip="The Submission Id of the Originating Submission"></parameter>
+                <parameter id="Short Description" label="Short Description" required="true" tooltip=""></parameter>
+                <parameter id="Description" label="Description" required="false" tooltip=""></parameter>
+                <parameter id="Category" label="Category" required="false" tooltip=""></parameter>
+                <parameter id="Assigned Group" label="Assigned Group" required="false" tooltip=""></parameter>
+                <parameter id="Assigned To" label="Assigned To" required="false" tooltip=""></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml">
+                <result name="Status" tooltip=""></result>
+                <result name="Resolution Notes" tooltip=""></result>
+                <result name="Resolution Code" tooltip=""></result>
+            </results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_defer_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_2" name="Create SNOW Incident" x="586" y="291.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">b080b901-bb64-4be6-9853-edd15c47ca45</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">9d441062-fbb2-4287-9844-9dfb33eccd66</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Assigned To" label="Assigned To" menu="" required="false" tooltip="">&lt;%= @inputs['Assigned To'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Assignment Group" label="Assignment Group" menu="" required="false" tooltip="">&lt;%= @inputs['Assigned Group'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Category" label="Category" menu="" required="false" tooltip="">&lt;%= @inputs['Category'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Deferral Token" label="Deferral Token" menu="" required="false" tooltip="">&lt;%= @results['Wait for Task']['deferral_token'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">&lt;%= @inputs['Description'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Original Submission ID" label="Original Submission ID" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Short Description" label="Short Description" menu="" required="false" tooltip="">&lt;%= @inputs['Short Description'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_17</task>
+                    <task label="" type="Complete" value="">system_integration_v1_37</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_defer_v1" id="utilities_defer_v1_4" name="Wait for Task" x="225" y="293.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="deferral_value" label="Initial Deferral Value" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Complete" type="Complete" value="">system_integration_v1_24</task>
+                    <task label="Create" type="Create" value="">system_integration_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_14" name="Return" x="224" y="580.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Status" label="Status" menu="" required="false" tooltip="">&lt;%= JSON.parse(@results['Get Incident Values']['Result'])['incident_state'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Resolution Notes" label="Resolution Notes" menu="" required="false" tooltip="">&lt;%= JSON.parse(@results['Get Incident Values']['Result'])['close_notes'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Resolution Code" label="Resolution Code" menu="" required="false" tooltip="">&lt;%= JSON.parse(@results['Get Incident Values']['Result'])['close_code'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_16" name="Validate Note" x="377.86679556324293" y="97.63663037210398">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">This is way simpler than than the "Queue Assignment Validate" Routine from Kinips. However it also has some valid checking.</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_17" name="Create Submission Activity - Awaiting Task Completion" x="921" y="290.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">92b6a327-5f5a-4377-80f7-b7223bd787ac</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%=
+{
+"Status"=&gt;"In Progress",
+"Comments"=&gt;"Service Now Incident #{@results['Create SNOW Incident']['Number']} was created",
+"SNOW Number" =&gt; @results['Create SNOW Incident']['Number'],
+"SNOW SYS ID" =&gt; @results['Create SNOW Incident']['Sys Id']
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">A Task was created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Service Now Incident &lt;%=@results['Create SNOW Incident']['Number']%&gt; was created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Task</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_18" name="Update Submission Activity - Task Complete" x="586" y="444.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">023fbddc-ec6e-49dd-9729-d1f64af70deb</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Activity Id" label="Activity Id" menu="" required="false" tooltip="">&lt;%= @results['Create Submission Activity - Awaiting Task Completion']['Activity Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%
+{
+"Status"=&gt;"#{JSON.parse(@results['Get Incident Values']['Result'])['incident_state']}",
+"Comments"=&gt;"#{JSON.parse(@results['Get Incident Values']['Result'])['close_notes']}",
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">Task was &lt;%= JSON.parse(@results['Get Incident Values']['Result'])['incident_state'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Task &lt;%= JSON.parse(@results['Get Incident Values']['Result'])['incident_state'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Task</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_24" name="Get Incident Values" x="224" y="439.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">b080b901-bb64-4be6-9853-edd15c47ca45</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">a30b6418-af4e-4c93-aa29-bcb12bc0fb44</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Sys Id" label="Sys Id" menu="" required="false" tooltip="">&lt;%= @results['Create SNOW Incident']['Sys Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_tree_return_v1_14</task>
+                    <task label="" type="Complete" value="">system_integration_v1_18</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_37" name="Get Originating Submission" x="922" y="357.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_echo_v1_38</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_38" name="Update Observers and Service Now Values" x="1261" y="356.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+  #Create Hash variable for the Observing Individuals and Team values to be passed into the original submission
+  values = {}
+
+  servicenow_values  = {
+    "SNOW Number" =&gt; @results['Create SNOW Incident']['Number'],
+    "SNOW SYS ID" =&gt; @results['Create SNOW Incident']['Sys Id']
+  }
+
+  # Merge the Obververs with the SNOW values
+  values = values.merge(servicenow_values)
+  
+  #Convert the Hash to JSON and return the result
+  values.to_json
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_36</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_36" name="Update Originating Submission" x="1581" y="358.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">0ef69bcb-c052-4b16-9814-166c3eef85ed</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Values" label="Values" menu="" required="false" tooltip="">&lt;%= @results['Update Observers and Service Now Values']['output'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

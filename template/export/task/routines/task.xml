@@ -1,0 +1,290 @@
+<tree schema_version="1.0">
+    <sourceName>-</sourceName>
+    <sourceGroup>-</sourceGroup>
+    <definitionId>routine_task</definitionId>
+    <type>Global Routine</type>
+    <status>Active</status>
+    <taskTree builder_version="" schema_version="1.0" version="">
+        <name>Task</name>
+        <author></author>
+        <notes>Recursive Approval Process.
+
+When supplied a list or array of approvals, each team or individual will receive an approval in series.</notes>
+        <lastID>24</lastID>
+        <taskDefinition id="routine_task" name="Task" schema_version="1.0" version="1">
+            <visible>false</visible>
+            <deferrable>true</deferrable>
+            <parameters>
+                <parameter id="Originating Submission Id" label="Originating Submission Id" required="true" tooltip="The Submission Id of the Originating Submission"></parameter>
+                <parameter id="Assignees" label="Assignees" required="true" tooltip="List or array of Approvers. (Teams and/or Individuals)"></parameter>
+                <parameter id="Submission Details" label="Submission Details" required="false" tooltip=""></parameter>
+                <parameter id="Task Summary" label="Task Summary" required="false" tooltip=""></parameter>
+                <parameter id="Due Date" label="Due Date" required="false" tooltip=""></parameter>
+            </parameters>
+            <handler name="system_tree_call" version="1"></handler>
+            <results format="xml">
+                <result name="Status" tooltip=""></result>
+                <result name="Notes" tooltip=""></result>
+            </results>
+        </taskDefinition>
+        <request>
+            <task definition_id="system_start_v1" id="start" name="Start" x="10" y="10">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters></parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_echo_v1_13</task>
+                </dependents>
+            </task>
+            <task definition_id="system_submission_create_v1" id="system_submission_create_v1_2" name="Create Task" x="586" y="291.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="kappSlug" label="Kapp Slug" menu="" required="false" tooltip="">service-portal</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="formSlug" label="Form Slug" menu="" required="false" tooltip="">task</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="coreState" label="Core State" menu="" required="false" tooltip="">Draft</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="currentPage" label="Current Page" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="origin" label="Origin" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parent" label="Parent" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Status" label="Status" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Notes" label="Notes" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Individual" label="Assigned Individual" menu="" required="false" tooltip="">&lt;%= @results['Validate Assignment']['Username'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Individual Display Name" label="Assigned Individual Display Name" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Team" label="Assigned Team" menu="" required="false" tooltip="">&lt;%= @results['Validate Assignment']['Team'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Assigned Team Display Name" label="Assigned Team Display Name" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Deferral Token" label="Deferral Token" menu="" required="false" tooltip="">&lt;%= @results['Wait for Task']['deferral_token'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Details" label="Details" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Due Date" label="Due Date" menu="" required="false" tooltip=""></parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="values.Summary" label="Summary" menu="" required="false" tooltip="">&lt;%= @inputs['Task Summary'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_17</task>
+                    <task label="" type="Complete" value="">system_integration_v1_37</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_defer_v1" id="utilities_defer_v1_4" name="Wait for Task" x="225" y="293.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="deferral_value" label="Initial Deferral Value" menu="" required="false" tooltip=""></parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="Complete" type="Complete" value="">system_integration_v1_24</task>
+                    <task label="Create" type="Create" value="">system_submission_create_v1_2</task>
+                </dependents>
+            </task>
+            <task definition_id="routine_validate_assignment" id="routine_validate_assignment_11" name="Validate Assignment" x="226" y="145.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>true</defers>
+                <deferrable>true</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Assignment" label="Assignment" menu="" required="false" tooltip="">&lt;%= 
+# Use only the first approver in the array
+JSON.parse(@results['Convert Assignees to Array']['output']).first
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_defer_v1_4</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_13" name="Convert Assignees to Array" x="225.22471923628805" y="13.508809500476024">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+# Ensure the Approvers input is formatted correctly and without leading or trailing spaces.
+
+begin
+   # Test to see if input is an array
+  approvers = JSON.parse(@inputs['Assignees'])
+rescue
+  # If Approvers is not an Array, convert into an Array
+  approvers = @inputs['Assignees'].split(',')
+end
+
+# Strip any leading or ending spaces from array values.
+approvers.collect(&amp;:strip)
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">routine_validate_assignment_11</task>
+                </dependents>
+            </task>
+            <task definition_id="system_tree_return_v1" id="system_tree_return_v1_14" name="Return" x="224" y="580.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>false</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="Status" label="Status" menu="" required="false" tooltip="">&lt;%= @results['Get Task Values']['Status'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="Notes" label="Notes" menu="" required="false" tooltip="">&lt;%= @results['Get Task Values']['Notes'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_16" name="Validate Note" x="377.86679556324293" y="97.63663037210398">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">This is way simpler than than the "Queue Assignment Validate" Routine from Kinips. However it also has some valid checking.</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_17" name="Create Submission Activity - Awaiting Task Completion" x="921" y="290.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">92b6a327-5f5a-4377-80f7-b7223bd787ac</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%=
+{
+"Assigned Team"=&gt;"#{@results['Validate Assignment']['Team']}",
+"Assigned Individual"=&gt;"#{@results['Validate Assignment']['Username']}",
+"Status"=&gt;"In Progress",
+"Comments"=&gt;""
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">A Task was created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Task Created</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Task</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_18" name="Update Submission Activity - Task Complete" x="586" y="444.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">023fbddc-ec6e-49dd-9729-d1f64af70deb</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Activity Id" label="Activity Id" menu="" required="false" tooltip="">&lt;%= @results['Create Submission Activity - Awaiting Task Completion']['Activity Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Data" label="Data" menu="" required="false" tooltip="">&lt;%=
+{
+"Status"=&gt;"#{@results['Get Task Values']['Status']}",
+"Comments"=&gt;"#{@results['Get Task Values']['Notes']}",
+}.to_json
+%&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Description" label="Description" menu="" required="false" tooltip="">Task was &lt;%= @results['Get Task Values']['Status'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Label" label="Label" menu="" required="false" tooltip="">Task &lt;%= @results['Get Task Values']['Status'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Type" label="Type" menu="" required="false" tooltip="">Task</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_24" name="Get Task Values" x="224" y="439.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">85be2cba-ee7e-4f36-8fd9-6c383ddb5b9a</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @results['Create Task']['Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_tree_return_v1_14</task>
+                    <task label="" type="Complete" value="">system_integration_v1_18</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_37" name="Get Originating Submission" x="924" y="425.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">c69716b8-f9dc-45f1-ab3f-2eed5d2a22b8</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">utilities_echo_v1_38</task>
+                </dependents>
+            </task>
+            <task definition_id="utilities_echo_v1" id="utilities_echo_v1_38" name="Update Observers" x="1256" y="425.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="input" label="Input" menu="" required="true" tooltip="">&lt;%= 
+  #Create Hash variable for the Observing Individuals and Team values to be passed into the original submission
+  values = {}
+  
+  # Get current Observers from the "Get Originatign Submission" results
+  observing_individuals = JSON.parse(@results['Get Originating Submission']['Values'])['Observing Individuals']
+  observing_teams = JSON.parse(@results['Get Originating Submission']['Values'])['Observing Teams']
+  
+  #Add the Assigned Individual of the Approval to the "Observing Individuals" if one exist and is not currently in the list.
+  if @results['Validate Assignment']['Username'] &amp;&amp; !observing_individuals.include?(@results['Validate Assignment']['Username'])
+    values['Observing Individuals'] = observing_individuals.push(@results['Validate Assignment']['Username']) 
+  end
+
+  #Add the Assigned Team of the Approval to the "Observing Teams" if one exist and is not currently in the list.
+  if @results['Validate Assignment']['Team'] &amp;&amp; !observing_teams.include?(@results['Validate Assignment']['Team'])
+    values['Observing Teams'] = observing_teams.push(@results['Validate Assignment']['Team']) 
+  end
+  
+  #Convert the Hash to JSON and return the result
+  values.to_json
+%&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents>
+                    <task label="" type="Complete" value="">system_integration_v1_36</task>
+                </dependents>
+            </task>
+            <task definition_id="system_integration_v1" id="system_integration_v1_36" name="Update Originating Submission with Observers" x="1574" y="423.5">
+                <version>1</version>
+                <configured>true</configured>
+                <defers>false</defers>
+                <deferrable>false</deferrable>
+                <visible>true</visible>
+                <parameters>
+                    <parameter dependsOnId="" dependsOnValue="" id="connection" label="Connection ID" menu="" required="true" tooltip="Connection ID">1415539c-bb98-48bb-ad33-11be25189ad0</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="operation" label="Operation ID" menu="" required="true" tooltip="Operation ID">0ef69bcb-c052-4b16-9814-166c3eef85ed</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Submission Id" label="Submission Id" menu="" required="false" tooltip="">&lt;%= @inputs['Originating Submission Id'] %&gt;</parameter>
+                    <parameter dependsOnId="" dependsOnValue="" id="parameters.Values" label="Values" menu="" required="false" tooltip="">&lt;%= @results['Update Observers']['output'] %&gt;</parameter>
+                </parameters>
+                <messages></messages>
+                <dependents></dependents>
+            </task>
+        </request>
+    </taskTree>
+</tree>

@@ -1,0 +1,77 @@
+{
+  "afterLogoutPath": "",
+  "allowedIps": [],
+  "allowedIpsEnabled": false,
+  "attributes": [
+    {
+      "name": "Theme",
+      "values": [
+        "{\"colors\":{\"primary\":\"\",\"secondary\":\"\"}}"
+      ]
+    },
+    {
+      "name": "Web Server Url",
+      "values": [
+        "https://momentum-dev.kinopsdev.io"
+      ]
+    }
+  ],
+  "bundlePath": null,
+  "customTranslationContexts": [],
+  "defaultLocale": "en",
+  "defaultTimezone": "America/Detroit",
+  "displayType": "Custom",
+  "displayValue": "https://s3.amazonaws.com/kinetic-portals/portals/momentum-portal/versions/latest/index.html",
+  "enabledLocales": [
+    "en"
+  ],
+  "loginPage": null,
+  "name": "momentum-dev",
+  "platformComponents": {
+    "agents": []
+  },
+  "resetPasswordPage": null,
+  "securityPolicies": [
+    {
+      "endpoint": "Display",
+      "name": "Authenticated Users"
+    },
+    {
+      "endpoint": "Teams Access",
+      "name": "Authenticated Users"
+    },
+    {
+      "endpoint": "Team Creation",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Team Membership Modification",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Team Modification",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "Users Access",
+      "name": "Authenticated Users"
+    },
+    {
+      "endpoint": "User Creation",
+      "name": "Admins"
+    },
+    {
+      "endpoint": "User Modification",
+      "name": "Admins"
+    }
+  ],
+  "sessionInactiveLimitInSeconds": null,
+  "sharedBundleBase": null,
+  "slug": "momentum-dev",
+  "trustedFrameDomains": [
+    "localhost:3000"
+  ],
+  "trustedResourceDomains": [
+    "http://localhost:3000"
+  ]
+}

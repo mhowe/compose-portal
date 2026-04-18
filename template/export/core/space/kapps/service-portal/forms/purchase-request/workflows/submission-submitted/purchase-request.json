@@ -1,0 +1,404 @@
+{
+  "builderVersion": "",
+  "schemaVersion": "1.0",
+  "version": "",
+  "processOwnerEmail": "",
+  "lastId": 15,
+  "name": "Purchase Request",
+  "notes": "",
+  "connectors": [
+    {
+      "from": "start",
+      "to": "utilities_echo_v1_12",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_approval_1",
+      "to": "routine_task_4",
+      "label": "Approved",
+      "value": "@results['Approval']['Approval Decision'].downcase != \"denied\"",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_task_4",
+      "to": "system_integration_v1_15",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_5",
+      "to": "utilities_echo_v1_6",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_6",
+      "to": "routine_approval_1",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_12",
+      "to": "utilities_echo_v1_5",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    }
+  ],
+  "nodes": [
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Start",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_12"
+          }
+        ]
+      },
+      "id": "start",
+      "position": {
+        "x": 10,
+        "y": 10
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_start_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Approval",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Approved",
+            "type": "Complete",
+            "value": "@results['Approval']['Approval Decision'].downcase != \"denied\"",
+            "content": "routine_task_4"
+          }
+        ]
+      },
+      "id": "routine_approval_1",
+      "position": {
+        "x": 164,
+        "y": 268.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Approvers",
+          "label": "Approvers",
+          "menu": "",
+          "value": "<%= \n# Create a comma separated list of approvers. (Can also accpet an array.)\n\"#{@results['Get Department Head']['output']}, #{@results['Get Approver(s)']['output']}\"\n%>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Details of the Submission",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission Details']['output'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Summary of the Approval",
+          "id": "Approval Summary",
+          "label": "Approval Summary",
+          "menu": "",
+          "value": "Approval for <%= @form['Name'] %> Submission (<%= @submission['Handle'] %>)",
+          "required": true
+        }
+      ],
+      "definitionId": "routine_approval"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Create Task - Budget Review",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_15"
+          }
+        ]
+      },
+      "id": "routine_task_4",
+      "position": {
+        "x": 160,
+        "y": 389.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Assignees",
+          "label": "Assignees",
+          "menu": "",
+          "value": "approvers@kineticdata.com",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission Details']['output'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Task Summary",
+          "label": "Task Summary",
+          "menu": "",
+          "value": "Purchase Request for <%= @values['Requested for Display Name'] %>  (<%= @submission['Handle'] %>)",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "routine_task"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Department Head",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_6"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_5",
+      "position": {
+        "x": 156,
+        "y": 95.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= @kapp_attributes['Department Head'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Approver(s)",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_approval_1"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_6",
+      "position": {
+        "x": 156,
+        "y": 182.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= @form_attributes['Approvers'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Submission Details",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_5"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_12",
+      "position": {
+        "x": 161,
+        "y": 16.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Requested by: <%= @submission['Created By'] %>\nItem Description: <%= @values['Item Description'] %>\nQuantity: <%= @values['Quantity'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Close Submission",
+      "messages": [],
+      "dependents": "",
+      "id": "system_integration_v1_15",
+      "position": {
+        "x": 157.44444444444446,
+        "y": 651.9444444444449
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "3ad53519-e058-48a1-b114-5745533526ad",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Core State",
+          "label": "Core State",
+          "menu": "",
+          "value": "Closed",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Submission Id",
+          "label": "Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Values",
+          "label": "Values",
+          "menu": "",
+          "value": "<%=\n  {\"Status\"=>\"Complete\"}.to_json\n%>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    }
+  ]
+}

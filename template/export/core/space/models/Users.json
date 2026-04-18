@@ -1,0 +1,37 @@
+{
+  "activeMappingName": "Users",
+  "attributes": [
+    {
+      "name": "username"
+    }
+  ],
+  "mappings": [
+    {
+      "agentSlug": "system",
+      "attributes": [
+        {
+          "name": "username",
+          "structureField": "${fields(\"username\")}"
+        }
+      ],
+      "bridgeSlug": "kinetic-platform",
+      "name": "Users",
+      "qualifications": [
+        {
+          "name": "All Users",
+          "query": ""
+        }
+      ],
+      "structure": "Users"
+    }
+  ],
+  "name": "Users",
+  "qualifications": [
+    {
+      "name": "All Users",
+      "parameters": [],
+      "resultType": "Multiple"
+    }
+  ],
+  "status": "Active"
+}

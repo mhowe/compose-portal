@@ -1,0 +1,909 @@
+{
+  "anonymous": false,
+  "attributes": [
+    {
+      "name": "Approvers",
+      "values": [
+        "Executive Team"
+      ]
+    },
+    {
+      "name": "Icon",
+      "values": [
+        "id-badge-2"
+      ]
+    }
+  ],
+  "bridgedResources": [],
+  "categorizations": [
+    {
+      "category": {
+        "slug": "hr--employee-services"
+      }
+    }
+  ],
+  "customHeadContent": null,
+  "description": "",
+  "indexDefinitions": [
+    {
+      "name": "closedBy",
+      "parts": [
+        "closedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "createdBy",
+      "parts": [
+        "createdBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "handle",
+      "parts": [
+        "handle"
+      ],
+      "unique": false
+    },
+    {
+      "name": "submittedBy",
+      "parts": [
+        "submittedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "updatedBy",
+      "parts": [
+        "updatedBy"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Access Requirements]",
+      "parts": [
+        "values[Access Requirements]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Accessories]",
+      "parts": [
+        "values[Accessories]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Account Number]",
+      "parts": [
+        "values[Account Number]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Bank Name]",
+      "parts": [
+        "values[Bank Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Department]",
+      "parts": [
+        "values[Department]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Employee Name]",
+      "parts": [
+        "values[Employee Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[First Name]",
+      "parts": [
+        "values[First Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Hardware Type]",
+      "parts": [
+        "values[Hardware Type]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Job Title]",
+      "parts": [
+        "values[Job Title]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Last Name]",
+      "parts": [
+        "values[Last Name]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Location]",
+      "parts": [
+        "values[Location]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Manager]",
+      "parts": [
+        "values[Manager]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Routing Number]",
+      "parts": [
+        "values[Routing Number]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[SNOW Number]",
+      "parts": [
+        "values[SNOW Number]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[SNOW SYS ID]",
+      "parts": [
+        "values[SNOW SYS ID]"
+      ],
+      "unique": false
+    },
+    {
+      "name": "values[Start Date]",
+      "parts": [
+        "values[Start Date]"
+      ],
+      "unique": false
+    }
+  ],
+  "integrations": [
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {},
+      "name": "Departments",
+      "operationId": "9c3a3309-536e-4e3d-a3b3-be072d652a51"
+    },
+    {
+      "connectionId": "1415539c-bb98-48bb-ad33-11be25189ad0",
+      "inputMappings": {
+        "Slug": "${values('Department')}"
+      },
+      "name": "Get Team",
+      "operationId": "e20b8b5d-da67-410b-a527-bd3ae1cfe07b"
+    }
+  ],
+  "name": "New Employee Onboarding",
+  "notes": null,
+  "pages": [
+    {
+      "advanceCondition": null,
+      "displayCondition": null,
+      "displayPage": null,
+      "elements": [
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Details",
+          "title": null,
+          "visible": true,
+          "omitWhenHidden": null,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Employee Name",
+              "title": "Employee Name",
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "First Name",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "First Name",
+                  "constraints": [],
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Employee Name",
+                          "value": "${values('First Name')} ${values('Last Name')}",
+                          "visible": null
+                        }
+                      ],
+                      "runIf": "values('First Name') != null && values('Last Name') != null",
+                      "name": "Set Employee Name",
+                      "integrationResourceName": null,
+                      "action": "Set Fields",
+                      "integrationResourceProperty": "",
+                      "type": "Change"
+                    }
+                  ],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "20f8b1836fa244bf8b4947dba9015edb",
+                  "required": true
+                },
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Last Name",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Last Name",
+                  "constraints": [],
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Employee Name",
+                          "value": "${values('First Name')} ${values('Last Name')}",
+                          "visible": null
+                        }
+                      ],
+                      "runIf": "values('First Name') != null && values('Last Name') != null",
+                      "name": "Set Employee Name",
+                      "integrationResourceName": null,
+                      "action": "Set Fields",
+                      "integrationResourceProperty": null,
+                      "type": "Change"
+                    }
+                  ],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "c83e4b29b27348c0ac3589e13c43d6ad",
+                  "required": true
+                },
+                {
+                  "enabled": true,
+                  "dataType": "file",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Comp Survey",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "attachment",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Comp Survey",
+                  "constraints": [],
+                  "allowMultiple": false,
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "1279405e862a48ff8584c7ca8fa30395",
+                  "required": false
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Employee Details",
+              "title": "Employee Details",
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Job Title",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Job Title",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "368a875bdf2d49c1b2eac24d212a9549",
+                  "required": false
+                },
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Start Date",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "date",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Start Date",
+                  "constraints": [],
+                  "events": [
+                    {
+                      "runIf": "values('Start Date')!=null",
+                      "name": "Check Start Date",
+                      "code": "const date = new Date(values('Start Date'));\n\n// Calculate the date 7 days from now\ntoday = new Date();\nsevenDaysFromNow = new Date(today.getFullYear(), today.getMonth(), today.getDate()+7);\n\n// Check if the input date is less than 7 days from now\nif (date <= sevenDaysFromNow) {\n    alert('Date must be more than 7 days in the future');\n    K('field[Start Date]').value(null)\n}",
+                      "integrationResourceName": null,
+                      "action": "Custom",
+                      "integrationResourceProperty": "",
+                      "type": "Change"
+                    }
+                  ],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "7a184db475a74082ae63dd6d3ebcd3c7",
+                  "required": false
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Department Section",
+              "title": null,
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {
+                "class": "cols-2"
+              },
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Department",
+                  "choicesResourceName": "Departments",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "dropdown",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": {
+                    "label": "${integration('Name')}",
+                    "value": "${integration('Slug')}"
+                  },
+                  "label": "Department",
+                  "choicesResourceProperty": "Departments",
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "integration",
+                  "events": [
+                    {
+                      "mappings": [
+                        {
+                          "field": "Manager",
+                          "value": "${integration('Manager')}",
+                          "visible": null
+                        }
+                      ],
+                      "name": "Set Manager",
+                      "integrationResourceName": "Get Team",
+                      "action": "Set Fields",
+                      "integrationResourceProperty": null,
+                      "type": "Change"
+                    }
+                  ],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "079e3c3c61d147fc8a8eca51e5966522",
+                  "required": false
+                },
+                {
+                  "enabled": false,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Manager",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Manager",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "ad80c2cc9ed346b1b125214004e1e6e9",
+                  "required": false
+                }
+              ]
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Location",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Location",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "234a81cace3e474b9710b3c1d6f0efdb",
+              "required": false
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Hardware and Access Section",
+              "title": "Hardware and Access",
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "json",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Access Requirements",
+                  "choicesResourceName": null,
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "checkbox",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": [
+                    {
+                      "label": "Service Catalog",
+                      "value": "Service Catalog"
+                    },
+                    {
+                      "label": "Service Now",
+                      "value": "Service Now"
+                    },
+                    {
+                      "label": "Jira",
+                      "value": "Jira"
+                    },
+                    {
+                      "label": "Email",
+                      "value": "Email"
+                    }
+                  ],
+                  "label": "Access Requirements",
+                  "choicesResourceProperty": null,
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "custom",
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "9d305b88f85241ad8c50521ec531c49b",
+                  "required": false
+                },
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Hardware Type",
+                  "choicesResourceName": null,
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "radio",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": [
+                    {
+                      "label": "Mac",
+                      "value": "Mac"
+                    },
+                    {
+                      "label": "PC",
+                      "value": "PC"
+                    }
+                  ],
+                  "label": "Hardware Type",
+                  "choicesResourceProperty": null,
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "custom",
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "ea2e92e7208f4aa19c351b7c019acba5",
+                  "required": false
+                },
+                {
+                  "enabled": true,
+                  "dataType": "json",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Accessories",
+                  "choicesResourceName": null,
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "checkbox",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "choices": [
+                    {
+                      "label": "Monitor",
+                      "value": "Monitor"
+                    },
+                    {
+                      "label": "Docking Station",
+                      "value": "Docking Station"
+                    },
+                    {
+                      "label": "Keyboard",
+                      "value": "Keyboard"
+                    },
+                    {
+                      "label": "Mouse",
+                      "value": "Mouse"
+                    },
+                    {
+                      "label": "Carrying Case",
+                      "value": "Carrying Case"
+                    }
+                  ],
+                  "label": "Accessories",
+                  "choicesResourceProperty": null,
+                  "choicesRunIf": null,
+                  "constraints": [],
+                  "choicesDataSource": "custom",
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "204bf6926b194e32b025e3f5b17580b8",
+                  "required": false
+                }
+              ]
+            },
+            {
+              "type": "section",
+              "renderType": null,
+              "name": "Banking and Task Information Sections",
+              "title": "Banking and Task Information",
+              "visible": true,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "elements": [
+                {
+                  "enabled": true,
+                  "dataType": "string",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Bank Name",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "text",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Bank Name",
+                  "constraints": [],
+                  "events": [],
+                  "rows": 1,
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "a33f40990fd4479784ee7dca9b42060b",
+                  "required": false
+                },
+                {
+                  "type": "section",
+                  "renderType": null,
+                  "name": "Bank Routing and Account Number",
+                  "title": null,
+                  "visible": true,
+                  "omitWhenHidden": null,
+                  "renderAttributes": {
+                    "class": "cols-2"
+                  },
+                  "elements": [
+                    {
+                      "enabled": true,
+                      "dataType": "string",
+                      "defaultDataSource": "none",
+                      "requiredMessage": null,
+                      "name": "Routing Number",
+                      "omitWhenHidden": null,
+                      "renderAttributes": {},
+                      "renderType": "text",
+                      "pattern": null,
+                      "defaultValue": null,
+                      "visible": true,
+                      "label": "Routing Number",
+                      "constraints": [],
+                      "events": [],
+                      "rows": 1,
+                      "defaultResourceName": null,
+                      "type": "field",
+                      "key": "ac124ce8c8c147418911275d7c5cbbc9",
+                      "required": false
+                    },
+                    {
+                      "enabled": true,
+                      "dataType": "string",
+                      "defaultDataSource": "none",
+                      "requiredMessage": null,
+                      "name": "Account Number",
+                      "omitWhenHidden": null,
+                      "renderAttributes": {},
+                      "renderType": "text",
+                      "pattern": null,
+                      "defaultValue": null,
+                      "visible": true,
+                      "label": "Account Number",
+                      "constraints": [],
+                      "events": [],
+                      "rows": 1,
+                      "defaultResourceName": null,
+                      "type": "field",
+                      "key": "cbf541732c52434e869e031b1b0dffcf",
+                      "required": false
+                    }
+                  ]
+                },
+                {
+                  "enabled": true,
+                  "dataType": "file",
+                  "defaultDataSource": "none",
+                  "requiredMessage": null,
+                  "name": "Tax Forms",
+                  "omitWhenHidden": null,
+                  "renderAttributes": {},
+                  "renderType": "attachment",
+                  "pattern": null,
+                  "defaultValue": null,
+                  "visible": true,
+                  "label": "Tax Forms",
+                  "constraints": [],
+                  "allowMultiple": false,
+                  "events": [],
+                  "defaultResourceName": null,
+                  "type": "field",
+                  "key": "f8d538777e1d4545abc01a5cb7c33534",
+                  "required": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "renderType": null,
+          "name": "Hidden System Questions",
+          "title": null,
+          "visible": false,
+          "omitWhenHidden": false,
+          "renderAttributes": {},
+          "elements": [
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Requested for Display Name",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": "${identity('displayName')}",
+              "visible": true,
+              "label": "Requested for Display Name",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "f202c391fd7148d78a5692f7bb57fffe",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Individuals",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Individuals",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "009ea2d0fecd4f19aa59e61814c13657",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "json",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Observing Teams",
+              "choicesResourceName": null,
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "checkbox",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "choices": [],
+              "label": "Observing Teams",
+              "choicesResourceProperty": null,
+              "choicesRunIf": null,
+              "constraints": [],
+              "choicesDataSource": "custom",
+              "events": [],
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "a7cb2d7b49e64723a9d885253975d317",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Status",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Status",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "2d1a5576c1094a2db83c80eec35eb7e4",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "Employee Name",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "Employee Name",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "c67c8a8ed4cf4b02b45ac1ee14faa2ce",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "SNOW Number",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "SNOW Number",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "511161f2653746498f2355bad9034d30",
+              "required": false
+            },
+            {
+              "enabled": true,
+              "dataType": "string",
+              "defaultDataSource": "none",
+              "requiredMessage": null,
+              "name": "SNOW SYS ID",
+              "omitWhenHidden": null,
+              "renderAttributes": {},
+              "renderType": "text",
+              "pattern": null,
+              "defaultValue": null,
+              "visible": true,
+              "label": "SNOW SYS ID",
+              "constraints": [],
+              "events": [],
+              "rows": 1,
+              "defaultResourceName": null,
+              "type": "field",
+              "key": "728590d2448944b686ed1879c75f8bf3",
+              "required": false
+            }
+          ]
+        },
+        {
+          "visible": true,
+          "renderAttributes": {},
+          "name": "Submit Button",
+          "label": "Submit",
+          "type": "button",
+          "renderType": "submit-page",
+          "enabled": true
+        }
+      ],
+      "events": [],
+      "name": "Page 1",
+      "renderType": "submittable",
+      "type": "page"
+    }
+  ],
+  "securityPolicies": [],
+  "slug": "new-employee-onboarding",
+  "status": "Active",
+  "submissionLabelExpression": "${form('name')} request for ${values('Requested for Display Name')}",
+  "type": "Service"
+}

@@ -1,0 +1,256 @@
+{
+  "builderVersion": "",
+  "schemaVersion": "1.0",
+  "version": "",
+  "processOwnerEmail": "",
+  "lastId": 27,
+  "name": "Workplace Incident Report Submitted",
+  "notes": "",
+  "connectors": [
+    {
+      "from": "start",
+      "to": "utilities_echo_v1_27",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_task_2",
+      "to": "utilities_echo_v1_26",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_26",
+      "to": "routine_complete_submission_20",
+      "label": "Task Complete",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_27",
+      "to": "routine_task_2",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    }
+  ],
+  "nodes": [
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Start",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_27"
+          }
+        ]
+      },
+      "id": "start",
+      "position": {
+        "x": 10,
+        "y": 10
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_start_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": true,
+      "name": "Task Safety Officers",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_26"
+          }
+        ]
+      },
+      "id": "routine_task_2",
+      "position": {
+        "x": 209.28118538938662,
+        "y": 549.2456926257747
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Assignees",
+          "label": "Assignees",
+          "menu": "",
+          "value": "Safety Officers",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission  Details']['output'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Task Summary",
+          "label": "Task Summary",
+          "menu": "",
+          "value": "Workplace Incident Report Review (<%= @submission['Handle'] %>)",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "routine_task"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Complete Submission",
+      "messages": [],
+      "dependents": "",
+      "id": "routine_complete_submission_20",
+      "position": {
+        "x": 213.42329569431502,
+        "y": 1138.1482528206238
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Original Submission Id",
+          "label": "Original Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Outcome",
+          "label": "Outcome",
+          "menu": "",
+          "value": "<%= @results['Set Ticket Outcome']['output'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "routine_complete_submission"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Ticket Outcome",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Task Complete",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_complete_submission_20"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_26",
+      "position": {
+        "x": 210.7653772986684,
+        "y": 983.273620798985
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= \n@results['Task Safety Officers']['Status']\n%>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Submission  Details",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_task_2"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_27",
+      "position": {
+        "x": 228,
+        "y": 19.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Employee Name: <%= @values['Requested for Display Name'] %>\nDate: <%= @values['Date'] %>\nLocation: <%= @values['Location'] %>\nDescription of Incident: <%= @values['Description of Incident'] %>\nInjury Details: <%= @values['Injury Details'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    }
+  ]
+}

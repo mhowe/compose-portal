@@ -1,0 +1,15 @@
+{
+  "name": "Messaging",
+  "description": "Handlers used for messaging: Email, SMS, etc...",
+  "type": "Stored",
+  "handlers": [
+    "smtp_email_send_v1"
+  ],
+  "policyRules": [],
+  "trees": [
+    "routine_email_approval_denial",
+    "routine_email_approval_reminder",
+    "routine_email_submission_approved",
+    "routine_email_submission_outcome"
+  ]
+}

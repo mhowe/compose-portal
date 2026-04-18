@@ -1,0 +1,18 @@
+{
+  "name": "Kinetic Request CE",
+  "status": "Active",
+  "type": "Kinetic Request CE",
+  "policyRules": [
+    {
+      "name": "Valid Signature",
+      "rule": "@auth.validate_signature()",
+      "message": "The request signature is invalid",
+      "type": "API Access"
+    }
+  ],
+  "properties": {
+    "Proxy Username": "space-integration-user",
+    "Web Server": "https://momentum-dev.kinopsdev.io",
+    "Space Slug": ""
+  }
+}

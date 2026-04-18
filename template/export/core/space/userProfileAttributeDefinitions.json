@@ -1,0 +1,22 @@
+[
+  {
+    "allowsMultiple": false,
+    "description": "",
+    "name": "First Name"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "",
+    "name": "Last Name"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "",
+    "name": "Phone"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The name of the portal theme that the user has selected.",
+    "name": "Theme"
+  }
+]

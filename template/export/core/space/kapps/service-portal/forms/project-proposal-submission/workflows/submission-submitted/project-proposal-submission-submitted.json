@@ -1,0 +1,742 @@
+{
+  "builderVersion": "",
+  "schemaVersion": "1.0",
+  "version": "",
+  "processOwnerEmail": "",
+  "lastId": 15,
+  "name": "Project Proposal Submission Submitted",
+  "notes": "",
+  "connectors": [
+    {
+      "from": "start",
+      "to": "utilities_echo_v1_12",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_approval_1",
+      "to": "routine_task_4",
+      "label": "Approved",
+      "value": "@results['Approval']['Approval Decision'].downcase != \"denied\"",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_approval_1",
+      "to": "system_integration_v1_8",
+      "label": "Denied",
+      "value": "@results['Approval']['Approval Decision'].downcase == \"denied\"",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_task_4",
+      "to": "routine_task_9",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_5",
+      "to": "utilities_echo_v1_6",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_6",
+      "to": "routine_approval_1",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "system_integration_v1_8",
+      "to": "smtp_email_send_v1_7",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "routine_task_9",
+      "to": "system_integration_v1_15",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "utilities_echo_v1_12",
+      "to": "utilities_echo_v1_5",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    },
+    {
+      "from": "system_integration_v1_15",
+      "to": "system_noop_v1_11",
+      "label": "",
+      "value": "",
+      "type": "Complete"
+    }
+  ],
+  "nodes": [
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Start",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_12"
+          }
+        ]
+      },
+      "id": "start",
+      "position": {
+        "x": 10,
+        "y": 10
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_start_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Approval",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "Approved",
+            "type": "Complete",
+            "value": "@results['Approval']['Approval Decision'].downcase != \"denied\"",
+            "content": "routine_task_4"
+          },
+          {
+            "label": "Denied",
+            "type": "Complete",
+            "value": "@results['Approval']['Approval Decision'].downcase == \"denied\"",
+            "content": "system_integration_v1_8"
+          }
+        ]
+      },
+      "id": "routine_approval_1",
+      "position": {
+        "x": 164,
+        "y": 268.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Approvers",
+          "label": "Approvers",
+          "menu": "",
+          "value": "<%= \n# Create a comma separated list of approvers. (Can also accpet an array.)\n\"#{@results['Get Department Head']['output']}, #{@results['Get Approver(s)']['output']}\"\n%>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Details of the Submission",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission Details']['output'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Summary of the Approval",
+          "id": "Approval Summary",
+          "label": "Approval Summary",
+          "menu": "",
+          "value": "Approval for <%= @form['Name'] %> Submission (<%= @submission['Handle'] %>)",
+          "required": true
+        }
+      ],
+      "definitionId": "routine_approval"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Notes",
+      "messages": [],
+      "dependents": "",
+      "id": "utilities_echo_v1_2",
+      "position": {
+        "x": 533,
+        "y": 9.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "How much configuration to we user here?\n\nDo we pass in the approver here or look it up in the Approval Routine.\nIf we pass it here it is more transparent but another point in the process that could need future updating.\nIn the Routine it is more resilient to future changes but perhaps less tranparent.\nIt also takes more logic in the Routine to handle multiple approvals (ie: Team1 then Team2)\n\nTeam and Individual\nI could add a routine to look up if it is a team or individual here or in an approval workflow.  There are tradeoffs.\nIf we want to use a team manager this also adds additional logic and checks.  Where is this logic added?\n\nThis doesn't currently address the manager/department head approval.",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Create Task - Budget Review",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_task_9"
+          }
+        ]
+      },
+      "id": "routine_task_4",
+      "position": {
+        "x": 160,
+        "y": 389.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Assignees",
+          "label": "Assignees",
+          "menu": "",
+          "value": "approvers@kineticdata.com",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "<%= @results['Set Submission Details']['output'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Task Summary",
+          "label": "Task Summary",
+          "menu": "",
+          "value": "Budget Review for Project Proposal",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "routine_task"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Department Head",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_6"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_5",
+      "position": {
+        "x": 156,
+        "y": 95.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= @kapp_attributes['Department Head'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Approver(s)",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "routine_approval_1"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_6",
+      "position": {
+        "x": 156,
+        "y": 182.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "<%= @form_attributes['Approvers'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Send Denial Email",
+      "messages": [],
+      "dependents": "",
+      "id": "smtp_email_send_v1_7",
+      "position": {
+        "x": 848.4736842105266,
+        "y": 274.13157894736827
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Determine what to return if an error is encountered.",
+          "id": "error_handling",
+          "label": "Error Handling",
+          "menu": "Error Message,Raise Error",
+          "value": "Error Message",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the simulated sender.",
+          "id": "from",
+          "label": "From (Email Address)",
+          "menu": "",
+          "value": "wally@kinops.io",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the intended recipient.",
+          "id": "to",
+          "label": "To (Email Address)",
+          "menu": "",
+          "value": "<%= @results['Get Submitter']['Email'].delete_prefix('\"').delete_suffix('\"')  %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The email address of the intended recipient.",
+          "id": "bcc",
+          "label": "Bcc (Email Address)",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The subject of the email.",
+          "id": "subject",
+          "label": "Subject",
+          "menu": "",
+          "value": "Approval Denied",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "HTML representing the body of a rich email.",
+          "id": "htmlbody",
+          "label": "HTML Body",
+          "menu": "",
+          "value": "<!DOCTYPE html>\n<html>\n<head>\n<title></title>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />\n<style type=\"text/css\">\n/* CLIENT-SPECIFIC STYLES */\nbody, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\ntable, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\nimg { -ms-interpolation-mode: bicubic; }\n\n/* RESET STYLES */\nimg { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }\ntable { border-collapse: collapse !important; }\nbody { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }\n\n/* iOS BLUE LINKS */\na[x-apple-data-detectors] {\n    color: inherit !important;\n    text-decoration: none !important;\n    font-size: inherit !important;\n    font-family: inherit !important;\n    font-weight: inherit !important;\n    line-height: inherit !important;\n}\n\n/* MEDIA QUERIES */\n@media screen and (max-width: 480px) {\n    .mobile-hide {\n        display: none !important;\n    }\n    .mobile-center {\n        text-align: center !important;\n    }\n}\n\n/* ANDROID CENTER FIX */\ndiv[style*=\"margin: 16px 0;\"] { margin: 0 !important; }\n</style>\n\n<style type=\"text/css\">\n\n</style>\n</head>\n<body style=\"margin: 0 !important; padding: 0 !important; background-color: #eeeeee;\" bgcolor=\"#eeeeee\">\n\n<div style=\"display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: Open Sans, Helvetica, Arial, sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;\">\n<%= @submission['Handle'] %> --\n</div>\n\n<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr>\n        <td align=\"center\" style=\"background-color: #eeeeee;\" bgcolor=\"#eeeeee\">\n            <!--[if (gte mso 9)|(IE)]>\n        <table align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"600\">\n        <tr>\n        <td align=\"center\" valign=\"top\" width=\"600\">\n        <![endif]-->\n            <table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:600px;\">\n                <tr>\n                    <td align=\"center\" valign=\"top\" style=\"font-size:0; padding: 20px;\" >\n                        <!--[if (gte mso 9)|(IE)]>\n                <table align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"600\">\n                <tr>\n                <td align=\"left\" valign=\"top\" width=\"300\">\n                <![endif]-->\n                        <div style=\"display:inline-block; max-width:70%; min-width:100px; vertical-align:top; width:100%;\">\n                            <table align=\"left\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:300px;\">\n                                <tr>\n                                    <td align=\"left\" valign=\"top\" style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; line-height: 30px;\" class=\"mobile-center\">\n                                        <h1 style=\"font-size: 20px; font-weight: 700; margin: 0; color: #ffffff;\"><%= @space['Name'] %></h1>\n                                    </td>\n                                </tr>\n                            </table>\n                        </div>\n                        <!--[if (gte mso 9)|(IE)]>\n                </td>\n                <td align=\"right\" width=\"300\">\n                <![endif]-->\n                        <div style=\"display:inline-block; max-width:30%; min-width:100px; vertical-align:top; width:100%;\" class=\"mobile-hide\">\n                            <table align=\"left\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:300px;\">\n                                <tr>\n                                    <td align=\"right\" valign=\"top\" style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 30x; font-weight: 400; line-height: 30px;\">\n                                        <table cellspacing=\"0\" cellpadding=\"0\" border=\"0\" align=\"right\">\n                                            <tr>\n                                                <td style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400;\">\n                                                    <p style=\"font-size: 16px; font-weight: 400; margin: 0; color: #ffffff;\"><a href=\"<%= @space_attributes['Web Server Url'] %>\" target=\"_blank\" style=\"color: #ffffff; text-decoration: none;\">kinops &nbsp;</a></p>\n                                                </td>\n                                                <td style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 24px;\">\n                                                    <a href=\"<%= @space_attributes['Web Server Url'] %>\" target=\"_blank\" style=\"color: #ffffff; text-decoration: none;\"><img src=\"https://s3.amazonaws.com/kinops-public/notification-images/kinops-32x32.png\" width=\"27\" height=\"23\" style=\"display: block; border: 0px;\" /></a>\n                                                </td>\n                                            </tr>\n                                        </table>\n                                    </td>\n                                </tr>\n                            </table>\n                        </div>\n                        <!--[if (gte mso 9)|(IE)]>\n                </td>\n                </tr>\n                </table>\n                <![endif]-->\n                    </td>\n                </tr>\n                <tr>\n                    <td align=\"center\" style=\"padding: 25px; background-color: #ffffff;\" bgcolor=\"#ffffff\">\n                        <!--[if (gte mso 9)|(IE)]>\n                <table align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"600\">\n                <tr>\n                <td align=\"center\" valign=\"top\" width=\"600\">\n                <![endif]-->\n                        <table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:600px;\"\n\n<tr>\n   <td align=\"left\" style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding-top: 15px; padding-bottom: 15px;\">\n      <h2 style=\"font-size: 24px; font-weight: 700; line-height: 30px; color: #333333; margin: 0;\">\n         <%= @form['Name'] %> - Denied\n      </h2>\n      <p>\n         <!--\n         <span style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777; font-style: italic; \">Summary: </span>\n         <span style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;\"><%= @submission['Handle'] %></span><br/>\n         -->\n         <span style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777; font-style: italic; \">Confirmation #: </span>\n         <span style=\"font-size: 16px; font-weight: 600; line-height: 24px; color: #777777;\"><%= @submission['Id'] %></span>\n      </p>\n\n      <p style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;\">\n         Your recent <%= @form['Name'] %> submission was denied and therefore cancelled. You may review and/or resubmit your request below.\n      </p>\n      <p style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;\">\n        <span style=\"font-weight: 600;\">Denial Reason: </span><br/>\n        <span style=\"white-space: pre-wrap;\"><%= JSON.parse(@results['Approval']['Approval Values'])['Denial Reason'] %> </span>\n      </p>\n      <p style=\"font-size: 16px; font-weight: 400; line-height: 24px; color: #777777;\">\n        <span style=\"font-weight: 600;\">Comments: </span><br/>\n        <span style=\"white-space: pre-wrap;\"><%= JSON.parse(@results['Approval']['Approval Values'])['Notes for Customer'] %></span>\n      </p>\n   </td>\n</tr>\n<tr>\n   <td align=\"center\" style=\"padding: 35px 0 35px 0;\">\n      <table border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n         <tr>\n            <td align=\"center\" style=\"border-radius: 5px;\" bgcolor=\"#ff7700\">\n               <a href=\"<%= @space_attributes['Web Server Url'] %>/submissions/<%= @submission['Id'] %>\"\n                  style=\"font-size: 16px; font-family: Open Sans, Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; border-radius: 5px; background-color: #ff7700; padding: 10px 24px; border: none; display: block;\"\n                  target=\"_blank\">Review Your Request</a>\n            </td>\n         </tr>\n      </table>\n   </td>\n</tr>\n\n<tr>\n   <td align=\"left\" style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 24px;\">\n      <p style=\"font-size: 18px; font-weight: 800; line-height: 24px; color: #333333;\">Love,<br/>The kinops Team</p>\n   </td>\n</tr>\n\n</table>\n<!--[if (gte mso 9)|(IE)]>\n</td>\n</tr>\n</table>\n<![endif]-->\n</td>\n</tr>\n\n<tr>\n    <td align=\"center\" style=\"padding: 25px; background-color: #ffffff;border-top:1px solid #eee\" bgcolor=\"#ffffff\">\n        <!--[if (gte mso 9)|(IE)]>\n<table align=\"center\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"600\">\n<tr>\n<td align=\"center\" valign=\"top\" width=\"600\">\n<![endif]-->\n        <table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:600px;\">\n            <tr>\n                <td align=\"left\" style=\"font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 400; line-height: 24px; padding: 5px 0 5px 0;\">\n\n                    <p style=\"font-size: 14px; font-weight: 400; line-height: 18px; color: #333333;\">\n                        <img src=\"https://s3.amazonaws.com/kinops-public/notification-images/kinops-32x32.png\" width=\"18\" height=\"18\" style=\"display: inline-block; border: 0px;vertical-align:top;\" />\n                        Sent from the <%= @space['Name'] %> kinops System\n                    </p>\n                </td>\n            </tr>\n        </table>\n        <!--[if (gte mso 9)|(IE)]>\n</td>\n</tr>\n</table>\n<![endif]-->\n    </td>\n</tr>\n</table>\n<!--[if (gte mso 9)|(IE)]>\n</td>\n</tr>\n</table>\n<![endif]-->\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "A plaintext message that will be displayed if the recipient can't display multipart HTML emails.",
+          "id": "textbody",
+          "label": "Alternate (text) Body",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "smtp_email_send_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Get Submitter",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "smtp_email_send_v1_7"
+          }
+        ]
+      },
+      "id": "system_integration_v1_8",
+      "position": {
+        "x": 524.5789473684206,
+        "y": 271.86842105263145
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "771f279a-988d-4b91-9b8f-85861c5c13fe",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Username",
+          "label": "Username",
+          "menu": "",
+          "value": "<%= @submission['Created By'] %>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    },
+    {
+      "configured": true,
+      "defers": true,
+      "deferrable": true,
+      "visible": false,
+      "name": "Create Task - Resource Allocation",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_integration_v1_15"
+          }
+        ]
+      },
+      "id": "routine_task_9",
+      "position": {
+        "x": 157.44444444444443,
+        "y": 513.9444444444449
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "The Submission Id of the Originating Submission",
+          "id": "Originating Submission Id",
+          "label": "Originating Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "List or array of Approvers. (Teams and/or Individuals)",
+          "id": "Assignees",
+          "label": "Assignees",
+          "menu": "",
+          "value": "approvers@kineticdata.com",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Submission Details",
+          "label": "Submission Details",
+          "menu": "",
+          "value": "",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Task Summary",
+          "label": "Task Summary",
+          "menu": "",
+          "value": "Resource Allocation for Project Proposal",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "Due Date",
+          "label": "Due Date",
+          "menu": "",
+          "value": "",
+          "required": false
+        }
+      ],
+      "definitionId": "routine_task"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Approval Notes",
+      "messages": [],
+      "dependents": "",
+      "id": "utilities_echo_v1_10",
+      "position": {
+        "x": 644.3567251461984,
+        "y": 187.423976608187
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Should the denial email be in here or in the Approval Routine.\n\nThe approval Routine make this tree more lightweight.\nIf the email message needs to be changed it required multiple trees to be made.\n\nIf the email is in the Approval node the Submitter information needs to be looked up or passed into the routine.",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": false,
+      "name": "Done",
+      "messages": [],
+      "dependents": "",
+      "id": "system_noop_v1_11",
+      "position": {
+        "x": 152.44444444444446,
+        "y": 797.9444444444449
+      },
+      "version": 1,
+      "parameters": [],
+      "definitionId": "system_noop_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Set Submission Details",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "utilities_echo_v1_5"
+          }
+        ]
+      },
+      "id": "utilities_echo_v1_12",
+      "position": {
+        "x": 161,
+        "y": 16.5
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "input",
+          "label": "Input",
+          "menu": "",
+          "value": "Requested by: <%= @submission['Created By'] %>\nRequested For: <%= @values['Requested for Display Name'] %>\nProject Title: <%= @values['Project Title'] %>\nProposed Budget: <%= @values['Proposed Budget'] %>\nDepartment: <%= @values['Department'] %>\nDescription: <%= @values['Description'] %>",
+          "required": true
+        }
+      ],
+      "definitionId": "utilities_echo_v1"
+    },
+    {
+      "configured": true,
+      "defers": false,
+      "deferrable": false,
+      "visible": true,
+      "name": "Close Submission",
+      "messages": [],
+      "dependents": {
+        "task": [
+          {
+            "label": "",
+            "type": "Complete",
+            "value": "",
+            "content": "system_noop_v1_11"
+          }
+        ]
+      },
+      "id": "system_integration_v1_15",
+      "position": {
+        "x": 157.44444444444446,
+        "y": 651.9444444444449
+      },
+      "version": 1,
+      "parameters": [
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Connection ID",
+          "id": "connection",
+          "label": "Connection ID",
+          "menu": "",
+          "value": "1415539c-bb98-48bb-ad33-11be25189ad0",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "Operation ID",
+          "id": "operation",
+          "label": "Operation ID",
+          "menu": "",
+          "value": "3ad53519-e058-48a1-b114-5745533526ad",
+          "required": true
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Core State",
+          "label": "Core State",
+          "menu": "",
+          "value": "Closed",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Submission Id",
+          "label": "Submission Id",
+          "menu": "",
+          "value": "<%= @submission['Id'] %>",
+          "required": false
+        },
+        {
+          "dependsOnId": "",
+          "dependsOnValue": "",
+          "description": "",
+          "id": "parameters.Values",
+          "label": "Values",
+          "menu": "",
+          "value": "<%=\n  {\"Status\"=>\"Complete\"}.to_json\n%>",
+          "required": false
+        }
+      ],
+      "definitionId": "system_integration_v1"
+    }
+  ]
+}

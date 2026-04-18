@@ -1,0 +1,10 @@
+{
+  "name": "Routines",
+  "description": "Routines used within the Space",
+  "type": "Stored",
+  "handlers": [],
+  "policyRules": [],
+  "trees": [
+    "routine_create_password_reset_url"
+  ]
+}

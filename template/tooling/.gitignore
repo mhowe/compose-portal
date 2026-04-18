@@ -1,0 +1,6 @@
+.bundle
+.devbox
+.envrc
+devbox.json
+devbox.lock
+Gemfile.lock

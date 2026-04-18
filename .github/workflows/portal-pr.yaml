@@ -1,0 +1,35 @@
+name: Momentum Portal Pull Request Workflow
+
+on:
+  pull_request:
+    paths:
+      - 'portal/**'
+
+jobs:
+  snyk-scan:
+    name: Build Portal and Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Run Yarn Install
+        working-directory: ${{ vars.SOURCE_DIRECTORY }}
+        run: yarn install
+
+      - name: Run Yarn Build
+        working-directory: ${{ vars.SOURCE_DIRECTORY }}
+        run: yarn build
+
+      - name: Run Snyk
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_AUTH }}
+        with:
+          args: ${{ vars.SOURCE_DIRECTORY }}/ --severity-threshold=critical

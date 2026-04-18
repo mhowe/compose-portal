@@ -1,0 +1,17 @@
+[
+  {
+    "allowsMultiple": false,
+    "description": "Whether this category should be hidden from the list in the UI. Valid values are \"true\" or \"false\".",
+    "name": "Hidden"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The name of the icon to use for this category, from the Tabler Icons library.",
+    "name": "Icon"
+  },
+  {
+    "allowsMultiple": false,
+    "description": "The slug of the parent category for this child category.",
+    "name": "Parent"
+  }
+]

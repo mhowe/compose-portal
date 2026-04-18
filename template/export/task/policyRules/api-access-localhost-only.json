@@ -1,0 +1,6 @@
+{
+  "name": "Localhost Only",
+  "rule": "['127.0.0.1'].include?(!@request.get_header('x-forwarded-for').nil? ?\n  @request.get_header('x-forwarded-for').split(', ').first :\n  @request.get_remote_addr())",
+  "message": "Access is allowed only from localhost.",
+  "type": "API Access"
+}
