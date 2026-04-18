@@ -62,12 +62,21 @@ export const Form = ({ review, listActions }) => {
   const portalKappSlug = useSelector(state => state.app.kappSlug);
   const navigate = useNavigate();
   const location = useLocation();
-  // If backPath state isn't set, set back path to the requests page if there
-  // is a submission id, or to the home page otherwise, but only on mobile
-  // since the UI doesn't have any other way out of this page on mobile.
+  // Back path precedence: explicit navigation state wins. For viewing an
+  // existing submission, go to /requests. For a new-submission URL with a
+  // kapp in the path (/kapps/:kappSlug/forms/:formSlug), return to the kapp
+  // page — this handles direct URL visits and bookmarks, and avoids falling
+  // through to PageHeading's ./.. default (which resolves to a broken
+  // /kapps/:kappSlug/forms path). Otherwise on mobile return home.
   const backTo =
     location.state?.backPath ||
-    (submissionId ? '/requests' : mobile ? '/' : null);
+    (submissionId
+      ? '/requests'
+      : kappSlug
+        ? `/kapps/${kappSlug}`
+        : mobile
+          ? '/'
+          : null);
 
   const DeleteDraftButton = useMemo(
     () => generateDeleteDraftButton({ listActions }),
