@@ -20,6 +20,17 @@ export const Header = () => {
         <Link to="/" className="flex-initial" aria-label="Home">
           <img src={themeLogo || logo} alt="Logo" className="logo" />
         </Link>
+        {/* Permanent link to the space landing page (/kapps). Conceptually the
+            "all apps" grid — the logo is the user's personalized home (runs
+            the landing resolver), this button is always the space listing. */}
+        <Link
+          to="/kapps"
+          className="kbtn kbtn-ghost kbtn-square kbtn-lg"
+          aria-label="All Kapps"
+          title="All Kapps"
+        >
+          <Icon name="apps" size={20} />
+        </Link>
         <div className="mx-auto" />
         <button
           className="kbtn kbtn-ghost kbtn-square kbtn-lg"
