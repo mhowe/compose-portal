@@ -21,13 +21,25 @@ yarn start
 
 You'll be prompted for a Kinetic Platform space URL (e.g. `https://your-space.kinops.io`). The dev server proxies API calls to that space and serves the portal on [http://localhost:3000](http://localhost:3000).
 
+## Reference Material
+
+The original momentum-portal home page is preserved and accessible in the running app at [`/_reference/legacy-home`](http://localhost:3000/#/_reference/legacy-home) (requires login). Use it as a visual/UX reference when building the form-driven replacement — especially when designing a form-based landing page for the service-portal kapp. The underlying components live at `portal/src/pages/home/` and `portal/src/components/home/` and are not linked from production UI.
+
+The momentum tickets pages (`/actions`, `/requests`) also remain in place as reference implementations; remove or modularize them once Compose Portal's own equivalents land.
+
 ## Status
 
-Early-stage scaffold. The immediate roadmap:
+Early-stage scaffold. What's working:
 
-- **Landing-page resolver** — at `/`, read space attribute `Default Kapp Slug`, then that kapp's `Default Form Slug`, then redirect to the resolved form/kapp. Fall back to a built-in embedded landing page when nothing is configured.
-- **Theme widget** — port from `momentum-portal-dataprise`, rebuilt with a generic preview strategy (not customer-specific components).
-- **Component class layer (`kd-*`)** — Tailwind `@layer components` classes form designers can apply as single class names (Bootstrap-style), alongside DaisyUI's built-in vocabulary.
+- **Landing-page resolver** at `/` — cascades through user profile `Default Kapp Slug` → space `Default Kapp Slug` → embedded landing; inside the resolved kapp, checks `Default Form Slug` and redirects to the form when present, otherwise lands on the bundle-default kapp page (forms table).
+- **Setup check** — if required attribute definitions are missing from the space, space admins are redirected to `/settings/space` so they can deploy them (Deploy action currently a stub; see Roadmap).
+- **Component class layer (`kd-*`)** — Tailwind `@layer components` classes form designers can apply as single class names (Bootstrap-style), alongside DaisyUI's built-in `k*` vocabulary.
+
+Roadmap:
+
+- **Deploy action** on Space Settings — call the Kinetic SDK to create missing attribute definitions automatically (currently shows instructions to create them manually).
+- **Theme editor rebuild** — cascade between space and kapp `Theme` attributes; entry points from Space Settings and (future) Kapp Settings pages.
+- **Richer kapp default page** — replace the bare forms table with something admins can customize (likely via an optional kapp-level landing form).
 - **Additional widgets** — navigation variants, kapp/form/submission renderers, timelines, and others discovered by putting the bundle through its paces.
 
 ## Outstanding Infra Cleanup

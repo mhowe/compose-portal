@@ -9,6 +9,8 @@ import { SettingsRouting } from './settings/index.jsx';
 import { Header } from '../components/header/Header.jsx';
 import { SearchModal } from '../components/search/SearchModal.jsx';
 import { Theme } from './theme/index.jsx';
+import { LandingResolver } from './landing/LandingResolver.jsx';
+import { KappDefaultPage } from './kapp/KappDefaultPage.jsx';
 
 const Redirect = ({ to }) => {
   const params = useParams();
@@ -52,8 +54,10 @@ export const PrivateRoutes = () => {
                 path="/kapps/:kappSlug/forms/:formSlug/:submissionId?"
                 element={<Form />}
               />
-              {/* Canonical route for kapps */}
-              <Route path="/kapps/:kappSlug" element={<Redirect to="/" />} />
+              {/* Bundle-default kapp page (forms table). Admins can override by
+                  setting the kapp's 'Default Form Slug' attribute, which the
+                  landing resolver picks up. */}
+              <Route path="/kapps/:kappSlug" element={<KappDefaultPage />} />
 
               {/* Portal routes */}
               <Route path="/actions/*" element={<Actions />} />
@@ -65,6 +69,15 @@ export const PrivateRoutes = () => {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings/*" element={<SettingsRouting />} />
               <Route path="/login" element={<Navigate to="/" />} />
+
+              {/* Reference: preserves momentum-portal's Home at a stable URL so
+                  we can use it as a visual/UX reference while building the
+                  form-driven replacement. Do not link to this in production UI. */}
+              <Route path="/_reference/legacy-home" element={<Home />} />
+
+              {/* Landing resolver at exact root. Other unmatched paths fall
+                  through to the legacy Home component for now. */}
+              <Route path="/" element={<LandingResolver />} />
               <Route path="/*" element={<Home />} />
             </Routes>
 

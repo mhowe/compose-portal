@@ -9,6 +9,7 @@ import { DatastoreRecords } from './DatastoreRecords.jsx';
 import { useSelector } from 'react-redux';
 import { useMemo } from 'react';
 import { Notifications } from './Notifications.jsx';
+import { SpaceSettings } from './SpaceSettings.jsx';
 
 export const SettingsRouting = () => {
   const kappSlug = useSelector(state => state.app.kappSlug);
@@ -78,6 +79,9 @@ export const SettingsRouting = () => {
     <div className="gutter">
       <Routes>
         <Route path="/" element={<Settings settings={settings} />} />
+        {/* Space-admin-only. The SpaceSettings component also guards itself
+            (redirecting to / for non-admins) as defense-in-depth. */}
+        <Route path="/space" element={<SpaceSettings />} />
         <Route
           path="/datastore"
           element={<Datastore datastores={datastores} />}
