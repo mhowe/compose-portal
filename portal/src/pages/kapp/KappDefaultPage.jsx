@@ -35,7 +35,7 @@ export const KappDefaultPage = () => {
 
   return (
     <div className="gutter">
-      <PageHeading title={kapp?.name || kappSlug} backTo="/" />
+      <PageHeading title={kapp?.name || kappSlug} backTo="/kapps" />
 
       {!initialized || loading ? (
         <Loading />

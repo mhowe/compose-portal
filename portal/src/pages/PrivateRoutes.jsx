@@ -10,6 +10,7 @@ import { Header } from '../components/header/Header.jsx';
 import { SearchModal } from '../components/search/SearchModal.jsx';
 import { Theme } from './theme/index.jsx';
 import { LandingResolver } from './landing/LandingResolver.jsx';
+import { EmbeddedLanding } from './landing/EmbeddedLanding.jsx';
 import { KappDefaultPage } from './kapp/KappDefaultPage.jsx';
 
 const Redirect = ({ to }) => {
@@ -54,6 +55,9 @@ export const PrivateRoutes = () => {
                 path="/kapps/:kappSlug/forms/:formSlug/:submissionId?"
                 element={<Form />}
               />
+              {/* Space landing page — kapp cards + admin settings link.
+                  Always reachable via /kapps regardless of resolver defaults. */}
+              <Route path="/kapps" element={<EmbeddedLanding />} />
               {/* Bundle-default kapp page (forms table). Admins can override by
                   setting the kapp's 'Default Form Slug' attribute, which the
                   landing resolver picks up. */}
