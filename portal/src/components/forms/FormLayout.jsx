@@ -48,6 +48,7 @@ export const generateFormLayout = ({
         <div className="max-w-screen-lg mx-auto full-form:max-w-full full-form:mx-0 pt-1 pb-6">
           <PageHeading
             title={form?.name}
+            backTo={backTo}
             before={
               <div className="icon-box-lg">
                 <Icon name={form ? icon : 'blank'} />
