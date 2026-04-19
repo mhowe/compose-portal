@@ -31,6 +31,13 @@ export const BUNDLE_MANIFEST = {
         description:
           "Slug of a form in the 'admin' kapp to render inline as the space landing page (/kapps). May be left empty; the bundle will fall back to the built-in kapp-cards landing.",
       },
+      {
+        name: 'Capability Registry URLs',
+        required: true,
+        allowsMultiple: true,
+        description:
+          'URLs of Compose Portal capability registry index.json files. Multiple allowed; the bundle fetches and merges each. Leave empty to hide the Capabilities section.',
+      },
     ],
   },
   userProfile: {

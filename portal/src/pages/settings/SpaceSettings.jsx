@@ -10,11 +10,15 @@ import { PageHeading } from '../../components/PageHeading.jsx';
 import { Icon } from '../../atoms/Icon.jsx';
 import { AccordionSection } from '../../atoms/AccordionSection.jsx';
 import { BUNDLE_MANIFEST } from '../../helpers/bundle-manifest.js';
-import { getManifestStatus } from '../../helpers/setup.js';
 import {
-  STUB_CAPABILITIES,
+  getManifestStatus,
+  readAttributeValues,
+} from '../../helpers/setup.js';
+import {
   getCapabilityStatuses,
+  useCapabilityRegistry,
 } from '../../helpers/capabilities.js';
+import { Loading } from '../../components/states/Loading.jsx';
 import { appActions } from '../../helpers/state.js';
 import { toastError, toastSuccess } from '../../helpers/toasts.js';
 
@@ -45,7 +49,7 @@ const deployOne = async item => {
       attributeDefinition: {
         name: item.name,
         description: item.description,
-        allowsMultiple: false,
+        allowsMultiple: !!item.allowsMultiple,
       },
     });
     if (error) return { ok: false, item, error };
@@ -76,9 +80,14 @@ export const SpaceSettings = () => {
   const [busyKeys, setBusyKeys] = useState(() => new Set());
 
   const status = useMemo(() => getManifestStatus(space), [space]);
+  const registryUrls = useMemo(
+    () => readAttributeValues(space, 'Capability Registry URLs'),
+    [space],
+  );
+  const registry = useCapabilityRegistry(registryUrls);
   const capabilities = useMemo(
-    () => getCapabilityStatuses(STUB_CAPABILITIES, space?.kapps),
-    [space?.kapps],
+    () => getCapabilityStatuses(registry.capabilities, space?.kapps),
+    [registry.capabilities, space?.kapps],
   );
 
   if (!spaceAdmin) return <Navigate to="/" replace />;
@@ -206,7 +215,15 @@ export const SpaceSettings = () => {
     </span>
   );
 
-  const capabilitiesHeaderBadge = (
+  const capabilitiesHeaderBadge = registry.loading ? (
+    <span className="kbadge kbadge-ghost">Loading…</span>
+  ) : registry.errors.length > 0 && capabilities.length === 0 ? (
+    <span className="kbadge kbadge-warning">
+      <Icon name="alert-triangle" /> Registry error
+    </span>
+  ) : registryUrls.length === 0 ? (
+    <span className="kbadge kbadge-ghost">No registry configured</span>
+  ) : (
     <div className="flex-sc gap-2">
       {capabilityUpgrades > 0 && (
         <span className="kbadge kbadge-info">
@@ -384,71 +401,100 @@ export const SpaceSettings = () => {
             Capabilities are kapps (plus forms, task handlers, workflows, and
             datastores) that provide discrete, reusable functions — things
             like notification templates, scheduled jobs, or shared reference
-            data. Install a capability to add its kapp and machinery to this
-            space.
-          </p>
-          <p className="text-xs text-base-content/60 italic mb-3">
-            Capability registry and one-click install are not yet wired. The
-            list below is a placeholder to validate the UX; status reflects
-            live kapps on your space matching the capability id and carrying a{' '}
+            data. The bundle fetches the available list from each URL in the
+            space attribute <code>Capability Registry URLs</code> and merges
+            them; install status is detected from each kapp's{' '}
             <code>Capability Metadata</code> attribute.
           </p>
+          <p className="text-xs text-base-content/60 italic mb-3">
+            One-click install is not yet implemented. You can see what's
+            available and whether it's already installed; the Install/Upgrade
+            button will become functional in a later phase.
+          </p>
 
-          {capabilities.length === 0 ? (
+          {registryUrls.length === 0 ? (
             <div className="kd-callout">
-              No capabilities are available from the current registry.
+              No <code>Capability Registry URLs</code> configured. Add one or
+              more URLs to the space attribute (e.g. your GitHub Pages
+              registry index.json) in the Kinetic admin console.
             </div>
+          ) : registry.loading ? (
+            <Loading />
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
-              {capabilities.map(cap => (
-                <div
-                  key={cap.id}
-                  className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100"
-                >
-                  <div className="flex-sc gap-2 w-full">
-                    <span className="text-h4 font-semibold flex-auto">
-                      {cap.name}
-                    </span>
-                    {cap.installed ? (
-                      cap.upgradeAvailable ? (
-                        <span className="kbadge kbadge-info">
-                          <Icon name="refresh" /> Upgrade
-                        </span>
-                      ) : (
-                        <span className="kbadge kbadge-success">
-                          <Icon name="check" /> Installed
-                        </span>
-                      )
-                    ) : (
-                      <span className="kbadge kbadge-ghost">Available</span>
-                    )}
+            <>
+              {registry.errors.length > 0 && (
+                <div className="kalert kalert-warning mb-3">
+                  <Icon name="alert-triangle" />
+                  <div>
+                    <div className="font-semibold">
+                      {registry.errors.length} fetch error
+                      {registry.errors.length === 1 ? '' : 's'}
+                    </div>
+                    <div className="text-sm">
+                      Some registries or manifests could not be retrieved. See
+                      the browser console for details.
+                    </div>
                   </div>
-                  <p className="text-sm text-base-content/70">
-                    {cap.description}
-                  </p>
-                  <div className="flex-sc gap-3 text-xs text-base-content/60">
-                    <span>Version {cap.version}</span>
-                    {cap.installed &&
-                      cap.installedVersion &&
-                      cap.installedVersion !== cap.version && (
-                        <span>(installed: {cap.installedVersion})</span>
-                      )}
-                  </div>
-                  <button
-                    type="button"
-                    className="kbtn kbtn-sm kbtn-outline mt-2"
-                    disabled
-                    title="Installer not yet implemented"
-                  >
-                    {cap.installed
-                      ? cap.upgradeAvailable
-                        ? 'Upgrade (coming soon)'
-                        : 'Installed'
-                      : 'Install (coming soon)'}
-                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+              {capabilities.length === 0 ? (
+                <div className="kd-callout">
+                  No capabilities returned by the configured registr
+                  {registryUrls.length === 1 ? 'y' : 'ies'}.
+                </div>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {capabilities.map(cap => (
+                    <div
+                      key={cap.id}
+                      className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100"
+                    >
+                      <div className="flex-sc gap-2 w-full">
+                        <span className="text-h4 font-semibold flex-auto">
+                          {cap.name}
+                        </span>
+                        {cap.installed ? (
+                          cap.upgradeAvailable ? (
+                            <span className="kbadge kbadge-info">
+                              <Icon name="refresh" /> Upgrade
+                            </span>
+                          ) : (
+                            <span className="kbadge kbadge-success">
+                              <Icon name="check" /> Installed
+                            </span>
+                          )
+                        ) : (
+                          <span className="kbadge kbadge-ghost">Available</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-base-content/70">
+                        {cap.description}
+                      </p>
+                      <div className="flex-sc gap-3 text-xs text-base-content/60">
+                        <span>Version {cap.version}</span>
+                        {cap.installed &&
+                          cap.installedVersion &&
+                          cap.installedVersion !== cap.version && (
+                            <span>(installed: {cap.installedVersion})</span>
+                          )}
+                      </div>
+                      <button
+                        type="button"
+                        className="kbtn kbtn-sm kbtn-outline mt-2"
+                        disabled
+                        title="Installer not yet implemented"
+                      >
+                        {cap.installed
+                          ? cap.upgradeAvailable
+                            ? 'Upgrade (coming soon)'
+                            : 'Installed'
+                          : 'Install (coming soon)'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </AccordionSection>
 

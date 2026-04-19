@@ -52,6 +52,14 @@ export const readAttribute = (record, name, map = 'attributesMap') =>
   record?.[map]?.[name]?.[0];
 
 /**
+ * Reads all values of a multi-valued attribute from a record's attributesMap
+ * or profileAttributesMap. Returns an array (empty when the attribute is
+ * absent or has no values).
+ */
+export const readAttributeValues = (record, name, map = 'attributesMap') =>
+  record?.[map]?.[name] || [];
+
+/**
  * Resolves the landing kapp slug according to the cascade:
  *   1. user profile 'Default Kapp Slug'
  *   2. space 'Default Kapp Slug'
@@ -149,6 +157,7 @@ export const getManifestStatus = space => {
       name: attr.name,
       description: attr.description,
       required: !!attr.required,
+      allowsMultiple: !!attr.allowsMultiple,
       present: spaceDefs.has(attr.name),
     });
   }
@@ -161,6 +170,7 @@ export const getManifestStatus = space => {
       name: attr.name,
       description: attr.description,
       required: !!attr.required,
+      allowsMultiple: !!attr.allowsMultiple,
       present: userDefs.has(attr.name),
     });
   }
@@ -188,6 +198,7 @@ export const getManifestStatus = space => {
         name: attr.name,
         description: attr.description,
         required: !!attr.required,
+        allowsMultiple: !!attr.allowsMultiple,
         present: kappDefs.has(attr.name),
       });
     }

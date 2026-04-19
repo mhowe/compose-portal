@@ -1,52 +1,21 @@
+import { useEffect, useMemo, useState } from 'react';
+
 /*
  * Capabilities — a capability is a kapp (plus its associated forms, task
- * handlers, workflows, datastores) that provides a discrete, reusable
- * function to the space. The bundle installs them from a registry and
- * records install metadata on the kapp via a `Capability Metadata` attribute.
+ * handlers, workflows, datastores, and integrations) that provides a
+ * discrete, reusable function to the space. The bundle fetches the list of
+ * available capabilities from one or more registries (static JSON indexes
+ * typically hosted on GitHub Pages or similar) and records install metadata
+ * on each installed kapp via a 'Capability Metadata' attribute.
  *
- * This module is the integration point. Today it serves a hardcoded stub
- * list of capabilities for UI development; in a later phase it will fetch
- * from a GitHub Pages registry (default) plus any space-attribute-declared
- * override registries, and it will wire real install/upgrade actions.
- *
- * Detection of "installed" is already real against the live space data:
- * we look for a kapp whose slug matches the capability id AND whose
- * `Capability Metadata` kapp attribute carries a matching id. This keeps the
- * detection logic production-ready even while the registry fetch and
- * install flow remain stubbed.
+ * This module covers Phase 3: fetching registries and detecting installed
+ * status. Phase 4+ will add the actual install action.
  */
 
 export const CAPABILITY_ATTRIBUTE_NAME = 'Capability Metadata';
 
 /**
- * Phase-2 stub list. Replace this with a real registry fetch in Phase 3.
- */
-export const STUB_CAPABILITIES = [
-  {
-    id: 'notification-templates',
-    name: 'Notification Templates',
-    description:
-      'Reusable notification templates for email, SMS, and Slack — forms, default data, a task handler, and workflow components.',
-    version: '0.1.0',
-  },
-  {
-    id: 'robots',
-    name: 'Robots',
-    description:
-      'Time-based workflow execution. Schedule recurring tasks and time-triggered automation.',
-    version: '0.1.0',
-  },
-  {
-    id: 'datastore',
-    name: 'Datastore',
-    description:
-      'Manage shared reference data (e.g., list of states, departments) without duplicating across kapps.',
-    version: '0.1.0',
-  },
-];
-
-/**
- * Reads and parses the `Capability Metadata` attribute from a kapp record.
+ * Reads and parses the 'Capability Metadata' attribute from a kapp record.
  * Returns the parsed object (shape: `{ id, version, installedAt?, checksums? }`)
  * or null when the attribute is absent or unparseable.
  */
@@ -66,7 +35,7 @@ export const readCapabilityMetadata = kapp => {
  *
  *   { ...capability, installed, installedVersion, upgradeAvailable, customized }
  *
- * @param {Array} capabilities The registry list (stub or real).
+ * @param {Array} capabilities The merged registry list.
  * @param {Array} kapps The space's kapps (must include attributesMap).
  */
 export const getCapabilityStatuses = (capabilities, kapps = []) =>
@@ -87,3 +56,139 @@ export const getCapabilityStatuses = (capabilities, kapps = []) =>
       customized,
     };
   });
+
+/**
+ * Fetches a single registry index.json and each capability's manifest.json.
+ * Never throws — failures are returned as entries in the `errors` array so
+ * partial success surfaces what succeeded.
+ *
+ * @param {string} indexUrl Absolute URL to the registry's index.json.
+ * @returns {Promise<{ registryUrl: string, capabilities: Array, errors: Array }>}
+ */
+export const fetchRegistry = async indexUrl => {
+  const errors = [];
+  let index;
+  try {
+    const response = await fetch(indexUrl);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    index = await response.json();
+  } catch (error) {
+    return {
+      registryUrl: indexUrl,
+      capabilities: [],
+      errors: [
+        {
+          url: indexUrl,
+          message: `Failed to fetch registry index: ${error.message}`,
+        },
+      ],
+    };
+  }
+
+  const entries = Array.isArray(index?.capabilities) ? index.capabilities : [];
+  const manifests = await Promise.all(
+    entries.map(async entry => {
+      let manifestUrl;
+      try {
+        manifestUrl = new URL(entry.manifestUrl, indexUrl).href;
+      } catch (error) {
+        errors.push({
+          url: entry.manifestUrl,
+          message: `Invalid manifest URL: ${error.message}`,
+        });
+        return null;
+      }
+      try {
+        const response = await fetch(manifestUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const manifest = await response.json();
+        return { ...manifest, registryUrl: indexUrl, manifestUrl };
+      } catch (error) {
+        errors.push({
+          url: manifestUrl,
+          message: `Failed to fetch manifest: ${error.message}`,
+        });
+        return null;
+      }
+    }),
+  );
+
+  return {
+    registryUrl: indexUrl,
+    capabilities: manifests.filter(Boolean),
+    errors,
+  };
+};
+
+/**
+ * Fetches every registry URL, merges the capabilities, de-duplicates by id
+ * (first wins), and surfaces any errors for the UI to display.
+ *
+ * @param {Array<string>} urls Registry index URLs.
+ * @returns {Promise<{ capabilities: Array, errors: Array }>}
+ */
+export const fetchAllRegistries = async urls => {
+  if (!urls || urls.length === 0) return { capabilities: [], errors: [] };
+  const results = await Promise.all(urls.map(fetchRegistry));
+  const seen = new Set();
+  const capabilities = [];
+  const errors = [];
+  for (const r of results) {
+    errors.push(...r.errors);
+    for (const cap of r.capabilities) {
+      if (cap?.id && !seen.has(cap.id)) {
+        seen.add(cap.id);
+        capabilities.push(cap);
+      }
+    }
+  }
+  return { capabilities, errors };
+};
+
+/**
+ * React hook that fetches the combined registry list when the URL set
+ * changes. Idle until an URL array is provided; supports empty input by
+ * immediately returning an empty capabilities list with no errors.
+ *
+ * Returns `{ initialized, loading, capabilities, errors }`.
+ */
+export const useCapabilityRegistry = urls => {
+  const urlsKey = useMemo(() => (urls || []).join('|'), [urls]);
+  const [state, setState] = useState({
+    initialized: false,
+    loading: false,
+    capabilities: [],
+    errors: [],
+  });
+
+  useEffect(() => {
+    const parsed = urlsKey.split('|').filter(Boolean);
+    if (parsed.length === 0) {
+      setState({
+        initialized: true,
+        loading: false,
+        capabilities: [],
+        errors: [],
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setState(prev => ({ ...prev, loading: true }));
+    fetchAllRegistries(parsed).then(result => {
+      if (cancelled) return;
+      setState({
+        initialized: true,
+        loading: false,
+        capabilities: result.capabilities,
+        errors: result.errors,
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [urlsKey]);
+
+  return state;
+};
