@@ -25,6 +25,12 @@ export const BUNDLE_MANIFEST = {
         description:
           'Slug of the kapp the portal lands on by default. May be left empty; the bundle will fall through to its embedded landing page.',
       },
+      {
+        name: 'Default Space Form Slug',
+        required: true,
+        description:
+          "Slug of a form in the 'admin' kapp to render inline as the space landing page (/kapps). May be left empty; the bundle will fall back to the built-in kapp-cards landing.",
+      },
     ],
   },
   userProfile: {

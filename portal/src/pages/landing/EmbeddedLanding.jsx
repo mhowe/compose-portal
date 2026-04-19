@@ -1,21 +1,67 @@
-import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { fetchForms } from '@kineticdata/react';
+import { useData } from '../../helpers/hooks/useData.js';
+import { ADMIN_KAPP_SLUG } from '../../helpers/constants.js';
+import { readSpaceDefaultFormSlug } from '../../helpers/setup.js';
 import { Icon } from '../../atoms/Icon.jsx';
 import { PageHeading } from '../../components/PageHeading.jsx';
+import { Loading } from '../../components/states/Loading.jsx';
+import { KineticForm } from '../../components/kinetic-form/KineticForm.jsx';
 
 /**
- * Bundle-default landing page. Shown when:
- *   - Neither user profile nor space has a 'Default Kapp Slug' value, OR
- *   - Setup is incomplete and the current user is not a space admin.
+ * Space landing at /kapps.
  *
- * Renders a card per kapp the user can see, plus a space-settings link for
- * admins. Intentionally plain — refine the visual treatment later.
+ * If the space's 'Default Space Form Slug' attribute is set and the form
+ * exists in the admin kapp, render it inline here. Otherwise fall through to
+ * the built-in kapp-cards view (plus a Space Settings link for admins).
+ *
+ * Also shown as a fallback when the landing resolver at / cascades through
+ * without a target kapp, or when setup is incomplete for a non-admin user.
  */
 export const EmbeddedLanding = () => {
   const space = useSelector(state => state.app.space);
   const spaceAdmin = useSelector(state => !!state.app.profile?.spaceAdmin);
   const kapps = space?.kapps || [];
+  const adminKappExists = kapps.some(k => k.slug === ADMIN_KAPP_SLUG);
+  const configuredFormSlug = readSpaceDefaultFormSlug(space);
 
+  // Confirm the configured form actually exists in the admin kapp. If it
+  // doesn't, fall through to the built-in view rather than letting CoreForm
+  // render an error.
+  const formCheckParams = useMemo(
+    () =>
+      configuredFormSlug && adminKappExists
+        ? {
+            kappSlug: ADMIN_KAPP_SLUG,
+            q: `slug = "${configuredFormSlug}"`,
+            limit: 1,
+          }
+        : null,
+    [configuredFormSlug, adminKappExists],
+  );
+  const { initialized, loading, response } = useData(
+    fetchForms,
+    formCheckParams,
+  );
+  const formExists = (response?.forms || []).length > 0;
+
+  if (formCheckParams && (!initialized || loading)) return <Loading />;
+
+  // Render the custom form inline when configured and valid.
+  if (configuredFormSlug && adminKappExists && formExists) {
+    return (
+      <div className="gutter">
+        <KineticForm
+          kappSlug={ADMIN_KAPP_SLUG}
+          formSlug={configuredFormSlug}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: built-in kapp cards.
   return (
     <div className="gutter">
       <PageHeading title={space?.name || 'Portal'} backTo={null} />

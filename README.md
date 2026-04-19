@@ -31,15 +31,21 @@ The momentum tickets pages (`/actions`, `/requests`) also remain in place as ref
 
 Early-stage scaffold. What's working:
 
-- **Landing-page resolver** at `/` — cascades through user profile `Default Kapp Slug` → space `Default Kapp Slug` → embedded landing; inside the resolved kapp, checks `Default Form Slug` and redirects to the form when present, otherwise lands on the bundle-default kapp page (forms table).
-- **Setup check** — if required attribute definitions are missing from the space, space admins are redirected to `/settings/space` so they can deploy them (Deploy action currently a stub; see Roadmap).
+- **Landing-page resolver** at `/` — cascades through user profile `Default Kapp Slug` → space `Default Kapp Slug` → embedded landing. Redirects to `/kapps/:slug` when a target kapp resolves; the kapp page handles form rendering from there.
+- **Inline form rendering** driven by attributes:
+  - `/kapps` renders the form named by space attribute `Default Space Form Slug` (expected to live in the `admin` kapp) when set; otherwise renders the kapp-cards landing.
+  - `/kapps/:slug` renders the form named by the kapp's `Default Form Slug` attribute when set; otherwise renders the forms table.
+  - In both cases, if the configured slug doesn't exist, the bundle falls through to its built-in view.
+- **Admin kapp convention** — a kapp with slug `admin` is expected on the space and is where bundle-level configuration forms live. Flagged by the setup check when missing.
+- **Setup check** — if required attribute definitions or the admin kapp are missing, space admins are redirected to `/settings/space`. Deploy action is currently a stub.
+- **Header navigation** — logo links to `/` (personalized home via resolver), a "grid" icon to the right of the logo links to `/kapps` (space home), hamburger menu is reserved for kapp-driven navigation.
 - **Component class layer (`kd-*`)** — Tailwind `@layer components` classes form designers can apply as single class names (Bootstrap-style), alongside DaisyUI's built-in `k*` vocabulary.
 
 Roadmap:
 
-- **Deploy action** on Space Settings — call the Kinetic SDK to create missing attribute definitions automatically (currently shows instructions to create them manually).
+- **Deploy action** on Space Settings — call the Kinetic SDK to create missing attribute definitions and the admin kapp automatically (currently shows instructions to do so manually).
+- **Kapp-driven hamburger menu** — read a kapp attribute (likely JSON) to populate the within-kapp navigation.
 - **Theme editor rebuild** — cascade between space and kapp `Theme` attributes; entry points from Space Settings and (future) Kapp Settings pages.
-- **Richer kapp default page** — replace the bare forms table with something admins can customize (likely via an optional kapp-level landing form).
 - **Additional widgets** — navigation variants, kapp/form/submission renderers, timelines, and others discovered by putting the bundle through its paces.
 
 ## Outstanding Infra Cleanup

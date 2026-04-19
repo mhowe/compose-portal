@@ -1,13 +1,14 @@
 import { BUNDLE_MANIFEST } from './bundle-manifest.js';
+import { ADMIN_KAPP_SLUG } from './constants.js';
 
 /**
- * Checks whether a space record has the attribute definitions the bundle
- * requires. Looks at *definition presence*, not value — a defined-but-empty
- * attribute is a valid configured state.
+ * Checks whether a space record has the attribute definitions and kapps the
+ * bundle requires. Looks at *definition presence*, not attribute values — a
+ * defined-but-empty attribute is a valid configured state.
  *
  * @param {Object} space The fetched space record. Must have been fetched with
- *   `include: spaceAttributeDefinitions,userProfileAttributeDefinitions`.
- * @returns {{ ok: boolean, missing: Array<{scope: string, name: string, description: string}> }}
+ *   `include: spaceAttributeDefinitions,userProfileAttributeDefinitions,kapps`.
+ * @returns {{ ok: boolean, missing: Array<{scope: string, name: string, description: string, kind?: string}> }}
  */
 export const checkSetup = space => {
   if (!space) return { ok: false, missing: [] };
@@ -16,18 +17,28 @@ export const checkSetup = space => {
   const userDefs = (space.userProfileAttributeDefinitions || []).map(
     d => d.name,
   );
+  const kappSlugs = (space.kapps || []).map(k => k.slug);
 
   const missing = [];
 
   for (const attr of BUNDLE_MANIFEST.space.attributes) {
     if (attr.required && !spaceDefs.includes(attr.name)) {
-      missing.push({ scope: 'space', ...attr });
+      missing.push({ scope: 'space', kind: 'attribute', ...attr });
     }
   }
   for (const attr of BUNDLE_MANIFEST.userProfile.attributes) {
     if (attr.required && !userDefs.includes(attr.name)) {
-      missing.push({ scope: 'userProfile', ...attr });
+      missing.push({ scope: 'userProfile', kind: 'attribute', ...attr });
     }
+  }
+  if (!kappSlugs.includes(ADMIN_KAPP_SLUG)) {
+    missing.push({
+      scope: 'kapp',
+      kind: 'kapp',
+      name: ADMIN_KAPP_SLUG,
+      description:
+        "The bundle looks for configuration forms (e.g., the custom space landing form) in a kapp with slug 'admin'. Create this kapp on the space.",
+    });
   }
 
   return { ok: missing.length === 0, missing };
@@ -82,3 +93,12 @@ export const resolveLandingKapp = (space, profile) => {
  */
 export const readKappDefaultFormSlug = kapp =>
   readAttribute(kapp, 'Default Form Slug');
+
+/**
+ * Given a space record (with attributesMap included), reads its
+ * 'Default Space Form Slug' attribute value. Returns the slug or undefined.
+ *
+ * That form is always expected to live in the admin kapp (ADMIN_KAPP_SLUG).
+ */
+export const readSpaceDefaultFormSlug = space =>
+  readAttribute(space, 'Default Space Form Slug');

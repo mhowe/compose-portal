@@ -3,41 +3,82 @@ import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { fetchForms } from '@kineticdata/react';
 import { useData } from '../../helpers/hooks/useData.js';
+import { readKappDefaultFormSlug } from '../../helpers/setup.js';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { Loading } from '../../components/states/Loading.jsx';
+import { KineticForm } from '../../components/kinetic-form/KineticForm.jsx';
 
 /**
- * Bundle-default "kapp home" shown when a user lands on /kapps/:kappSlug and
- * the kapp has no Default Form Slug configured (or the configured form is
- * missing). Lists every active form in the kapp with:
- *   - New Request: working link to the form submission page
- *   - View Submissions: stub for now; will link to a submissions list page later
+ * Renders at /kapps/:kappSlug.
  *
- * This page is intentionally utilitarian — admins who want a richer kapp home
- * should set the kapp's 'Default Form Slug' attribute to point at a form that
- * renders the experience they want.
+ * If the kapp's 'Default Form Slug' attribute is set and the form exists,
+ * render it inline as the kapp's home. Otherwise fall through to the built-in
+ * forms table (New Request link works; View Submissions is a stub).
+ *
+ * Admins who want a richer kapp home should set 'Default Form Slug' to point
+ * at a form that renders the experience they want.
  */
 export const KappDefaultPage = () => {
   const { kappSlug } = useParams();
   const space = useSelector(state => state.app.space);
   const kapp = (space?.kapps || []).find(k => k.slug === kappSlug);
+  const defaultFormSlug = readKappDefaultFormSlug(kapp);
 
-  const params = useMemo(
-    () => ({
-      kappSlug,
-      include: 'attributesMap',
-      q: '(status = "Active" OR status = "New")',
-    }),
-    [kappSlug],
+  // Confirm the kapp's Default Form Slug exists before rendering it — falls
+  // through to the forms table on misconfiguration rather than erroring.
+  const defaultFormCheckParams = useMemo(
+    () =>
+      defaultFormSlug
+        ? { kappSlug, q: `slug = "${defaultFormSlug}"`, limit: 1 }
+        : null,
+    [kappSlug, defaultFormSlug],
   );
-  const { initialized, loading, response } = useData(fetchForms, params);
-  const forms = response?.forms || [];
+  const defaultFormCheck = useData(fetchForms, defaultFormCheckParams);
+  const defaultFormExists =
+    (defaultFormCheck.response?.forms || []).length > 0;
+
+  // Forms table is only needed when we're rendering the fallback. Skip the
+  // fetch entirely when a valid default form will render instead.
+  const willRenderDefaultForm =
+    defaultFormSlug &&
+    defaultFormCheck.initialized &&
+    !defaultFormCheck.loading &&
+    defaultFormExists;
+  const formsTableParams = useMemo(
+    () =>
+      willRenderDefaultForm
+        ? null
+        : {
+            kappSlug,
+            include: 'attributesMap',
+            q: '(status = "Active" OR status = "New")',
+          },
+    [kappSlug, willRenderDefaultForm],
+  );
+  const formsTable = useData(fetchForms, formsTableParams);
+  const forms = formsTable.response?.forms || [];
+
+  if (
+    defaultFormCheckParams &&
+    (!defaultFormCheck.initialized || defaultFormCheck.loading)
+  ) {
+    return <Loading />;
+  }
+
+  if (willRenderDefaultForm) {
+    return (
+      <div className="gutter">
+        <PageHeading title={kapp?.name || kappSlug} backTo="/kapps" />
+        <KineticForm kappSlug={kappSlug} formSlug={defaultFormSlug} />
+      </div>
+    );
+  }
 
   return (
     <div className="gutter">
       <PageHeading title={kapp?.name || kappSlug} backTo="/kapps" />
 
-      {!initialized || loading ? (
+      {!formsTable.initialized || formsTable.loading ? (
         <Loading />
       ) : forms.length === 0 ? (
         <div className="kd-callout">No forms are available in this kapp.</div>
