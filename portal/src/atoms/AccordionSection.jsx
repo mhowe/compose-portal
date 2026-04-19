@@ -28,7 +28,7 @@ export const AccordionSection = ({
   return (
     <details
       className={clsx(
-        'group rounded-box border border-base-300 bg-base-100',
+        'group w-full rounded-box border border-base-300 bg-base-100',
         className,
       )}
       open={open}
@@ -45,7 +45,7 @@ export const AccordionSection = ({
         </span>
         {headerRight}
       </summary>
-      <div className="p-4 pt-0 border-t border-base-300">{children}</div>
+      <div className="p-4 border-t border-base-300">{children}</div>
     </details>
   );
 };

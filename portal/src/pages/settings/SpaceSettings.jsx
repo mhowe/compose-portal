@@ -230,7 +230,7 @@ export const SpaceSettings = () => {
           headerRight={setupHeaderBadge}
           initialOpen={!setupOk}
         >
-          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+          <p className="text-sm text-base-content/70 mb-3">
             Compose Portal expects these attribute definitions and kapps to
             exist on the space. Values may be left blank; the bundle falls
             through to its embedded defaults when a value isn't configured.
@@ -303,7 +303,7 @@ export const SpaceSettings = () => {
           headerRight={kappAttrsHeaderBadge}
           initialOpen={false}
         >
-          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+          <p className="text-sm text-base-content/70 mb-3">
             Kapp-level attribute definitions the bundle reads when present.
             Optional — the bundle falls through to built-in views when not
             defined — but deploying them gives each kapp's admins a place to
@@ -329,7 +329,7 @@ export const SpaceSettings = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-base-content/70 max-w-prose">
+                  <p className="text-sm text-base-content/70">
                     {attr.description}
                   </p>
                   {rows.length === 0 ? (
@@ -380,7 +380,7 @@ export const SpaceSettings = () => {
           headerRight={capabilitiesHeaderBadge}
           initialOpen={false}
         >
-          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+          <p className="text-sm text-base-content/70 mb-3">
             Capabilities are kapps (plus forms, task handlers, workflows, and
             datastores) that provide discrete, reusable functions — things
             like notification templates, scheduled jobs, or shared reference
@@ -453,7 +453,7 @@ export const SpaceSettings = () => {
         </AccordionSection>
 
         <AccordionSection title="More Settings" initialOpen={false}>
-          <p className="text-sm text-base-content/70 max-w-prose">
+          <p className="text-sm text-base-content/70">
             Additional space-level configuration (theming, kapp management,
             nav, etc.) will appear here as the bundle grows.
           </p>
