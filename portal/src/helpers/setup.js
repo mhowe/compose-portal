@@ -102,3 +102,96 @@ export const readKappDefaultFormSlug = kapp =>
  */
 export const readSpaceDefaultFormSlug = space =>
   readAttribute(space, 'Default Space Form Slug');
+
+/**
+ * Returns the full status of every manifest item against the live space,
+ * including optional items. Used by Space Settings to render every row the
+ * admin can inspect or deploy — a superset of checkSetup's `missing` array
+ * (which only includes blocking / required items).
+ *
+ * Shape of each returned item:
+ *   {
+ *     scope: 'space' | 'userProfile' | 'kapp-existence' | 'kapp-attribute',
+ *     scopeLabel: string,       // human label for UI
+ *     kind: 'attribute' | 'kapp',
+ *     name: string,             // attribute name or kapp slug
+ *     description: string,
+ *     required: boolean,        // true if this item blocks setup.ok
+ *     present: boolean,
+ *     attributeType?: string,   // SDK attribute type when kind === 'attribute'
+ *     kappSlug?: string,        // which kapp this applies to, for kapp-attribute
+ *   }
+ *
+ * @param {Object} space Fetched space record. Must include space,
+ *   userProfile, and kapp attribute definitions, plus kapps.
+ * @returns {Array<Object>}
+ */
+export const getManifestStatus = space => {
+  if (!space) return [];
+
+  const spaceDefs = new Set(
+    (space.spaceAttributeDefinitions || []).map(d => d.name),
+  );
+  const userDefs = new Set(
+    (space.userProfileAttributeDefinitions || []).map(d => d.name),
+  );
+  const kapps = space.kapps || [];
+  const kappSlugs = new Set(kapps.map(k => k.slug));
+
+  const rows = [];
+
+  for (const attr of BUNDLE_MANIFEST.space.attributes) {
+    rows.push({
+      scope: 'space',
+      scopeLabel: 'Space',
+      kind: 'attribute',
+      attributeType: 'spaceAttributeDefinitions',
+      name: attr.name,
+      description: attr.description,
+      required: !!attr.required,
+      present: spaceDefs.has(attr.name),
+    });
+  }
+  for (const attr of BUNDLE_MANIFEST.userProfile.attributes) {
+    rows.push({
+      scope: 'userProfile',
+      scopeLabel: 'User Profile',
+      kind: 'attribute',
+      attributeType: 'userProfileAttributeDefinitions',
+      name: attr.name,
+      description: attr.description,
+      required: !!attr.required,
+      present: userDefs.has(attr.name),
+    });
+  }
+  rows.push({
+    scope: 'kapp-existence',
+    scopeLabel: 'Kapp',
+    kind: 'kapp',
+    name: ADMIN_KAPP_SLUG,
+    description:
+      "The bundle looks for configuration forms (e.g., the custom space landing form) in a kapp with slug 'admin'. Create this kapp on the space.",
+    required: true,
+    present: kappSlugs.has(ADMIN_KAPP_SLUG),
+  });
+  for (const attr of BUNDLE_MANIFEST.kapp.attributes) {
+    for (const kapp of kapps) {
+      const kappDefs = new Set(
+        (kapp.kappAttributeDefinitions || []).map(d => d.name),
+      );
+      rows.push({
+        scope: 'kapp-attribute',
+        scopeLabel: `Kapp: ${kapp.slug}`,
+        kind: 'attribute',
+        attributeType: 'kappAttributeDefinitions',
+        kappSlug: kapp.slug,
+        name: attr.name,
+        description: attr.description,
+        required: !!attr.required,
+        present: kappDefs.has(attr.name),
+      });
+    }
+  }
+
+  return rows;
+};

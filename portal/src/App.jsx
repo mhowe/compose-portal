@@ -57,7 +57,7 @@ export const App = ({
         ? loggedIn
           ? {
               include:
-                'attributesMap,kapps,kapps.attributesMap,spaceAttributeDefinitions,kappAttributeDefinitions,userProfileAttributeDefinitions',
+                'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions',
             }
           : { public: true, include: 'attributesMap,kapps' }
         : null,
