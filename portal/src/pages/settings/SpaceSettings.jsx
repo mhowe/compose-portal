@@ -8,8 +8,13 @@ import {
 } from '@kineticdata/react';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { Icon } from '../../atoms/Icon.jsx';
+import { AccordionSection } from '../../atoms/AccordionSection.jsx';
 import { BUNDLE_MANIFEST } from '../../helpers/bundle-manifest.js';
 import { getManifestStatus } from '../../helpers/setup.js';
+import {
+  STUB_CAPABILITIES,
+  getCapabilityStatuses,
+} from '../../helpers/capabilities.js';
 import { appActions } from '../../helpers/state.js';
 import { toastError, toastSuccess } from '../../helpers/toasts.js';
 
@@ -52,44 +57,46 @@ const deployOne = async item => {
 
 /**
  * Space Settings — admin-only page for deploying and configuring bundle
- * features.
+ * features. Each conceptual area lives in its own accordion section.
  *
- * Shows two tables:
- *   1. Bundle Setup — space + user-profile attribute definitions + admin kapp.
- *      All required; missing items block setup.ok.
- *   2. Kapp Attributes — one table per kapp attribute in the manifest, with
- *      a row per kapp showing definition status. Today this surfaces
- *      'Default Form Slug' across every kapp. Rows are optional (not
- *      required for setup.ok) but can still be deployed individually or via
- *      the top-level Deploy button.
- *
- * Deploy actions:
- *   - Top-level "Deploy Missing Items" deploys every item showing as missing
- *     (required + optional) in one batch.
- *   - Per-row Deploy deploys just that one item.
- * Both re-fetch the space on completion so the UI updates without a reload.
+ * Sections:
+ *   - Bundle Setup: required space + user-profile attribute definitions and
+ *     the admin kapp. Shows a warning badge when anything is missing.
+ *   - Kapp Attributes: optional per-kapp attribute definitions, one inner
+ *     table per attribute. Informational summary badge.
+ *   - Capabilities: stub list of installable kapps (Phase 2). Detection is
+ *     already real — Phase 3 wires the registry fetch and real install.
+ *   - More Settings: future home for theming, nav, etc.
  */
 export const SpaceSettings = () => {
   const space = useSelector(state => state.app.space);
   const spaceAdmin = useSelector(state => !!state.app.profile?.spaceAdmin);
 
   const [deploying, setDeploying] = useState(false);
-  // Item keys currently being deployed (either via top button or per-row).
-  // Used to disable the buttons mid-flight.
   const [busyKeys, setBusyKeys] = useState(() => new Set());
 
   const status = useMemo(() => getManifestStatus(space), [space]);
+  const capabilities = useMemo(
+    () => getCapabilityStatuses(STUB_CAPABILITIES, space?.kapps),
+    [space?.kapps],
+  );
 
   if (!spaceAdmin) return <Navigate to="/" replace />;
 
-  // Stable identifier for a row — also used as React key.
   const rowKey = row =>
     `${row.scope}:${row.kappSlug || ''}:${row.kind}:${row.name}`;
 
   const setupRows = status.filter(r => r.scope !== 'kapp-attribute');
   const missingItems = status.filter(r => !r.present);
-  const missingRequired = missingItems.filter(r => r.required);
-  const setupOk = missingRequired.length === 0;
+  const setupMissingRequired = missingItems.filter(r => r.required);
+  const setupOk = setupMissingRequired.length === 0;
+
+  const kappAttrRows = status.filter(r => r.scope === 'kapp-attribute');
+  const kappAttrMissing = kappAttrRows.filter(r => !r.present);
+
+  const capabilityInstalled = capabilities.filter(c => c.installed).length;
+  const capabilityUpgrades = capabilities.filter(c => c.upgradeAvailable).length;
+  const capabilityAvailable = capabilities.length - capabilityInstalled;
 
   const refreshSpace = async () => {
     try {
@@ -175,7 +182,6 @@ export const SpaceSettings = () => {
     );
   };
 
-  // Group kapp-attribute rows by attribute name for display.
   const kappAttrGroups = BUNDLE_MANIFEST.kapp.attributes.map(attr => ({
     attr,
     rows: status.filter(
@@ -183,155 +189,276 @@ export const SpaceSettings = () => {
     ),
   }));
 
+  const setupHeaderBadge = setupOk ? (
+    <span className="kbadge kbadge-success">
+      <Icon name="check" /> All set
+    </span>
+  ) : (
+    <span className="kbadge kbadge-warning">
+      <Icon name="alert-triangle" /> {setupMissingRequired.length} missing
+    </span>
+  );
+
+  const kappAttrsHeaderBadge = (
+    <span className="kbadge kbadge-ghost">
+      {kappAttrRows.length - kappAttrMissing.length} defined ·{' '}
+      {kappAttrMissing.length} not defined
+    </span>
+  );
+
+  const capabilitiesHeaderBadge = (
+    <div className="flex-sc gap-2">
+      {capabilityUpgrades > 0 && (
+        <span className="kbadge kbadge-info">
+          <Icon name="refresh" /> {capabilityUpgrades} upgrade
+          {capabilityUpgrades === 1 ? '' : 's'}
+        </span>
+      )}
+      <span className="kbadge kbadge-ghost">
+        {capabilityInstalled} installed · {capabilityAvailable} available
+      </span>
+    </div>
+  );
+
   return (
     <div className="gutter">
       <PageHeading title="Space Settings" backTo="/" />
 
-      <section className="flex-c-ss gap-3 mb-8">
-        <h2 className="text-h3 font-semibold">Bundle Setup</h2>
-        <p className="text-sm text-base-content/70 max-w-prose">
-          Compose Portal expects these attribute definitions and kapps to exist
-          on the space. Values may be left blank; the bundle falls through to
-          its embedded defaults when a value isn't configured. Only missing{' '}
-          <em>definitions</em> block the bundle from running normally.
-        </p>
+      <div className="flex-c-ss gap-4">
+        <AccordionSection
+          title="Bundle Setup"
+          headerRight={setupHeaderBadge}
+          initialOpen={!setupOk}
+        >
+          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+            Compose Portal expects these attribute definitions and kapps to
+            exist on the space. Values may be left blank; the bundle falls
+            through to its embedded defaults when a value isn't configured.
+            Only missing <em>definitions</em> block the bundle from running
+            normally.
+          </p>
 
-        <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 w-full">
-          <table className="ktable w-full">
-            <thead>
-              <tr>
-                <th className="text-left p-3">Scope</th>
-                <th className="text-left p-3">Name</th>
-                <th className="text-left p-3 hidden md:table-cell">
-                  Description
-                </th>
-                <th className="text-left p-3 w-0 whitespace-nowrap">Status</th>
-                <th className="text-right p-3 w-0 whitespace-nowrap" />
-              </tr>
-            </thead>
-            <tbody>
-              {setupRows.map(row => (
-                <tr key={rowKey(row)} className="border-t border-base-300">
-                  <td className="p-3 whitespace-nowrap">{row.scopeLabel}</td>
-                  <td className="p-3 font-medium whitespace-nowrap">
-                    {row.name}
-                  </td>
-                  <td className="p-3 hidden md:table-cell text-sm text-base-content/70">
-                    {row.description}
-                  </td>
-                  <td className="p-3 whitespace-nowrap">
-                    {renderStatusCell(row)}
-                  </td>
-                  <td className="p-3 text-right whitespace-nowrap">
-                    {renderDeployCell(row)}
-                  </td>
+          <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 w-full">
+            <table className="ktable w-full">
+              <thead>
+                <tr>
+                  <th className="text-left p-3">Scope</th>
+                  <th className="text-left p-3">Name</th>
+                  <th className="text-left p-3 hidden md:table-cell">
+                    Description
+                  </th>
+                  <th className="text-left p-3 w-0 whitespace-nowrap">
+                    Status
+                  </th>
+                  <th className="text-right p-3 w-0 whitespace-nowrap" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex-sc gap-3 mt-2">
-          <button
-            type="button"
-            className="kbtn kbtn-primary"
-            onClick={() => runDeploy(missingItems)}
-            disabled={missingItems.length === 0 || deploying}
-          >
-            {missingItems.length === 0
-              ? 'All Items Defined'
-              : deploying
-                ? 'Deploying…'
-                : `Deploy ${missingItems.length} Missing Item${missingItems.length === 1 ? '' : 's'}`}
-          </button>
-          {!setupOk && (
-            <span className="text-sm text-base-content/70">
-              {missingRequired.length} required item
-              {missingRequired.length === 1 ? '' : 's'} still blocking setup.
-            </span>
-          )}
-        </div>
-      </section>
-
-      <section className="flex-c-ss gap-3 mb-8">
-        <h2 className="text-h3 font-semibold">Kapp Attributes</h2>
-        <p className="text-sm text-base-content/70 max-w-prose">
-          Kapp-level attribute definitions the bundle reads when present.
-          These are optional — the bundle falls through to built-in views
-          when not defined — but deploying them gives each kapp's admins a
-          place to configure kapp-specific behavior.
-        </p>
-
-        {kappAttrGroups.length === 0 ? (
-          <div className="kd-callout">
-            No kapp attribute definitions are declared in the manifest yet.
+              </thead>
+              <tbody>
+                {setupRows.map(row => (
+                  <tr key={rowKey(row)} className="border-t border-base-300">
+                    <td className="p-3 whitespace-nowrap">{row.scopeLabel}</td>
+                    <td className="p-3 font-medium whitespace-nowrap">
+                      {row.name}
+                    </td>
+                    <td className="p-3 hidden md:table-cell text-sm text-base-content/70">
+                      {row.description}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {renderStatusCell(row)}
+                    </td>
+                    <td className="p-3 text-right whitespace-nowrap">
+                      {renderDeployCell(row)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          kappAttrGroups.map(({ attr, rows }) => (
-            <div
-              key={attr.name}
-              className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100 w-full"
-            >
-              <div className="flex-sc gap-2 flex-wrap">
-                <span className="text-h4 font-semibold">{attr.name}</span>
-                {attr.required && (
-                  <span className="kbadge kbadge-warning kbadge-sm">
-                    Required
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-base-content/70 max-w-prose">
-                {attr.description}
-              </p>
-              {rows.length === 0 ? (
-                <div className="text-sm text-base-content/60 italic">
-                  No kapps found on this space.
-                </div>
-              ) : (
-                <div className="overflow-x-auto rounded-box border border-base-300 w-full">
-                  <table className="ktable w-full">
-                    <thead>
-                      <tr>
-                        <th className="text-left p-3">Kapp</th>
-                        <th className="text-left p-3 w-0 whitespace-nowrap">
-                          Status
-                        </th>
-                        <th className="text-right p-3 w-0 whitespace-nowrap" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map(row => (
-                        <tr
-                          key={rowKey(row)}
-                          className="border-t border-base-300"
-                        >
-                          <td className="p-3 font-medium whitespace-nowrap">
-                            {row.kappSlug}
-                          </td>
-                          <td className="p-3 whitespace-nowrap">
-                            {renderStatusCell(row)}
-                          </td>
-                          <td className="p-3 text-right whitespace-nowrap">
-                            {renderDeployCell(row)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </section>
 
-      <section className="flex-c-ss gap-3 mb-8">
-        <h2 className="text-h3 font-semibold">More Settings</h2>
-        <p className="text-sm text-base-content/70 max-w-prose">
-          Additional space-level configuration (theming, kapp management, nav,
-          etc.) will appear here as the bundle grows.
-        </p>
-      </section>
+          <div className="flex-sc gap-3 mt-4 flex-wrap">
+            <button
+              type="button"
+              className="kbtn kbtn-primary"
+              onClick={() => runDeploy(missingItems)}
+              disabled={missingItems.length === 0 || deploying}
+            >
+              {missingItems.length === 0
+                ? 'All Items Defined'
+                : deploying
+                  ? 'Deploying…'
+                  : `Deploy ${missingItems.length} Missing Item${missingItems.length === 1 ? '' : 's'}`}
+            </button>
+            {!setupOk && (
+              <span className="text-sm text-base-content/70">
+                {setupMissingRequired.length} required item
+                {setupMissingRequired.length === 1 ? '' : 's'} still blocking
+                setup.
+              </span>
+            )}
+          </div>
+        </AccordionSection>
+
+        <AccordionSection
+          title="Kapp Attributes"
+          headerRight={kappAttrsHeaderBadge}
+          initialOpen={false}
+        >
+          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+            Kapp-level attribute definitions the bundle reads when present.
+            Optional — the bundle falls through to built-in views when not
+            defined — but deploying them gives each kapp's admins a place to
+            configure kapp-specific behavior.
+          </p>
+
+          {kappAttrGroups.length === 0 ? (
+            <div className="kd-callout">
+              No kapp attribute definitions are declared in the manifest yet.
+            </div>
+          ) : (
+            <div className="flex-c-ss gap-4">
+              {kappAttrGroups.map(({ attr, rows }) => (
+                <div
+                  key={attr.name}
+                  className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100 w-full"
+                >
+                  <div className="flex-sc gap-2 flex-wrap">
+                    <span className="text-h4 font-semibold">{attr.name}</span>
+                    {attr.required && (
+                      <span className="kbadge kbadge-warning kbadge-sm">
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-base-content/70 max-w-prose">
+                    {attr.description}
+                  </p>
+                  {rows.length === 0 ? (
+                    <div className="text-sm text-base-content/60 italic">
+                      No kapps found on this space.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-box border border-base-300 w-full">
+                      <table className="ktable w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left p-3">Kapp</th>
+                            <th className="text-left p-3 w-0 whitespace-nowrap">
+                              Status
+                            </th>
+                            <th className="text-right p-3 w-0 whitespace-nowrap" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map(row => (
+                            <tr
+                              key={rowKey(row)}
+                              className="border-t border-base-300"
+                            >
+                              <td className="p-3 font-medium whitespace-nowrap">
+                                {row.kappSlug}
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                {renderStatusCell(row)}
+                              </td>
+                              <td className="p-3 text-right whitespace-nowrap">
+                                {renderDeployCell(row)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </AccordionSection>
+
+        <AccordionSection
+          title="Capabilities"
+          headerRight={capabilitiesHeaderBadge}
+          initialOpen={false}
+        >
+          <p className="text-sm text-base-content/70 max-w-prose mb-3">
+            Capabilities are kapps (plus forms, task handlers, workflows, and
+            datastores) that provide discrete, reusable functions — things
+            like notification templates, scheduled jobs, or shared reference
+            data. Install a capability to add its kapp and machinery to this
+            space.
+          </p>
+          <p className="text-xs text-base-content/60 italic mb-3">
+            Capability registry and one-click install are not yet wired. The
+            list below is a placeholder to validate the UX; status reflects
+            live kapps on your space matching the capability id and carrying a{' '}
+            <code>Capability Metadata</code> attribute.
+          </p>
+
+          {capabilities.length === 0 ? (
+            <div className="kd-callout">
+              No capabilities are available from the current registry.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {capabilities.map(cap => (
+                <div
+                  key={cap.id}
+                  className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100"
+                >
+                  <div className="flex-sc gap-2 w-full">
+                    <span className="text-h4 font-semibold flex-auto">
+                      {cap.name}
+                    </span>
+                    {cap.installed ? (
+                      cap.upgradeAvailable ? (
+                        <span className="kbadge kbadge-info">
+                          <Icon name="refresh" /> Upgrade
+                        </span>
+                      ) : (
+                        <span className="kbadge kbadge-success">
+                          <Icon name="check" /> Installed
+                        </span>
+                      )
+                    ) : (
+                      <span className="kbadge kbadge-ghost">Available</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-base-content/70">
+                    {cap.description}
+                  </p>
+                  <div className="flex-sc gap-3 text-xs text-base-content/60">
+                    <span>Version {cap.version}</span>
+                    {cap.installed &&
+                      cap.installedVersion &&
+                      cap.installedVersion !== cap.version && (
+                        <span>(installed: {cap.installedVersion})</span>
+                      )}
+                  </div>
+                  <button
+                    type="button"
+                    className="kbtn kbtn-sm kbtn-outline mt-2"
+                    disabled
+                    title="Installer not yet implemented"
+                  >
+                    {cap.installed
+                      ? cap.upgradeAvailable
+                        ? 'Upgrade (coming soon)'
+                        : 'Installed'
+                      : 'Install (coming soon)'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </AccordionSection>
+
+        <AccordionSection title="More Settings" initialOpen={false}>
+          <p className="text-sm text-base-content/70 max-w-prose">
+            Additional space-level configuration (theming, kapp management,
+            nav, etc.) will appear here as the bundle grows.
+          </p>
+        </AccordionSection>
+      </div>
     </div>
   );
 };
