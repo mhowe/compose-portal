@@ -1,7 +1,6 @@
 import {
   createAttributeDefinition,
   createForm,
-  createHandler,
   createKapp,
   createOperation,
   fetchConnections,
@@ -652,17 +651,29 @@ export const installCapability = async (manifest, options = {}) => {
           .replace(/\?.*$/, '');
         const definitionId = filename.replace(/\.zip$/i, '');
 
-        // createHandler with packageUrl: Kinetic's task service fetches the
-        // zip server-side from the registry URL — no browser download/upload
-        // round-trip. force=true makes it an upsert, matching the
-        // capability-scoped overwrite policy (admin code-edits to handler
-        // packages get replaced; configuration_properties they don't manage
-        // are preserved by the merge below).
-        const importResult = await createHandler({
-          packageUrl: zipUrl,
-          force: true,
-        });
-        if (importResult?.error) throw importResult.error;
+        // Import via plain fetch (SDK's createHandler wraps the body as an
+        // object literal with empty headers and the Kinetic task service
+        // bounces it back as "java.util.LinkedHashMap cannot be cast to
+        // java.lang.String" — Content-Type isn't reliably reaching the
+        // server through the SDK path on this endpoint). Using fetch with
+        // explicit Content-Type and JSON.stringify gives the deserializer
+        // exactly what it expects: { "packageUrl": "<url>" }.
+        // force=true is a query param so an existing handler is replaced.
+        const importResp = await fetch(
+          '/app/components/task/app/api/v2/handlers?force=true',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ packageUrl: zipUrl }),
+            credentials: 'include',
+          },
+        );
+        if (!importResp.ok) {
+          const detail = await importResp.text().catch(() => '');
+          throw new Error(
+            `Handler upload failed: HTTP ${importResp.status} ${detail.slice(0, 300)}`,
+          );
+        }
 
         const props =
           step.handlerEntry?.configuration_properties ||
