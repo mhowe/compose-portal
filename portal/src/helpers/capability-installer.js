@@ -218,7 +218,15 @@ export const installCapability = async (manifest, options = {}) => {
           };
         }
         const definitionUrl = resolveUrl(manifest, manifest.kapp?.definition);
-        if (!definitionUrl) throw new Error('manifest.kapp.definition missing');
+        if (!definitionUrl) {
+          console.error(
+            'Capability install: manifest.kapp.definition missing. Full manifest:',
+            manifest,
+          );
+          throw new Error(
+            `manifest.kapp.definition missing — got manifest.kapp = ${JSON.stringify(manifest.kapp)}. Check the served manifest.json in the browser network tab.`,
+          );
+        }
         const kappJson = await fetchJson(definitionUrl);
         const kappObject = kappJson?.kapp || kappJson;
         // Defensive: never let a pre-set Capability Metadata value sneak in
