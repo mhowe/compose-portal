@@ -392,9 +392,29 @@ export const installCapability = async (manifest, options = {}) => {
         }
         // Capability-scoped content: if the capability is already present,
         // PUT the export over the live kapp so the bundle's canonical state
-        // is restored. Existing kapp identified by Capability Metadata id,
-        // not by slug, since kapp.json owns the slug.
-        const existing = findInstalledKapp(space?.kapps, manifest.id);
+        // is restored.
+        //
+        // Detection precedence:
+        //   1. Find a kapp tagged with this capability's metadata id —
+        //      authoritative match across slug changes.
+        //   2. If no metadata match, fall back to a slug match against
+        //      kapp.json's slug — handles the common case where someone
+        //      cleared the metadata value (manual debugging, partial install
+        //      that didn't reach metadata-value, etc.).
+        //   3. If neither matches, create. Treat a createKapp slug-collision
+        //      response as a true conflict — a kapp at the same slug exists
+        //      that we couldn't see in space.kapps (race / stale data /
+        //      etc.) and isn't ours.
+        //
+        // TODO(force-overwrite-toggle): once the install dialog has an
+        // explicit "force overwrite" checkbox, the slug-only fallback (case 2)
+        // can be gated behind it for capabilities whose slugs collide with
+        // genuinely-unrelated admin kapps.
+        const byMeta = findInstalledKapp(space?.kapps, manifest.id);
+        const bySlug = (space?.kapps || []).find(
+          k => k.slug === kappObject.slug,
+        );
+        const existing = byMeta || bySlug;
         if (existing) {
           kappSlug = existing.slug;
           const result = await updateKapp({
@@ -402,16 +422,16 @@ export const installCapability = async (manifest, options = {}) => {
             kapp: kappObject,
           });
           if (result?.error) throw result.error;
-          return { message: `Updated /kapps/${kappSlug}` };
+          const note = byMeta
+            ? ''
+            : ' (slug match; will be re-tagged with Capability Metadata)';
+          return { message: `Updated /kapps/${kappSlug}${note}` };
         }
         const result = await createKapp({ kapp: kappObject });
         if (result?.error) {
           if (isAlreadyExistsError(result.error)) {
-            // A kapp at this slug exists but isn't tagged as this capability.
-            // Don't silently overwrite a kapp the bundle didn't install —
-            // surface the conflict so the admin can resolve it manually.
             throw new Error(
-              `A kapp with slug "${kappObject.slug}" already exists but is not tagged as this capability. Rename or remove it before installing.`,
+              `A kapp with slug "${kappObject.slug}" already exists but isn't visible to the bundle. Refresh the page and try again, or rename / remove the conflicting kapp.`,
             );
           }
           throw result.error;

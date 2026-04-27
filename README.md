@@ -37,13 +37,18 @@ Early-stage scaffold. What's working:
   - `/kapps/:slug` renders the form named by the kapp's `Default Form Slug` attribute when set; otherwise renders the forms table.
   - In both cases, if the configured slug doesn't exist, the bundle falls through to its built-in view.
 - **Admin kapp convention** — a kapp with slug `admin` is expected on the space and is where bundle-level configuration forms live. Flagged by the setup check when missing.
-- **Setup check** — if required attribute definitions or the admin kapp are missing, space admins are redirected to `/settings/space`. Deploy action is currently a stub.
+- **Setup check + Deploy action** — Space Settings detects missing attribute definitions and the admin kapp; clicking Deploy creates them via the SDK. Required-missing items block setup; optional items (per-kapp `Default Form Slug`) are surfaced informationally.
+- **Capability registry** — Space Settings reads registry URLs from the `Capability Registry URLs` space attribute, fetches index + manifests, displays available capabilities with installed-status detection (via `Capability Metadata` attribute on each kapp).
+- **Capability installer** — installs spaceConfiguration (user/team attrs), connections + their operations, the kapp from `kapp.json`, the kapp's `Capability Metadata` definition, forms + CSV seed data, and writes the canonical `Capability Metadata` value. Idempotent: re-installs replace bundle-scoped content (kapp, forms, operations) but leave admin-scoped content (connection credentials, seeded form submissions) alone.
 - **Header navigation** — logo links to `/` (personalized home via resolver), a "grid" icon to the right of the logo links to `/kapps` (space home), hamburger menu is reserved for kapp-driven navigation.
 - **Component class layer (`kd-*`)** — Tailwind `@layer components` classes form designers can apply as single class names (Bootstrap-style), alongside DaisyUI's built-in `k*` vocabulary.
 
 Roadmap:
 
-- **Deploy action** on Space Settings — call the Kinetic SDK to create missing attribute definitions and the admin kapp automatically (currently shows instructions to do so manually).
+- **Capability installer Phase 4c** — task handler upload + properties PUT, workflow trees + routines, post-install manual_steps UI.
+- **Capability upgrade flow** — version-aware re-install with diff detection on bundle-scoped content; surface what changed before applying.
+- **Force-overwrite toggle on install** — explicit checkbox in the install modal to opt into overwriting kapps/forms that aren't currently tagged with this capability's metadata. Today the installer's slug fallback handles the common re-install case; this toggle covers genuinely-conflicting admin work.
+- **Customization detection** — SHA-256 checksums on capability assets so admins see which parts of an installed capability have been modified locally.
 - **Kapp-driven hamburger menu** — read a kapp attribute (likely JSON) to populate the within-kapp navigation.
 - **Theme editor rebuild** — cascade between space and kapp `Theme` attributes; entry points from Space Settings and (future) Kapp Settings pages.
 - **Additional widgets** — navigation variants, kapp/form/submission renderers, timelines, and others discovered by putting the bundle through its paces.
