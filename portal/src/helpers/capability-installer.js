@@ -2,13 +2,16 @@ import {
   createAttributeDefinition,
   createForm,
   createKapp,
+  createOperation,
   fetchConnections,
   fetchForms,
   fetchKapp,
+  fetchOperations,
   importConnection,
   importSubmissions,
   updateAttributeDefinition,
   updateKapp,
+  updateOperation,
 } from '@kineticdata/react';
 import {
   CAPABILITY_ATTRIBUTE_NAME,
@@ -278,35 +281,92 @@ export const installCapability = async (manifest, options = {}) => {
         }
         const exportJson = await fetchJson(definitionUrl);
         const connectionObject = exportJson?.connection || exportJson;
-        const id = connectionObject?.id;
-        // Existence check by id — the export carries stable ids the import
-        // endpoint preserves, so re-runs detect a prior install cleanly.
-        if (id) {
+        const connectionId = connectionObject?.id;
+        const exportedOps = Array.isArray(connectionObject?.operations)
+          ? connectionObject.operations
+          : [];
+
+        // 1. Connection record — admin-extensible (credentials, baseUrl etc.).
+        //    Existence check by id; skip if present, import if not.
+        let connectionStatus = null;
+        if (connectionId) {
           const existingResp = await fetchConnections({});
           if (existingResp?.error) throw existingResp.error;
           const existing = (existingResp?.connections || []).find(
-            c => c.id === id,
+            c => c.id === connectionId,
           );
           if (existing) {
-            return {
-              skipped: true,
-              message: `Already imported: ${existing.name || id}`,
-            };
+            connectionStatus = `connection ${existing.name || connectionId} already present`;
           }
         }
-        const result = await importConnection({ connection: connectionObject });
-        if (result?.error) {
-          if (isAlreadyExistsError(result.error)) {
-            return {
-              skipped: true,
-              message: 'Already imported',
-            };
+        if (!connectionStatus) {
+          const importResult = await importConnection({
+            connection: connectionObject,
+          });
+          if (importResult?.error) {
+            if (!isAlreadyExistsError(importResult.error)) {
+              throw importResult.error;
+            }
+            connectionStatus = 'connection already imported';
+          } else {
+            connectionStatus = `imported connection ${connectionObject?.name || connectionId}`;
           }
-          throw result.error;
         }
-        return {
-          message: `Imported ${connectionObject?.name || id || 'connection'}`,
-        };
+
+        // 2. Operations — capability-scoped. Each operation in the export is
+        //    create-or-updated; live operations not in the export are left
+        //    alone so admin-added ones persist across re-installs.
+        let created = 0;
+        let updated = 0;
+        if (connectionId && exportedOps.length > 0) {
+          const liveResp = await fetchOperations({ connectionId });
+          if (liveResp?.error) throw liveResp.error;
+          const liveById = new Map(
+            (liveResp?.operations || []).map(o => [o.id, o]),
+          );
+
+          for (const operation of exportedOps) {
+            const opId = operation?.id;
+            if (opId && liveById.has(opId)) {
+              const result = await updateOperation({
+                connectionId,
+                id: opId,
+                operation,
+              });
+              if (result?.error) throw result.error;
+              updated += 1;
+            } else {
+              const result = await createOperation({
+                connectionId,
+                operation,
+              });
+              if (result?.error) {
+                // Race condition / id reuse; fall back to update.
+                if (
+                  isAlreadyExistsError(result.error) &&
+                  opId
+                ) {
+                  const upd = await updateOperation({
+                    connectionId,
+                    id: opId,
+                    operation,
+                  });
+                  if (upd?.error) throw upd.error;
+                  updated += 1;
+                } else {
+                  throw result.error;
+                }
+              } else {
+                created += 1;
+              }
+            }
+          }
+        }
+
+        const opsSummary = exportedOps.length
+          ? `, ${created} op${created === 1 ? '' : 's'} created, ${updated} updated`
+          : '';
+        return { message: `${connectionStatus}${opsSummary}` };
       });
     } else if (step.kind === 'kapp') {
       await run(step, async () => {
