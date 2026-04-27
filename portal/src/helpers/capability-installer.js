@@ -1,11 +1,11 @@
 import {
   createAttributeDefinition,
   createForm,
+  createHandler,
   createKapp,
   createOperation,
   fetchConnections,
   fetchForms,
-  fetchHandler,
   fetchKapp,
   fetchOperations,
   importConnection,
@@ -651,29 +651,14 @@ export const installCapability = async (manifest, options = {}) => {
           .replace(/\?.*$/, '');
         const definitionId = filename.replace(/\.zip$/i, '');
 
-        // Import via plain fetch (SDK's createHandler wraps the body as an
-        // object literal with empty headers and the Kinetic task service
-        // bounces it back as "java.util.LinkedHashMap cannot be cast to
-        // java.lang.String" — Content-Type isn't reliably reaching the
-        // server through the SDK path on this endpoint). Using fetch with
-        // explicit Content-Type and JSON.stringify gives the deserializer
-        // exactly what it expects: { "packageUrl": "<url>" }.
-        // force=true is a query param so an existing handler is replaced.
-        const importResp = await fetch(
-          '/app/components/task/app/api/v2/handlers?force=true',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ packageUrl: zipUrl }),
-            credentials: 'include',
-          },
-        );
-        if (!importResp.ok) {
-          const detail = await importResp.text().catch(() => '');
-          throw new Error(
-            `Handler upload failed: HTTP ${importResp.status} ${detail.slice(0, 300)}`,
-          );
-        }
+        // Import via SDK's createHandler — Kinetic's task service fetches
+        // the zip server-side from the registry URL. force=true makes it an
+        // upsert (capability-scoped overwrite policy).
+        const importResult = await createHandler({
+          packageUrl: zipUrl,
+          force: true,
+        });
+        if (importResult?.error) throw importResult.error;
 
         const props =
           step.handlerEntry?.configuration_properties ||
@@ -684,26 +669,14 @@ export const installCapability = async (manifest, options = {}) => {
           return { message: `${definitionId} imported` };
         }
 
-        // Properties pass: GET with include=properties, merge our values
-        // into the live property records (preserving description/required
-        // metadata for keys we don't touch), PUT the merged handler back.
-        const fetched = await fetchHandler({
-          definitionId,
-          include: 'properties',
-        });
-        if (fetched?.error) throw fetched.error;
-        const currentHandler = fetched.handler || {};
-        const currentProps = currentHandler.properties || {};
-        const mergedProps = { ...currentProps };
-        for (const [key, value] of Object.entries(props)) {
-          mergedProps[key] = mergedProps[key]
-            ? { ...mergedProps[key], value }
-            : { value };
-        }
-
+        // Property PUT: send only the keys we manage as a flat
+        // { properties: { key: stringValue } }. Kinetic merges with
+        // existing — admin-set values for keys we don't touch survive,
+        // and the server expects flat string values (wrapping them as
+        // { value: "..." } trips a LinkedHashMap-to-String cast error).
         const updateResult = await updateHandler({
           definitionId,
-          handler: { ...currentHandler, properties: mergedProps },
+          handler: { properties: props },
         });
         if (updateResult?.error) throw updateResult.error;
 
