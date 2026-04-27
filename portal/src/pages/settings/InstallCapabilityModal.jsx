@@ -6,6 +6,8 @@ import {
   installCapability,
   INSTALLER_STATUSES,
 } from '../../helpers/capability-installer.js';
+import { findInstalledKapp } from '../../helpers/capabilities.js';
+import { ManualStepsList } from '../../components/capabilities/ManualStepsList.jsx';
 
 const StepIcon = ({ status }) => {
   switch (status) {
@@ -42,6 +44,18 @@ export const InstallCapabilityModal = ({ capability, onClose, onComplete }) => {
   const [steps, setSteps] = useState([]);
   const [finished, setFinished] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Once install completes and the parent has refreshed space data, find
+  // the freshly-tagged kapp so the manual-steps checklist below renders
+  // against live metadata. Will be null briefly between finish and the
+  // Redux update from refreshSpace; ManualStepsList isn't rendered until
+  // the kapp is available.
+  const installedKapp = finished && success
+    ? findInstalledKapp(space?.kapps, capability.id)
+    : null;
+  const hasManualSteps =
+    Array.isArray(capability?.notes?.manual_steps) &&
+    capability.notes.manual_steps.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -115,11 +129,25 @@ export const InstallCapabilityModal = ({ capability, onClose, onComplete }) => {
           </div>
         )}
 
-        <p className="text-xs text-base-content/50 italic mt-2">
-          Phase 4a installs the kapp and tags it with Capability Metadata.
-          Forms, task handlers, workflows, and integrations land in later
-          phases.
-        </p>
+        {finished && success && hasManualSteps && (
+          <div className="mt-4 pt-4 border-t border-base-300">
+            {installedKapp ? (
+              <ManualStepsList
+                capability={capability}
+                installedKapp={installedKapp}
+              />
+            ) : (
+              <div className="flex-sc gap-2 text-sm text-base-content/60">
+                <Icon
+                  name="loader-2"
+                  size={16}
+                  className="animate-spin"
+                />
+                Loading manual-step checklist…
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div slot="footer">

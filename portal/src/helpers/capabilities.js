@@ -42,10 +42,43 @@ export const findInstalledKapp = (kapps, capabilityId) =>
   null;
 
 /**
+ * Returns manual-step status for an installed capability:
+ *   { total, completed, pending, steps: [{id, text, link, completed}] }
+ *
+ * `steps` enumerates the manifest's manual_steps in declared order, with
+ * each entry's completion state pulled from the kapp's metadata. Steps
+ * present on the kapp but not in the manifest (orphaned by a version
+ * change) are ignored — the manifest is the source of truth for which
+ * steps to render.
+ */
+export const getManualStepStatus = (capability, kapp) => {
+  const manifestSteps = capability?.notes?.manual_steps || [];
+  const meta = kapp ? readCapabilityMetadata(kapp) : null;
+  const completionMap = meta?.manualSteps || {};
+  const steps = manifestSteps.map(s => ({
+    id: String(s.id),
+    text: s.text || '',
+    link: s.link || null,
+    completed: !!completionMap[String(s.id)]?.completed,
+  }));
+  const completed = steps.filter(s => s.completed).length;
+  return {
+    total: steps.length,
+    completed,
+    pending: steps.length - completed,
+    steps,
+  };
+};
+
+/**
  * Augments each registry capability with live install status based on the
  * space's kapps. Produces one row per capability:
  *
- *   { ...capability, installed, installedVersion, installedKapp, upgradeAvailable, customized }
+ *   { ...capability, installed, installedVersion, installedKapp,
+ *     upgradeAvailable, customized, manualSteps }
+ *
+ * `manualSteps` is the result of getManualStepStatus when the capability
+ * is installed; an empty/zero status when not.
  *
  * @param {Array} capabilities The merged registry list.
  * @param {Array} kapps The space's kapps (must include attributesMap).
@@ -60,6 +93,9 @@ export const getCapabilityStatuses = (capabilities, kapps = []) =>
       installed && !!installedVersion && installedVersion !== cap.version;
     // Customization detection lands in a later phase — stub to false now.
     const customized = false;
+    const manualSteps = installed
+      ? getManualStepStatus(cap, kapp)
+      : { total: 0, completed: 0, pending: 0, steps: [] };
     return {
       ...cap,
       installed,
@@ -67,6 +103,7 @@ export const getCapabilityStatuses = (capabilities, kapps = []) =>
       installedKapp: kapp || null,
       upgradeAvailable,
       customized,
+      manualSteps,
     };
   });
 

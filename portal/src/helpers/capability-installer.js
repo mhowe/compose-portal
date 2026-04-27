@@ -1,4 +1,5 @@
 import {
+  bundle,
   createAttributeDefinition,
   createForm,
   createHandler,
@@ -8,9 +9,9 @@ import {
   fetchForms,
   fetchKapp,
   fetchOperations,
+  getCsrfToken,
   importConnection,
   importSubmissions,
-  importTree,
   updateAttributeDefinition,
   updateForm,
   updateHandler,
@@ -90,6 +91,34 @@ const fetchText = async url => {
     throw new Error(`HTTP ${response.status} fetching ${url}`);
   }
   return response.text();
+};
+
+// The Kinetic Platform trees endpoint requires a multipart/form-data upload.
+// The SDK's importTree({ contentUrl }) sends application/json (server rejects)
+// and importTree({ content }) sets a Content-Type without a boundary (also
+// rejected). Build the multipart request directly so the browser fills in the
+// boundary, and POST the XML as a named "content" file — matching the export
+// shape the server produces.
+const importWorkflowXml = async ({ xmlUrl, force = true }) => {
+  const xml = await fetchText(xmlUrl);
+  const filename = xmlUrl.split('/').pop() || 'workflow.xml';
+  const file = new File([xml], filename, { type: 'text/xml' });
+  const formData = new FormData();
+  formData.set('content', file, filename);
+  const url = `${bundle.spaceLocation()}/app/components/task/app/api/v2/trees?force=${force ? 'true' : 'false'}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    headers: { 'X-XSRF-TOKEN': getCsrfToken() },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = body?.message || body?.error || `HTTP ${response.status}`;
+    const err = new Error(`Failed to import ${filename}: ${message}`);
+    err.response = body;
+    throw err;
+  }
+  return { tree: body };
 };
 
 /**
@@ -692,11 +721,10 @@ export const installCapability = async (manifest, options = {}) => {
             `workflows.routines[${step.index}] URL missing in manifest`,
           );
         }
-        // Capability-scoped overwrite: importTree with force=true upserts
-        // by name. Both routines and trees use the same endpoint; the XML's
-        // root element type (routine vs tree) determines server handling.
-        const result = await importTree({ contentUrl: xmlUrl, force: true });
-        if (result?.error) throw result.error;
+        // Capability-scoped overwrite: force=true upserts by name. Both
+        // routines and trees use the same endpoint; the XML's root element
+        // type (routine vs tree) determines server handling.
+        const result = await importWorkflowXml({ xmlUrl, force: true });
         const name = result?.tree?.name || xmlUrl.split('/').pop();
         return { message: `Imported ${name}` };
       });
@@ -708,8 +736,7 @@ export const installCapability = async (manifest, options = {}) => {
             `workflows.trees[${step.index}].definition missing in manifest`,
           );
         }
-        const result = await importTree({ contentUrl: xmlUrl, force: true });
-        if (result?.error) throw result.error;
+        const result = await importWorkflowXml({ xmlUrl, force: true });
         const name = result?.tree?.name || xmlUrl.split('/').pop();
         return { message: `Imported ${name}` };
       });
@@ -718,11 +745,47 @@ export const installCapability = async (manifest, options = {}) => {
         if (!kappSlug) {
           throw new Error('Kapp slug unknown');
         }
+        // Preserve completion state across re-installs and across version
+        // upgrades that add or remove steps. Strategy:
+        //   - Read whatever Capability Metadata already lives on the kapp.
+        //   - For every manual_steps entry in the current manifest, carry
+        //     forward the existing per-step record (preserving completed /
+        //     completedAt / completedBy) when the id matches.
+        //   - New ids from the current manifest land as { completed: false }.
+        //   - Ids that were on the kapp but are no longer in the manifest
+        //     drop out — they're stale and shouldn't render anywhere.
+        //   - installedAt is set on first install only; re-installs add an
+        //     upgradedAt timestamp without overwriting the original.
+        const fetchedKapp = await fetchKapp({
+          kappSlug,
+          include: 'attributesMap',
+        });
+        const liveAttrValue =
+          fetchedKapp?.kapp?.attributesMap?.[CAPABILITY_ATTRIBUTE_NAME]?.[0];
+        let priorMeta = {};
+        if (liveAttrValue) {
+          try {
+            priorMeta = JSON.parse(liveAttrValue) || {};
+          } catch {
+            priorMeta = {};
+          }
+        }
+        const priorSteps = priorMeta.manualSteps || {};
+        const manifestSteps = manifest?.notes?.manual_steps || [];
+        const manualSteps = {};
+        for (const step of manifestSteps) {
+          const stepId = String(step.id);
+          manualSteps[stepId] = priorSteps[stepId] || { completed: false };
+        }
+
+        const now = new Date().toISOString();
         const metadata = {
           id: manifest.id,
           version: manifest.version,
-          installedAt: new Date().toISOString(),
+          installedAt: priorMeta.installedAt || now,
           registryUrl: registryUrl || manifest.registryUrl,
+          ...(priorMeta.installedAt ? { upgradedAt: now } : {}),
+          ...(manifestSteps.length > 0 ? { manualSteps } : {}),
         };
         const result = await updateKapp({
           kappSlug,
