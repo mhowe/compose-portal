@@ -135,6 +135,11 @@ export const InstallCapabilityModal = ({ capability, onClose, onComplete }) => {
               <ManualStepsList
                 capability={capability}
                 installedKapp={installedKapp}
+                // Reuse onComplete as "something changed, refresh" so the
+                // parent's space data — and therefore the capability card's
+                // Manual steps badge — stays in sync with toggles made
+                // here in the install modal.
+                onChange={onComplete}
               />
             ) : (
               <div className="flex-sc gap-2 text-sm text-base-content/60">
