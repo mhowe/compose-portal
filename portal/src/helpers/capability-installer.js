@@ -1,6 +1,8 @@
 import {
   createAttributeDefinition,
   createKapp,
+  fetchKapp,
+  updateAttributeDefinition,
   updateKapp,
 } from '@kineticdata/react';
 import {
@@ -255,22 +257,48 @@ export const installCapability = async (manifest, options = {}) => {
         if (!kappSlug) {
           throw new Error('Kapp slug unknown — earlier step must succeed');
         }
-        const result = await createAttributeDefinition({
-          attributeType: 'kappAttributeDefinitions',
+        const desired = {
+          name: CAPABILITY_ATTRIBUTE_NAME,
+          description:
+            'Compose Portal capability install metadata. Managed by the bundle.',
+          allowsMultiple: false,
+        };
+        // Fetch the kapp's current attribute definitions to decide between
+        // create / update / skip rather than relying on error-message matching
+        // (which proved fragile — Kinetic's "must be unique and there are 2"
+        // error doesn't match a generic already-exists pattern).
+        const fetched = await fetchKapp({
           kappSlug,
-          attributeDefinition: {
-            name: CAPABILITY_ATTRIBUTE_NAME,
-            description:
-              'Compose Portal capability install metadata. Managed by the bundle.',
-            allowsMultiple: false,
-          },
+          include: 'kappAttributeDefinitions',
         });
-        if (result?.error) {
-          if (isAlreadyExistsError(result.error)) {
+        if (fetched?.error) throw fetched.error;
+        const defs = fetched?.kapp?.kappAttributeDefinitions || [];
+        const existing = defs.find(d => d.name === CAPABILITY_ATTRIBUTE_NAME);
+
+        if (existing) {
+          const drift =
+            existing.description !== desired.description ||
+            !!existing.allowsMultiple !== desired.allowsMultiple;
+          if (!drift) {
             return { skipped: true, message: 'Already defined' };
           }
-          throw result.error;
+          // Bundle-managed definition drifted — bring it back in line.
+          const updateResult = await updateAttributeDefinition({
+            attributeType: 'kappAttributeDefinitions',
+            kappSlug,
+            attributeName: CAPABILITY_ATTRIBUTE_NAME,
+            attributeDefinition: desired,
+          });
+          if (updateResult?.error) throw updateResult.error;
+          return { message: 'Updated to match bundle spec' };
         }
+
+        const createResult = await createAttributeDefinition({
+          attributeType: 'kappAttributeDefinitions',
+          kappSlug,
+          attributeDefinition: desired,
+        });
+        if (createResult?.error) throw createResult.error;
         return { message: 'Created' };
       });
     } else if (step.kind === 'metadata-value') {
