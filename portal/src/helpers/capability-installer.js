@@ -10,6 +10,7 @@ import {
   importConnection,
   importSubmissions,
   updateAttributeDefinition,
+  updateForm,
   updateKapp,
   updateOperation,
 } from '@kineticdata/react';
@@ -370,14 +371,6 @@ export const installCapability = async (manifest, options = {}) => {
       });
     } else if (step.kind === 'kapp') {
       await run(step, async () => {
-        const existing = findInstalledKapp(space?.kapps, manifest.id);
-        if (existing) {
-          kappSlug = existing.slug;
-          return {
-            skipped: true,
-            message: `Already installed at /kapps/${existing.slug}`,
-          };
-        }
         const definitionUrl = resolveUrl(manifest, manifest.kapp?.definition);
         if (!definitionUrl) {
           console.error(
@@ -397,14 +390,29 @@ export const installCapability = async (manifest, options = {}) => {
             a => a.name !== CAPABILITY_ATTRIBUTE_NAME,
           );
         }
+        // Capability-scoped content: if the capability is already present,
+        // PUT the export over the live kapp so the bundle's canonical state
+        // is restored. Existing kapp identified by Capability Metadata id,
+        // not by slug, since kapp.json owns the slug.
+        const existing = findInstalledKapp(space?.kapps, manifest.id);
+        if (existing) {
+          kappSlug = existing.slug;
+          const result = await updateKapp({
+            kappSlug,
+            kapp: kappObject,
+          });
+          if (result?.error) throw result.error;
+          return { message: `Updated /kapps/${kappSlug}` };
+        }
         const result = await createKapp({ kapp: kappObject });
         if (result?.error) {
           if (isAlreadyExistsError(result.error)) {
-            kappSlug = kappObject.slug;
-            return {
-              skipped: true,
-              message: `Already exists: ${kappObject.slug}`,
-            };
+            // A kapp at this slug exists but isn't tagged as this capability.
+            // Don't silently overwrite a kapp the bundle didn't install —
+            // surface the conflict so the admin can resolve it manually.
+            throw new Error(
+              `A kapp with slug "${kappObject.slug}" already exists but is not tagged as this capability. Rename or remove it before installing.`,
+            );
           }
           throw result.error;
         }
@@ -479,7 +487,10 @@ export const installCapability = async (manifest, options = {}) => {
             `Form definition at ${definitionUrl} missing slug`,
           );
         }
-        // Idempotency: query for an existing form by slug in this kapp.
+        // Capability-scoped content: if the form already exists in this
+        // kapp, overwrite its schema with the export. form-seed still skips
+        // CSV seeding for forms that pre-existed so admin submissions are
+        // preserved across re-installs.
         const existingResp = await fetchForms({
           kappSlug,
           q: `slug = "${formSlug}"`,
@@ -488,21 +499,26 @@ export const installCapability = async (manifest, options = {}) => {
         if (existingResp?.error) throw existingResp.error;
         const existed = (existingResp?.forms || []).length > 0;
         if (existed) {
-          // Mark as not-just-created so the seed step skips this form's data.
+          const result = await updateForm({
+            kappSlug,
+            formSlug,
+            form: formObject,
+          });
+          if (result?.error) throw result.error;
           formContexts[step.index] = { slug: formSlug, created: false };
-          return {
-            skipped: true,
-            message: `${formSlug} already exists`,
-          };
+          return { message: `Updated ${formSlug}` };
         }
         const result = await createForm({ kappSlug, form: formObject });
         if (result?.error) {
           if (isAlreadyExistsError(result.error)) {
+            const upd = await updateForm({
+              kappSlug,
+              formSlug,
+              form: formObject,
+            });
+            if (upd?.error) throw upd.error;
             formContexts[step.index] = { slug: formSlug, created: false };
-            return {
-              skipped: true,
-              message: `${formSlug} already exists`,
-            };
+            return { message: `Updated ${formSlug}` };
           }
           throw result.error;
         }
@@ -513,7 +529,6 @@ export const installCapability = async (manifest, options = {}) => {
       await run(step, async () => {
         const ctx = formContexts[step.index];
         if (!ctx) {
-          // The form step never ran or recorded context — nothing to do.
           return {
             skipped: true,
             message: 'Form not available',
@@ -533,7 +548,6 @@ export const installCapability = async (manifest, options = {}) => {
           const csvUrl = resolveUrl(manifest, relative);
           if (!csvUrl) continue;
           const csvText = await fetchText(csvUrl);
-          // Rough row count for the message — header line excluded.
           const lines = csvText.split(/\r?\n/).filter(Boolean);
           totalRows += Math.max(0, lines.length - 1);
           const result = await importSubmissions({
