@@ -1,19 +1,20 @@
 import {
   createAttributeDefinition,
   createForm,
+  createHandler,
   createKapp,
   createOperation,
-  fetchAgentHandler,
   fetchConnections,
   fetchForms,
+  fetchHandler,
   fetchKapp,
   fetchOperations,
   importConnection,
   importSubmissions,
   importTree,
-  updateAgentHandler,
   updateAttributeDefinition,
   updateForm,
+  updateHandler,
   updateKapp,
   updateOperation,
 } from '@kineticdata/react';
@@ -633,70 +634,45 @@ export const installCapability = async (manifest, options = {}) => {
             `taskHandlers[${step.index}].definition missing in manifest`,
           );
         }
-        // Handler slug derived from the zip filename — Kinetic convention:
-        // a handler zip named foo_v1.zip registers as handler slug foo_v1.
+        // Handler definitionId is the zip filename without the .zip
+        // extension — Kinetic's task service registers it that way.
         const filename = String(step.handlerEntry.definition)
           .split('/')
           .pop()
           .replace(/\?.*$/, '');
-        const handlerSlug = filename.replace(/\.zip$/i, '');
+        const definitionId = filename.replace(/\.zip$/i, '');
 
-        // Check existence. Swallow 404 and treat as not-present.
-        const existing = await fetchAgentHandler({ handlerSlug }).catch(
-          () => ({ error: { statusCode: 404 } }),
-        );
-        const handlerPresent =
-          existing && !existing.error && existing.handler;
+        // createHandler with packageUrl: Kinetic's task service fetches the
+        // zip server-side from the registry URL — no browser download/upload
+        // round-trip. force=true makes it an upsert, matching the
+        // capability-scoped overwrite policy (admin code-edits to handler
+        // packages get replaced; configuration_properties they don't manage
+        // are preserved by the merge below).
+        const importResult = await createHandler({
+          packageUrl: zipUrl,
+          force: true,
+        });
+        if (importResult?.error) throw importResult.error;
 
-        let uploadAction = 'already present';
-        if (!handlerPresent) {
-          // Fetch the zip from the registry and POST it to /handlers.
-          // SDK doesn't expose a multipart-aware create helper, so use plain
-          // fetch with Content-Type: application/zip.
-          const zipResponse = await fetch(zipUrl);
-          if (!zipResponse.ok) {
-            throw new Error(
-              `HTTP ${zipResponse.status} fetching ${zipUrl}`,
-            );
-          }
-          const zipBlob = await zipResponse.blob();
-          const uploadResponse = await fetch('/app/api/v1/handlers/', {
-            method: 'POST',
-            body: zipBlob,
-            headers: { 'Content-Type': 'application/zip' },
-            credentials: 'include',
-          });
-          if (!uploadResponse.ok) {
-            const detail = await uploadResponse.text().catch(() => '');
-            throw new Error(
-              `Handler upload failed: HTTP ${uploadResponse.status} ${detail.slice(0, 200)}`,
-            );
-          }
-          uploadAction = 'uploaded';
-        }
-
-        // Properties — capability-scoped: always set the keys declared in the
-        // manifest, leaving keys the manifest doesn't mention untouched
-        // (admin-set creds, etc.).
         const props =
           step.handlerEntry?.configuration_properties ||
           step.handlerEntry?.configuration_parameters ||
           {};
         const propKeys = Object.keys(props);
         if (propKeys.length === 0) {
-          return { message: `${handlerSlug} ${uploadAction}` };
+          return { message: `${definitionId} imported` };
         }
 
-        const fetched = await fetchAgentHandler({
-          handlerSlug,
+        // Properties pass: GET with include=properties, merge our values
+        // into the live property records (preserving description/required
+        // metadata for keys we don't touch), PUT the merged handler back.
+        const fetched = await fetchHandler({
+          definitionId,
           include: 'properties',
         });
         if (fetched?.error) throw fetched.error;
         const currentHandler = fetched.handler || {};
         const currentProps = currentHandler.properties || {};
-
-        // Merge our values into existing property objects (preserving
-        // description/required metadata Kinetic may attach).
         const mergedProps = { ...currentProps };
         for (const [key, value] of Object.entries(props)) {
           mergedProps[key] = mergedProps[key]
@@ -704,14 +680,14 @@ export const installCapability = async (manifest, options = {}) => {
             : { value };
         }
 
-        const updateResult = await updateAgentHandler({
-          handlerSlug,
+        const updateResult = await updateHandler({
+          definitionId,
           handler: { ...currentHandler, properties: mergedProps },
         });
         if (updateResult?.error) throw updateResult.error;
 
         return {
-          message: `${handlerSlug} ${uploadAction}, ${propKeys.length} propert${propKeys.length === 1 ? 'y' : 'ies'} set`,
+          message: `${definitionId} imported, ${propKeys.length} propert${propKeys.length === 1 ? 'y' : 'ies'} set`,
         };
       });
     } else if (step.kind === 'workflow-routine') {
