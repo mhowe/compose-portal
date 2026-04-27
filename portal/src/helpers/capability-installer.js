@@ -260,6 +260,9 @@ export const installCapability = async (manifest, options = {}) => {
   const userDefs = new Set(
     (space?.userProfileAttributeDefinitions || []).map(d => d.name),
   );
+  const teamDefs = new Set(
+    (space?.teamAttributeDefinitions || []).map(d => d.name),
+  );
 
   for (const step of steps) {
     // Bail subsequent steps if a critical earlier step failed.
@@ -293,6 +296,13 @@ export const installCapability = async (manifest, options = {}) => {
       });
     } else if (step.kind === 'team-attribute') {
       await run(step, async () => {
+        // Explicit pre-check against the local cache mirrors what the
+        // user-attribute and metadata-def steps do — Kinetic's "must be
+        // unique and there are 2 with the name X" error doesn't match
+        // generic already-exists regexes.
+        if (teamDefs.has(step.attribute.name)) {
+          return { skipped: true, message: 'Already defined' };
+        }
         const result = await createAttributeDefinition({
           attributeType: 'teamAttributeDefinitions',
           attributeDefinition: {

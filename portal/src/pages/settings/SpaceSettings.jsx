@@ -26,7 +26,7 @@ import { toastError, toastSuccess } from '../../helpers/toasts.js';
 // Must match the include list in App.jsx so post-deploy refresh populates the
 // same fields the setup check + landing resolver + Space Settings rely on.
 const SPACE_INCLUDE =
-  'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions';
+  'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions';
 
 /**
  * Deploys a single manifest status row and returns a result descriptor.
