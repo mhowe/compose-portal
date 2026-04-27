@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 import {
@@ -28,6 +28,17 @@ import { toastError, toastSuccess } from '../../helpers/toasts.js';
 // same fields the setup check + landing resolver + Space Settings rely on.
 const SPACE_INCLUDE =
   'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions';
+
+// Module-level refresh — extracted so it's stable across renders and can be
+// referenced from useEffect without dep-array churn.
+const refreshSpaceData = async () => {
+  try {
+    const response = await fetchSpace({ include: SPACE_INCLUDE });
+    appActions.setSpace(response);
+  } catch (error) {
+    console.error('Failed to refresh space data', error);
+  }
+};
 
 /**
  * Deploys a single manifest status row and returns a result descriptor.
@@ -111,14 +122,27 @@ export const SpaceSettings = () => {
   const capabilityUpgrades = capabilities.filter(c => c.upgradeAvailable).length;
   const capabilityAvailable = capabilities.length - capabilityInstalled;
 
-  const refreshSpace = async () => {
-    try {
-      const response = await fetchSpace({ include: SPACE_INCLUDE });
-      appActions.setSpace(response);
-    } catch (error) {
-      console.error('Failed to refresh space after deploy', error);
-    }
-  };
+  const refreshSpace = refreshSpaceData;
+
+  // Track whether something the user is mid-flighting on. Refreshing space
+  // data while a deploy or install is running could overwrite optimistic
+  // state with stale-mid-call data.
+  const inFlightRef = useRef(false);
+  inFlightRef.current = !!(deploying || installing || managingSteps);
+
+  // Refresh on mount and on tab/window focus so admins who flip to the
+  // Kinetic admin console (clear an attribute, change a kapp, etc.) and
+  // come back see fresh state without manually reloading the page.
+  useEffect(() => {
+    refreshSpaceData();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && !inFlightRef.current) {
+        refreshSpaceData();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   const runDeploy = async items => {
     if (items.length === 0) return;
