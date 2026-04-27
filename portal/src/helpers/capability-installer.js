@@ -1,7 +1,12 @@
 import {
   createAttributeDefinition,
+  createForm,
   createKapp,
+  fetchConnections,
+  fetchForms,
   fetchKapp,
+  importConnection,
+  importSubmissions,
   updateAttributeDefinition,
   updateKapp,
 } from '@kineticdata/react';
@@ -11,24 +16,32 @@ import {
 } from './capabilities.js';
 
 /*
- * Capability installer (Phase 4a).
+ * Capability installer.
  *
  * Given a fully-fetched capability manifest, installs the parts the bundle
- * supports today: spaceConfiguration (user profile + team attribute
- * definitions), the kapp (POSTed from kapp.json), the kapp-level
- * `Capability Metadata` attribute definition, and the metadata value that
- * tags the kapp as installed.
+ * currently supports:
+ *   - spaceConfiguration: user profile + team attribute definitions
+ *   - integrations: connections (each definition file imported via the
+ *     integrator import endpoint, preserving exported ids)
+ *   - kapp: POSTed from kapp.json (Capability Metadata stripped from any
+ *     pre-set attribute values; bundle writes the canonical value at the
+ *     end of install)
+ *   - Capability Metadata kappAttributeDefinition: idempotent create or
+ *     update, owned by the bundle
+ *   - forms: created within the kapp
+ *   - form data: each CSV in form.data is POSTed as raw text to the
+ *     bulk submissions import endpoint; only seeded for forms that were
+ *     just created in this pass
+ *   - Capability Metadata value: written last to tag the kapp as installed
  *
- * Forms, submissions, connections, task handlers, workflows, and manual
- * steps land in subsequent phases. The installer plans step rows for what's
- * present in the manifest; assets the manifest doesn't declare are simply
- * not in the plan, not skipped.
+ * Task handlers, workflows, and manual_steps display land in later phases.
  *
- * Each step is **idempotent**: re-running install on a partially-installed
- * capability picks up where it left off without raising errors. Detection
- * relies on the canonical Capability Metadata id (not kapp slug), so a
- * capability whose kapp slug differs from its capability id still resolves
- * correctly.
+ * The installer plans step rows from what the manifest actually declares;
+ * asset types the manifest omits produce no step at all. Each step is
+ * **idempotent** — re-running install on a partially-installed capability
+ * picks up missing pieces without raising errors. Detection of "installed"
+ * relies on the canonical Capability Metadata id rather than kapp slug, so
+ * a capability whose kapp slug differs from its id still resolves correctly.
  */
 
 export const INSTALLER_STATUSES = {
@@ -64,6 +77,14 @@ const fetchJson = async url => {
   return response.json();
 };
 
+const fetchText = async url => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} fetching ${url}`);
+  }
+  return response.text();
+};
+
 /**
  * Builds the step list from the manifest. Only includes steps for asset
  * types the manifest actually declares — empty/missing keys produce no
@@ -90,12 +111,44 @@ const planSteps = manifest => {
       attribute: attr,
     });
   }
+  // Connections come before the kapp so any form-level integration
+  // references (which carry connection ids) resolve to existing connections.
+  const integrations = manifest.integrations || [];
+  for (let i = 0; i < integrations.length; i++) {
+    steps.push({
+      id: `connection:${i}`,
+      label: `Connection #${i + 1}`,
+      kind: 'connection',
+      integration: integrations[i],
+      index: i,
+    });
+  }
   steps.push({ id: 'kapp', label: 'Kapp', kind: 'kapp' });
   steps.push({
     id: 'metadata-def',
     label: `Kapp attribute: ${CAPABILITY_ATTRIBUTE_NAME}`,
     kind: 'metadata-def',
   });
+  // Forms + per-form seed data within the kapp.
+  const forms = manifest.forms || [];
+  for (let i = 0; i < forms.length; i++) {
+    steps.push({
+      id: `form:${i}`,
+      label: `Form #${i + 1}`,
+      kind: 'form',
+      formEntry: forms[i],
+      index: i,
+    });
+    if ((forms[i].data || []).length > 0) {
+      steps.push({
+        id: `form-seed:${i}`,
+        label: `Seed form #${i + 1}`,
+        kind: 'form-seed',
+        formEntry: forms[i],
+        index: i,
+      });
+    }
+  }
   steps.push({
     id: 'metadata-value',
     label: 'Write Capability Metadata',
@@ -129,6 +182,9 @@ export const installCapability = async (manifest, options = {}) => {
   const steps = planSteps(manifest);
 
   let kappSlug = null;
+  // Per-form context populated by 'form' steps; consumed by 'form-seed' so
+  // we only seed CSV data into forms that were just created in this pass.
+  const formContexts = {};
 
   const update = (id, patch) => {
     const idx = steps.findIndex(s => s.id === id);
@@ -208,6 +264,49 @@ export const installCapability = async (manifest, options = {}) => {
           throw result.error;
         }
         return { message: 'Created' };
+      });
+    } else if (step.kind === 'connection') {
+      await run(step, async () => {
+        const definitionUrl = resolveUrl(
+          manifest,
+          step.integration?.definition,
+        );
+        if (!definitionUrl) {
+          throw new Error(
+            `integrations[${step.index}].definition missing in manifest`,
+          );
+        }
+        const exportJson = await fetchJson(definitionUrl);
+        const connectionObject = exportJson?.connection || exportJson;
+        const id = connectionObject?.id;
+        // Existence check by id — the export carries stable ids the import
+        // endpoint preserves, so re-runs detect a prior install cleanly.
+        if (id) {
+          const existingResp = await fetchConnections({});
+          if (existingResp?.error) throw existingResp.error;
+          const existing = (existingResp?.connections || []).find(
+            c => c.id === id,
+          );
+          if (existing) {
+            return {
+              skipped: true,
+              message: `Already imported: ${existing.name || id}`,
+            };
+          }
+        }
+        const result = await importConnection({ connection: connectionObject });
+        if (result?.error) {
+          if (isAlreadyExistsError(result.error)) {
+            return {
+              skipped: true,
+              message: 'Already imported',
+            };
+          }
+          throw result.error;
+        }
+        return {
+          message: `Imported ${connectionObject?.name || id || 'connection'}`,
+        };
       });
     } else if (step.kind === 'kapp') {
       await run(step, async () => {
@@ -300,6 +399,98 @@ export const installCapability = async (manifest, options = {}) => {
         });
         if (createResult?.error) throw createResult.error;
         return { message: 'Created' };
+      });
+    } else if (step.kind === 'form') {
+      await run(step, async () => {
+        if (!kappSlug) {
+          throw new Error('Kapp slug unknown — earlier step must succeed');
+        }
+        const definitionUrl = resolveUrl(manifest, step.formEntry?.definition);
+        if (!definitionUrl) {
+          throw new Error(
+            `forms[${step.index}].definition missing in manifest`,
+          );
+        }
+        const formJson = await fetchJson(definitionUrl);
+        const formObject = formJson?.form || formJson;
+        const formSlug = formObject?.slug;
+        if (!formSlug) {
+          throw new Error(
+            `Form definition at ${definitionUrl} missing slug`,
+          );
+        }
+        // Idempotency: query for an existing form by slug in this kapp.
+        const existingResp = await fetchForms({
+          kappSlug,
+          q: `slug = "${formSlug}"`,
+          limit: 1,
+        });
+        if (existingResp?.error) throw existingResp.error;
+        const existed = (existingResp?.forms || []).length > 0;
+        if (existed) {
+          // Mark as not-just-created so the seed step skips this form's data.
+          formContexts[step.index] = { slug: formSlug, created: false };
+          return {
+            skipped: true,
+            message: `${formSlug} already exists`,
+          };
+        }
+        const result = await createForm({ kappSlug, form: formObject });
+        if (result?.error) {
+          if (isAlreadyExistsError(result.error)) {
+            formContexts[step.index] = { slug: formSlug, created: false };
+            return {
+              skipped: true,
+              message: `${formSlug} already exists`,
+            };
+          }
+          throw result.error;
+        }
+        formContexts[step.index] = { slug: formSlug, created: true };
+        return { message: `Created ${formSlug}` };
+      });
+    } else if (step.kind === 'form-seed') {
+      await run(step, async () => {
+        const ctx = formContexts[step.index];
+        if (!ctx) {
+          // The form step never ran or recorded context — nothing to do.
+          return {
+            skipped: true,
+            message: 'Form not available',
+          };
+        }
+        if (!ctx.created) {
+          // Don't trample existing data on a re-install or a form the admin
+          // already had. They can re-seed by deleting + re-installing.
+          return {
+            skipped: true,
+            message: `${ctx.slug} pre-existed; data not seeded`,
+          };
+        }
+        const dataUrls = step.formEntry?.data || [];
+        let totalRows = 0;
+        for (const relative of dataUrls) {
+          const csvUrl = resolveUrl(manifest, relative);
+          if (!csvUrl) continue;
+          const csvText = await fetchText(csvUrl);
+          // Rough row count for the message — header line excluded.
+          const lines = csvText.split(/\r?\n/).filter(Boolean);
+          totalRows += Math.max(0, lines.length - 1);
+          const result = await importSubmissions({
+            kappSlug,
+            formSlug: ctx.slug,
+            file: csvText,
+          });
+          if (result?.errors?.length) {
+            throw new Error(
+              `Bulk import reported ${result.errors.length} error(s); see browser console.`,
+            );
+          }
+          if (result?.error) throw result.error;
+        }
+        return {
+          message: `Seeded ~${totalRows} row${totalRows === 1 ? '' : 's'} into ${ctx.slug}`,
+        };
       });
     } else if (step.kind === 'metadata-value') {
       await run(step, async () => {
