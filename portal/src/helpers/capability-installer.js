@@ -3,12 +3,15 @@ import {
   createForm,
   createKapp,
   createOperation,
+  fetchAgentHandler,
   fetchConnections,
   fetchForms,
   fetchKapp,
   fetchOperations,
   importConnection,
   importSubmissions,
+  importTree,
+  updateAgentHandler,
   updateAttributeDefinition,
   updateForm,
   updateKapp,
@@ -152,6 +155,42 @@ const planSteps = manifest => {
         index: i,
       });
     }
+  }
+  // Task handlers — placed after forms so configuration_properties referring
+  // to form slugs (e.g. form_slug_data) resolve to existing forms.
+  const handlers = manifest.taskHandlers || [];
+  for (let i = 0; i < handlers.length; i++) {
+    steps.push({
+      id: `handler:${i}`,
+      label: `Task handler #${i + 1}`,
+      kind: 'task-handler',
+      handlerEntry: handlers[i],
+      index: i,
+    });
+  }
+  // Workflows — routines first (trees may reference routines), then trees.
+  const workflows = manifest.workflows || {};
+  const routines = workflows.routines || [];
+  for (let i = 0; i < routines.length; i++) {
+    const entry = routines[i];
+    steps.push({
+      id: `routine:${i}`,
+      label: `Workflow routine #${i + 1}`,
+      kind: 'workflow-routine',
+      // routines[] entries can be plain URL strings or { definition } objects.
+      routineUrl: typeof entry === 'string' ? entry : entry?.definition,
+      index: i,
+    });
+  }
+  const trees = workflows.trees || [];
+  for (let i = 0; i < trees.length; i++) {
+    steps.push({
+      id: `tree:${i}`,
+      label: `Workflow tree #${i + 1}`,
+      kind: 'workflow-tree',
+      treeEntry: trees[i],
+      index: i,
+    });
   }
   steps.push({
     id: 'metadata-value',
@@ -585,6 +624,124 @@ export const installCapability = async (manifest, options = {}) => {
         return {
           message: `Seeded ~${totalRows} row${totalRows === 1 ? '' : 's'} into ${ctx.slug}`,
         };
+      });
+    } else if (step.kind === 'task-handler') {
+      await run(step, async () => {
+        const zipUrl = resolveUrl(manifest, step.handlerEntry?.definition);
+        if (!zipUrl) {
+          throw new Error(
+            `taskHandlers[${step.index}].definition missing in manifest`,
+          );
+        }
+        // Handler slug derived from the zip filename — Kinetic convention:
+        // a handler zip named foo_v1.zip registers as handler slug foo_v1.
+        const filename = String(step.handlerEntry.definition)
+          .split('/')
+          .pop()
+          .replace(/\?.*$/, '');
+        const handlerSlug = filename.replace(/\.zip$/i, '');
+
+        // Check existence. Swallow 404 and treat as not-present.
+        const existing = await fetchAgentHandler({ handlerSlug }).catch(
+          () => ({ error: { statusCode: 404 } }),
+        );
+        const handlerPresent =
+          existing && !existing.error && existing.handler;
+
+        let uploadAction = 'already present';
+        if (!handlerPresent) {
+          // Fetch the zip from the registry and POST it to /handlers.
+          // SDK doesn't expose a multipart-aware create helper, so use plain
+          // fetch with Content-Type: application/zip.
+          const zipResponse = await fetch(zipUrl);
+          if (!zipResponse.ok) {
+            throw new Error(
+              `HTTP ${zipResponse.status} fetching ${zipUrl}`,
+            );
+          }
+          const zipBlob = await zipResponse.blob();
+          const uploadResponse = await fetch('/app/api/v1/handlers/', {
+            method: 'POST',
+            body: zipBlob,
+            headers: { 'Content-Type': 'application/zip' },
+            credentials: 'include',
+          });
+          if (!uploadResponse.ok) {
+            const detail = await uploadResponse.text().catch(() => '');
+            throw new Error(
+              `Handler upload failed: HTTP ${uploadResponse.status} ${detail.slice(0, 200)}`,
+            );
+          }
+          uploadAction = 'uploaded';
+        }
+
+        // Properties — capability-scoped: always set the keys declared in the
+        // manifest, leaving keys the manifest doesn't mention untouched
+        // (admin-set creds, etc.).
+        const props =
+          step.handlerEntry?.configuration_properties ||
+          step.handlerEntry?.configuration_parameters ||
+          {};
+        const propKeys = Object.keys(props);
+        if (propKeys.length === 0) {
+          return { message: `${handlerSlug} ${uploadAction}` };
+        }
+
+        const fetched = await fetchAgentHandler({
+          handlerSlug,
+          include: 'properties',
+        });
+        if (fetched?.error) throw fetched.error;
+        const currentHandler = fetched.handler || {};
+        const currentProps = currentHandler.properties || {};
+
+        // Merge our values into existing property objects (preserving
+        // description/required metadata Kinetic may attach).
+        const mergedProps = { ...currentProps };
+        for (const [key, value] of Object.entries(props)) {
+          mergedProps[key] = mergedProps[key]
+            ? { ...mergedProps[key], value }
+            : { value };
+        }
+
+        const updateResult = await updateAgentHandler({
+          handlerSlug,
+          handler: { ...currentHandler, properties: mergedProps },
+        });
+        if (updateResult?.error) throw updateResult.error;
+
+        return {
+          message: `${handlerSlug} ${uploadAction}, ${propKeys.length} propert${propKeys.length === 1 ? 'y' : 'ies'} set`,
+        };
+      });
+    } else if (step.kind === 'workflow-routine') {
+      await run(step, async () => {
+        const xmlUrl = resolveUrl(manifest, step.routineUrl);
+        if (!xmlUrl) {
+          throw new Error(
+            `workflows.routines[${step.index}] URL missing in manifest`,
+          );
+        }
+        // Capability-scoped overwrite: importTree with force=true upserts
+        // by name. Both routines and trees use the same endpoint; the XML's
+        // root element type (routine vs tree) determines server handling.
+        const result = await importTree({ contentUrl: xmlUrl, force: true });
+        if (result?.error) throw result.error;
+        const name = result?.tree?.name || xmlUrl.split('/').pop();
+        return { message: `Imported ${name}` };
+      });
+    } else if (step.kind === 'workflow-tree') {
+      await run(step, async () => {
+        const xmlUrl = resolveUrl(manifest, step.treeEntry?.definition);
+        if (!xmlUrl) {
+          throw new Error(
+            `workflows.trees[${step.index}].definition missing in manifest`,
+          );
+        }
+        const result = await importTree({ contentUrl: xmlUrl, force: true });
+        if (result?.error) throw result.error;
+        const name = result?.tree?.name || xmlUrl.split('/').pop();
+        return { message: `Imported ${name}` };
       });
     } else if (step.kind === 'metadata-value') {
       await run(step, async () => {
