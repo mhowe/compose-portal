@@ -19,6 +19,7 @@ import {
   useCapabilityRegistry,
 } from '../../helpers/capabilities.js';
 import { Loading } from '../../components/states/Loading.jsx';
+import { InstallCapabilityModal } from './InstallCapabilityModal.jsx';
 import { appActions } from '../../helpers/state.js';
 import { toastError, toastSuccess } from '../../helpers/toasts.js';
 
@@ -78,6 +79,7 @@ export const SpaceSettings = () => {
 
   const [deploying, setDeploying] = useState(false);
   const [busyKeys, setBusyKeys] = useState(() => new Set());
+  const [installing, setInstalling] = useState(null);
 
   const status = useMemo(() => getManifestStatus(space), [space]);
   const registryUrls = useMemo(
@@ -480,15 +482,22 @@ export const SpaceSettings = () => {
                       </div>
                       <button
                         type="button"
-                        className="kbtn kbtn-sm kbtn-outline mt-2"
-                        disabled
-                        title="Installer not yet implemented"
+                        className="kbtn kbtn-sm kbtn-primary mt-2"
+                        onClick={() => setInstalling(cap)}
+                        disabled={cap.installed}
+                        title={
+                          cap.installed
+                            ? cap.upgradeAvailable
+                              ? 'Upgrade flow lands in a later phase'
+                              : 'Capability is already installed'
+                            : 'Install this capability'
+                        }
                       >
                         {cap.installed
                           ? cap.upgradeAvailable
                             ? 'Upgrade (coming soon)'
                             : 'Installed'
-                          : 'Install (coming soon)'}
+                          : 'Install'}
                       </button>
                     </div>
                   ))}
@@ -505,6 +514,18 @@ export const SpaceSettings = () => {
           </p>
         </AccordionSection>
       </div>
+
+      {installing && (
+        <InstallCapabilityModal
+          capability={installing}
+          onComplete={() => {
+            // Refresh space so the new kapp + Capability Metadata show up
+            // in the Capabilities accordion as Installed.
+            refreshSpace();
+          }}
+          onClose={() => setInstalling(null)}
+        />
+      )}
     </div>
   );
 };

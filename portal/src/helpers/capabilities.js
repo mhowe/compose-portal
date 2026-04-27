@@ -30,19 +30,31 @@ export const readCapabilityMetadata = kapp => {
 };
 
 /**
+ * Finds the kapp on a space whose Capability Metadata attribute carries the
+ * given capability id. Returns the kapp record or null.
+ *
+ * Detection is by metadata id (not kapp slug) because kapp.json is the
+ * source of truth for the installed kapp's slug — which can differ from
+ * the capability id (and from version to version of the same capability).
+ */
+export const findInstalledKapp = (kapps, capabilityId) =>
+  (kapps || []).find(k => readCapabilityMetadata(k)?.id === capabilityId) ||
+  null;
+
+/**
  * Augments each registry capability with live install status based on the
  * space's kapps. Produces one row per capability:
  *
- *   { ...capability, installed, installedVersion, upgradeAvailable, customized }
+ *   { ...capability, installed, installedVersion, installedKapp, upgradeAvailable, customized }
  *
  * @param {Array} capabilities The merged registry list.
  * @param {Array} kapps The space's kapps (must include attributesMap).
  */
 export const getCapabilityStatuses = (capabilities, kapps = []) =>
   capabilities.map(cap => {
-    const kapp = kapps.find(k => k.slug === cap.id);
+    const kapp = findInstalledKapp(kapps, cap.id);
     const meta = kapp ? readCapabilityMetadata(kapp) : null;
-    const installed = !!meta && meta.id === cap.id;
+    const installed = !!meta;
     const installedVersion = installed ? meta?.version : null;
     const upgradeAvailable =
       installed && !!installedVersion && installedVersion !== cap.version;
@@ -52,6 +64,7 @@ export const getCapabilityStatuses = (capabilities, kapps = []) =>
       ...cap,
       installed,
       installedVersion,
+      installedKapp: kapp || null,
       upgradeAvailable,
       customized,
     };
