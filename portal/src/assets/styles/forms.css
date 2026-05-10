@@ -91,10 +91,10 @@
     }
 
     &,
-    [data-element-type='section'] {
+    [data-element-type='section']:not(.plain) {
       @apply flex flex-wrap justify-start content-start items-stretch gap-5 w-full;
 
-      > [data-element-type='content'] {
+      > [data-element-type='content']:not(.plain) {
         @apply block w-full;
         &:empty {
           @apply hidden;

@@ -8,8 +8,14 @@ export const themeActions = regRedux(
   'theme',
   { ...themeState },
   {
+    // Payload: { space, kapp } — either or both records (with attributesMap
+    // included). Each contributes a layer to the cascade; missing records
+    // contribute nothing.
     setTheme(state, payload) {
-      calculateThemeState(state, getAttributeValue(payload.kapp, 'Theme'));
+      calculateThemeState(state, {
+        space: getAttributeValue(payload?.space, 'Theme'),
+        kapp: getAttributeValue(payload?.kapp, 'Theme'),
+      });
     },
     enableEditor(state) {
       state.editor = true;
@@ -62,6 +68,51 @@ export const appActions = regRedux(
     },
     updateProfile(state, profile) {
       Object.assign(state.profile, profile);
+    },
+    // Shallow-merge a partial record into state.space / state.kapp. Useful
+    // after a targeted save (updateSpace / updateKapp) so we refresh the
+    // changed fields without dropping fields that weren't included in the
+    // mutation response (e.g. spaceAttributeDefinitions, kapp.categories).
+    updateSpaceData(state, partial) {
+      if (state.space && partial) Object.assign(state.space, partial);
+    },
+    updateKappData(state, partial) {
+      if (state.kapp && partial) Object.assign(state.kapp, partial);
+    },
+  },
+);
+
+// Layout state — controls bundle-level chrome (Header, etc.). Pages set
+// chromeHidden to render full-bleed (e.g. forms with Display Mode = fullscreen)
+// and clear it on unmount so the rest of the portal keeps its chrome.
+export const layoutActions = regRedux(
+  'layout',
+  { chromeHidden: false },
+  {
+    setChromeHidden(state, payload) {
+      state.chromeHidden = !!payload;
+    },
+  },
+);
+
+// Modal stack — drives the global ModalSlot rendered in App.jsx. Stacked so a
+// modal opened from inside another modal layers on top rather than replacing.
+// Each entry: { id, type, path?, url?, size, title, closeOn }.
+export const modalActions = regRedux(
+  'modal',
+  { stack: [] },
+  {
+    push(state, modal) {
+      state.stack.push(modal);
+    },
+    remove(state, id) {
+      state.stack = state.stack.filter(m => m.id !== id);
+    },
+    popTop(state) {
+      state.stack.pop();
+    },
+    clear(state) {
+      state.stack = [];
     },
   },
 );

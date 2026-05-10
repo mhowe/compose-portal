@@ -36,11 +36,18 @@ const registry = {};
  *  component.
  * @param {string} [options.id] Unique id for referencing this instance of the
  *  widget.
+ * @param {boolean} [options.skipRouter] When true, do not wrap the Component
+ *  in a HashRouter. Use for widgets (e.g. BundleContainer) that provide their
+ *  own router context internally. Without this, a nested Router inside the
+ *  widget would conflict with the wrapping HashRouter.
  * @returns {Object} Object of APi functions to interact with the widget. Some
  *  API functions are added to this API object after the asynchronous render of
  *  the component, and may not be immediately available.
  */
-export const registerWidget = (Widget, { container, Component, props, id }) => {
+export const registerWidget = (
+  Widget,
+  { container, Component, props, id, skipRouter },
+) => {
   // Define a mutable object to store the React root and API for the widget,
   // which will both be updated later in the registration process
   const state = { root: undefined, api: { container: () => container } };
@@ -76,13 +83,12 @@ export const registerWidget = (Widget, { container, Component, props, id }) => {
   return new Promise(resolve => {
     // Render the component
     state.root = createRoot(container);
-    state.root.render(
-      <HashRouter>
-        <Component
-          {...props}
-          // Use a custom ref function that will update the api state with any
-          // API functions or properties provided by the component
-          ref={el => {
+    const renderedComponent = (
+      <Component
+        {...props}
+        // Use a custom ref function that will update the api state with any
+        // API functions or properties provided by the component
+        ref={el => {
             // If there is no element in the ref function, then we are
             // unmounting the widget
             if (!el) {
@@ -152,10 +158,16 @@ export const registerWidget = (Widget, { container, Component, props, id }) => {
             // Resolve the promise with the API object
             resolve(state.api);
           }}
-          // Pass a way to trigger the destroy function from within the component
-          destroy={() => callIfFn(state.api.destroy)}
-        />
-      </HashRouter>,
+        // Pass a way to trigger the destroy function from within the component
+        destroy={() => callIfFn(state.api.destroy)}
+      />
+    );
+    state.root.render(
+      skipRouter ? (
+        renderedComponent
+      ) : (
+        <HashRouter>{renderedComponent}</HashRouter>
+      ),
     );
   });
 };
@@ -184,6 +196,30 @@ export const validateContainer = (container, widgetName = 'Custom') =>
     : console.error(
         `${widgetName} Widget Error: The container parameter must be a valid dom element.`,
       );
+
+/**
+ * Resolves the `container` argument that callers pass to widget initializers
+ * into a real `HTMLElement`. Lets form designers pass any of the following and
+ * have it just work:
+ *   - A plain DOM element (e.g., `document.getElementById('foo')`)
+ *   - The result of `K('content[...]').element()` or `K('field[...]').element()`
+ *     (which is an array-like wrapper, not the element itself)
+ *   - An already-indexed element (`K('content[...]').element()[0]`)
+ *
+ * Returns the resolved `HTMLElement` or `null` if no element can be extracted.
+ * Logs an error in the latter case so the form designer sees what happened.
+ */
+export const resolveContainer = (container, widgetName = 'Custom') => {
+  if (container instanceof HTMLElement) return container;
+  // Array-like (jQuery, Kinetic element() wrapper, NodeList, etc.) — first
+  // entry is the actual element when the wrapper has any matches at all.
+  const first = container && container[0];
+  if (first instanceof HTMLElement) return first;
+  console.error(
+    `${widgetName} Widget Error: The container parameter must be a DOM element, or an array-like (e.g. K('content[...]').element()) whose first entry is a DOM element.`,
+  );
+  return null;
+};
 
 // Validates that the field passed into the helper is a Kinetic field. If the
 // type parameter is provided, validates that the field is of that type.

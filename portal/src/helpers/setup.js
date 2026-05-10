@@ -111,6 +111,24 @@ export const readKappDefaultFormSlug = kapp =>
 export const readSpaceDefaultFormSlug = space =>
   readAttribute(space, 'Default Space Form Slug');
 
+// Bundle's chrome-or-not decision for landing forms. Anything other than
+// 'fullscreen' (case-insensitive, trimmed) is treated as embedded so the
+// default — and any typo — keeps today's behavior.
+export const FORM_DISPLAY_MODE_EMBEDDED = 'embedded';
+export const FORM_DISPLAY_MODE_FULLSCREEN = 'fullscreen';
+
+/**
+ * Given a form record (with attributesMap included), reads its 'Display Mode'
+ * attribute. Returns FORM_DISPLAY_MODE_FULLSCREEN or FORM_DISPLAY_MODE_EMBEDDED
+ * (the default).
+ */
+export const readFormDisplayMode = form => {
+  const raw = readAttribute(form, 'Display Mode');
+  return raw && raw.trim().toLowerCase() === FORM_DISPLAY_MODE_FULLSCREEN
+    ? FORM_DISPLAY_MODE_FULLSCREEN
+    : FORM_DISPLAY_MODE_EMBEDDED;
+};
+
 /**
  * Returns the full status of every manifest item against the live space,
  * including optional items. Used by Space Settings to render every row the

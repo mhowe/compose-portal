@@ -13,6 +13,8 @@ bundle.utils.utilityFunction(parameters);
 
 - [Confirmation Modal](#confirmation-modal)
 - [Toasts](#toasts)
+- [Widget Events](#widget-events)
+- [Programmatic Modals](#programmatic-modals)
 
 ---
 
@@ -138,4 +140,141 @@ bundle.utils.toastError({
 
 // Clear all toasts
 bundle.utils.clearToasts();
+```
+
+---
+
+[Back to Top](#utils)
+
+### Widget Events
+
+Several chrome widgets ([BundleLogo](BUNDLE_LOGO.md), [BundleLink](BUNDLE_LINK.md), [BundleAvatar](BUNDLE_AVATAR.md), [BundleSearch](BUNDLE_SEARCH.md)) can be configured with `clickAction: { type: 'event', name: '<name>' }`. When the widget is clicked, it dispatches a `CustomEvent` with that name on `window`. These helpers let your form-side code listen for those events safely across re-renders.
+
+#### Functions
+
+![name=onWidgetEvent](https://img.shields.io/badge/onWidgetEvent%28name,%20handler%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Registers a handler for the given event name. **Replaces** any prior handler registered under the same name — safe to call on every form load without piling up listeners. Returns a cleanup function.
+
+![name=offWidgetEvent](https://img.shields.io/badge/offWidgetEvent%28name%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Removes the handler registered for an event name. No-op when nothing is registered.
+
+#### Why use `onWidgetEvent` instead of `window.addEventListener`?
+
+Form bundle scripts re-run on every form mount. Naive use of `window.addEventListener` adds a *new* listener each time, so after N mounts your handler fires N times per click. `onWidgetEvent` maintains one handler per event name — calling it again replaces the prior handler.
+
+#### Event detail payload
+
+Every widget-dispatched event has a `detail` object with:
+
+| Field    | Type     | Description                                                                                              |
+| -------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| `widget` | `string` | The widget's name, e.g. `'BundleLogo'`. Useful when the same event name is dispatched by multiple widgets. |
+| `id`     | `string` | The widget instance's id (the `id` you passed when initializing). Useful to disambiguate instances.        |
+| `config` | `object` | The exact `clickAction` config that fired the event.                                                       |
+
+#### Examples
+
+```js
+// Listen for a logo click event
+bundle.utils.onWidgetEvent('logo-clicked', e => {
+  console.log('Logo clicked:', e.detail);
+  // e.detail = { widget: 'BundleLogo', id: 'main-logo', config: { type: 'event', name: 'logo-clicked' } }
+});
+
+// Stop listening
+bundle.utils.offWidgetEvent('logo-clicked');
+```
+
+---
+
+[Back to Top](#utils)
+
+### Programmatic Modals
+
+The chrome widgets accept `target: 'modal'` to open a click in a modal dialog. For full programmatic control — opening a modal from inside an event handler, after a timer, or in response to a server result — use these helpers directly.
+
+The modal stack is global and stacked: a modal opened from inside another modal layers on top, rather than replacing it. So a form rendered in one modal can open another modal without coordinating with the embedding context.
+
+#### Functions
+
+![name=openModal](https://img.shields.io/badge/openModal%28config%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Opens a modal with the given configuration. Returns a close function that dismisses **this specific** modal.
+
+![name=closeModal](https://img.shields.io/badge/closeModal%28id%3F%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Closes a modal. With no argument, closes the topmost modal on the stack. With an id, closes that specific modal (no-op if not on the stack).
+
+![name=closeAllModals](https://img.shields.io/badge/closeAllModals%28%29-gray)
+![type=Function](https://img.shields.io/badge/Function-e66e22)  
+Closes every open modal. Useful for hard resets (e.g., after auth timeout).
+
+#### Modal Config Options
+
+![name=type](https://img.shields.io/badge/type-gray)
+![type=string](https://img.shields.io/badge/string_(required)-e66e22)  
+One of:
+
+- `'internal'` — render a bundle path in the modal. Requires `path`.
+- `'home'` — render the user's resolved home (runs the landing resolver) in the modal. No additional fields.
+- `'external'` — render an external URL via iframe in the modal. Requires `url`. **Note:** sites that send `X-Frame-Options: DENY` will appear blank.
+
+![name=path](https://img.shields.io/badge/path-gray)
+![type=string](https://img.shields.io/badge/string-e66e22)  
+For `type: 'internal'`. Bundle path starting with `/` (e.g. `'/forms/help'`, `'/kapps/services'`).
+
+![name=url](https://img.shields.io/badge/url-gray)
+![type=string](https://img.shields.io/badge/string-e66e22)  
+For `type: 'external'`. Full URL to embed.
+
+![name=size](https://img.shields.io/badge/size-gray)
+![type=string](https://img.shields.io/badge/string-e66e22)  
+One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`, `'full'`.
+
+![name=title](https://img.shields.io/badge/title-gray)
+![type=string](https://img.shields.io/badge/string-e66e22)  
+Optional title displayed in the modal header.
+
+![name=closeOn](https://img.shields.io/badge/closeOn-gray)
+![type=array](https://img.shields.io/badge/string[]-e66e22)  
+Subset of `['esc', 'backdrop', 'button']`. Default is all three. Pass `['esc', 'button']` to disable backdrop-click close (useful for forms where a stray click would lose work). Pass `[]` for fully programmatic-only close.
+
+#### Examples
+
+```js
+// Open a help form in a large modal
+const close = bundle.utils.openModal({
+  type: 'internal',
+  path: '/forms/help',
+  size: 'lg',
+  title: 'Help',
+});
+
+// Close it later (from a timer, callback, etc.)
+setTimeout(close, 30000);
+
+// Open and listen for an event from inside the modal that triggers close
+const close2 = bundle.utils.openModal({
+  type: 'internal',
+  path: '/forms/submit',
+  size: 'md',
+});
+bundle.utils.onWidgetEvent('form-submitted', () => close2());
+
+// Open a modal where backdrop click won't close (force explicit dismiss)
+bundle.utils.openModal({
+  type: 'internal',
+  path: '/forms/payment',
+  size: 'lg',
+  title: 'Payment',
+  closeOn: ['esc', 'button'],
+});
+
+// Close the topmost modal from anywhere
+bundle.utils.closeModal();
+
+// Close everything (e.g., on logout)
+bundle.utils.closeAllModals();
 ```

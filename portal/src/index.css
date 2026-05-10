@@ -1,8 +1,10 @@
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 @import './assets/styles/daisyui.css';
 @import './assets/styles/font.css' layer(base);
 @import './assets/styles/layout.css';
 @import './assets/styles/avatar.css';
+@import './assets/styles/banner.css';
 @import './assets/styles/buttons.css';
 @import './assets/styles/forms.css';
 @import './assets/styles/menu.css';
@@ -56,4 +58,5 @@
 @source inline("kbtn{,-{primary,seconday,accent,neutral,info,success,warning,error,outline,ghost,xs,sm,md,lg,xl,circle,block}}");
 @source inline("kbadge{,-{primary,seconday,accent,neutral,info,success,warning,error,outline,ghost,xs,sm,md,lg,xl}}");
 @source inline("kalert{,-{info,success,warning,error,outline,soft,xs,sm,md,lg,xl,vertical,horizontal}}");
+@source inline("kbanner{,-{error,warning,success,info,neutral}}");
 @source inline("kd-{section-header,field-group,callout}");

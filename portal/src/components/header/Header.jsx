@@ -9,43 +9,56 @@ import { Popover, usePopover } from '@ark-ui/react/popover';
 import clsx from 'clsx';
 import { openSearch } from '../../helpers/search.js';
 
-export const Header = () => {
+// Inner header content — the visible markup, no portal. Reusable by the
+// top-level auto-rendered Header (wrapped in HeaderPortal) and by the
+// `BundleHeader` widget (rendered inline at the form designer's mount point).
+// Reads Redux state for profile + theme logo, so any consumer needs to be
+// inside a <Provider store={store}>.
+export const HeaderContent = () => {
   const profile = useSelector(state => state.app.profile);
   const themeLogo = useSelector(state => state.theme.data?.logo?.default);
 
   return (
+    <nav className="relative flex-sc gap-3 md:gap-5 h-20 px-3 md:px-6 py-2 bg-base-100 z-20">
+      <HeaderMenu profile={profile} />
+      <Link to="/" className="flex-initial" aria-label="Home">
+        <img src={themeLogo || logo} alt="Logo" className="logo" />
+      </Link>
+      {/* Permanent link to the space landing page (/kapps). Conceptually the
+          "all apps" grid — the logo is the user's personalized home (runs
+          the landing resolver), this button is always the space listing. */}
+      <Link
+        to="/kapps"
+        className="kbtn kbtn-ghost kbtn-square kbtn-lg"
+        aria-label="All Kapps"
+        title="All Kapps"
+      >
+        <Icon name="apps" size={20} />
+      </Link>
+      <div className="mx-auto" />
+      <button
+        className="kbtn kbtn-ghost kbtn-square kbtn-lg"
+        onClick={() => openSearch({ searchOnly: true })}
+      >
+        <Icon name="search" size={20} />
+      </button>
+      <Avatar
+        username={profile?.username}
+        size="lg"
+        className="flex-none"
+        as="link"
+        to="/profile"
+      />
+    </nav>
+  );
+};
+
+export const Header = () => {
+  const chromeHidden = useSelector(state => state.layout?.chromeHidden);
+  if (chromeHidden) return null;
+  return (
     <HeaderPortal>
-      <nav className="relative flex-sc gap-3 md:gap-5 h-20 px-3 md:px-6 py-2 bg-base-100 z-20">
-        <HeaderMenu profile={profile} />
-        <Link to="/" className="flex-initial" aria-label="Home">
-          <img src={themeLogo || logo} alt="Logo" className="logo" />
-        </Link>
-        {/* Permanent link to the space landing page (/kapps). Conceptually the
-            "all apps" grid — the logo is the user's personalized home (runs
-            the landing resolver), this button is always the space listing. */}
-        <Link
-          to="/kapps"
-          className="kbtn kbtn-ghost kbtn-square kbtn-lg"
-          aria-label="All Kapps"
-          title="All Kapps"
-        >
-          <Icon name="apps" size={20} />
-        </Link>
-        <div className="mx-auto" />
-        <button
-          className="kbtn kbtn-ghost kbtn-square kbtn-lg"
-          onClick={() => openSearch({ searchOnly: true })}
-        >
-          <Icon name="search" size={20} />
-        </button>
-        <Avatar
-          username={profile?.username}
-          size="lg"
-          className="flex-none"
-          as="link"
-          to="/profile"
-        />
-      </nav>
+      <HeaderContent />
     </HeaderPortal>
   );
 };

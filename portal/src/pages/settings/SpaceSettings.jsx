@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   createAttributeDefinition,
   createKapp,
@@ -121,6 +121,14 @@ export const SpaceSettings = () => {
   const capabilityInstalled = capabilities.filter(c => c.installed).length;
   const capabilityUpgrades = capabilities.filter(c => c.upgradeAvailable).length;
   const capabilityAvailable = capabilities.length - capabilityInstalled;
+
+  // Theme section state — driven entirely off the Bundle Setup row for
+  // 'Theme' so the two sections stay consistent with no extra fetching.
+  const themeRow = setupRows.find(
+    r => r.scope === 'space' && r.name === 'Theme',
+  );
+  const themeDefined = !!themeRow?.present;
+  const themeValueSet = !!space?.attributesMap?.['Theme']?.[0];
 
   const refreshSpace = refreshSpaceData;
 
@@ -554,10 +562,50 @@ export const SpaceSettings = () => {
           )}
         </AccordionSection>
 
+        <AccordionSection
+          title="Theming"
+          headerRight={
+            !themeDefined ? (
+              <span className="kbadge kbadge-warning">
+                <Icon name="alert-triangle" /> Attribute missing
+              </span>
+            ) : themeValueSet ? (
+              <span className="kbadge kbadge-success">
+                <Icon name="check" /> Customized
+              </span>
+            ) : (
+              <span className="kbadge kbadge-ghost">Bundle defaults</span>
+            )
+          }
+          initialOpen={false}
+        >
+          <p className="text-sm text-base-content/70 mb-3">
+            Edit the space-level theme — colors, radius, and logo. The space
+            theme is the baseline for the whole portal; per-kapp themes layer
+            on top of it.
+          </p>
+          {!themeDefined ? (
+            <div className="kd-callout">
+              The <code>Theme</code> space attribute definition has not been
+              deployed yet. Deploy it from the Bundle Setup section above, then
+              return here to start editing.
+            </div>
+          ) : (
+            <div className="flex-sc gap-3 flex-wrap">
+              <Link to="/settings/space/theme" className="kbtn kbtn-primary">
+                <Icon name="palette" /> Edit Space Theme
+              </Link>
+              <span className="text-sm text-base-content/70">
+                Opens the full-page theme editor with a live preview.
+              </span>
+            </div>
+          )}
+        </AccordionSection>
+
         <AccordionSection title="More Settings" initialOpen={false}>
           <p className="text-sm text-base-content/70">
-            Additional space-level configuration (theming, kapp management,
-            nav, etc.) will appear here as the bundle grows.
+            Additional space-level configuration (kapp management, nav, etc.)
+            will appear here as the bundle grows.
           </p>
         </AccordionSection>
       </div>

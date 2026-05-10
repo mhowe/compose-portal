@@ -68,6 +68,10 @@ export const Form = ({ review, listActions }) => {
   // page — this handles direct URL visits and bookmarks, and avoids falling
   // through to PageHeading's ./.. default (which resolves to a broken
   // /kapps/:kappSlug/forms path). Otherwise on mobile return home.
+  //
+  // PageHeading itself decides what to do with these inside a container or
+  // modal (it ignores literal backTo in container mode and renders nothing
+  // in modal mode), so we don't branch on render mode here.
   const backTo =
     location.state?.backPath ||
     (submissionId

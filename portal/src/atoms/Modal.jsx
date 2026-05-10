@@ -24,11 +24,15 @@ import { Icon } from './Icon.jsx';
  * @param {Function} [props.onExitComplete] Function to call after the modal
  *  finishes closing.
  * @param {string} [props.title] The title text for the modal.
- * @param {('sm'|'md'|'lg'|'xl')} [size=sm] The size of the modal
+ * @param {('sm'|'md'|'lg'|'xl'|'full')} [size=sm] The size of the modal.
+ *  'full' renders a near-full-viewport modal with kmodal-box constraints
+ *  expanded — useful for embedding entire kapp pages or rich content.
  * @param {boolean} [props.closeOnEscape=true] Should the modal close when the
  *  escape key is pressed.
  * @param {boolean} [props.closeOnInteractOutside=true] Should the modal close
  *  when the user interacts with the area outside the modal.
+ * @param {boolean} [props.showCloseButton=true] Should the modal render the
+ *  X close button in the upper-right.
  * @param {string} [props.toasterId] The id for a Toaster component that should
  *  be rendered inside the modal to allow for toasts that can be interacted
  *  with without the modal getting closed.
@@ -50,6 +54,7 @@ export const Modal = ({
   size = 'sm',
   closeOnEscape,
   closeOnInteractOutside,
+  showCloseButton = true,
   toasterId,
   portal,
   children,
@@ -82,13 +87,17 @@ export const Modal = ({
               'md:w-screen-md': size === 'md',
               'md:w-screen-lg': size === 'lg',
               'md:w-screen': size === 'xl',
+              'w-screen h-screen max-w-screen max-h-screen rounded-none':
+                size === 'full',
             })}
           >
-            <Dialog.CloseTrigger asChild>
-              <button className="kbtn kbtn-sm kbtn-circle kbtn-ghost absolute right-2 top-2">
-                <Icon name="x" size={20} />
-              </button>
-            </Dialog.CloseTrigger>
+            {showCloseButton && (
+              <Dialog.CloseTrigger asChild>
+                <button className="kbtn kbtn-sm kbtn-circle kbtn-ghost absolute right-2 top-2">
+                  <Icon name="x" size={20} />
+                </button>
+              </Dialog.CloseTrigger>
+            )}
             <div className="flex justify-between items-center gap-2">
               <Dialog.Title className="flex-auto" asChild={!!slots.title}>
                 {slots.title || title}

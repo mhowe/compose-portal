@@ -6,11 +6,28 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
 
 - [How to Use Widgets](#how-to-use-widgets)
 - [Available Widgets, Utils, and Styles](#available-widgets)
-  - [Markdown](MARKDOWN.md)
-  - [Search](SEARCH.md)
-  - [Signature](SIGNATURE.md)
-  - [Subform](SUBFORM.md)
-  - [Table](TABLE.md)
+  - **Bundle UI Widgets** _(compose pages and chrome from forms — see [Chrome Widget Actions](CHROME_ACTIONS.md) for the shared clickAction/target system)_
+    - [BundleContainer](BUNDLE_CONTAINER.md)
+    - [BundleChrome](BUNDLE_CHROME.md)
+    - [BundleChromeToggle](BUNDLE_CHROME_TOGGLE.md)
+    - [BundleHeader](BUNDLE_HEADER.md)
+    - [BundleLogo](BUNDLE_LOGO.md)
+    - [BundleLink](BUNDLE_LINK.md)
+    - [BundleAvatar](BUNDLE_AVATAR.md)
+    - [BundleSearch](BUNDLE_SEARCH.md)
+    - [BundleMenu](BUNDLE_MENU.md)
+    - [BundleBanner](BUNDLE_BANNER.md)
+    - [BundleCounter](BUNDLE_COUNTER.md)
+  - **Form-Field Widgets**
+    - [Markdown](MARKDOWN.md)
+    - [Search](SEARCH.md)
+    - [Signature](SIGNATURE.md)
+    - [Subform](SUBFORM.md)
+    - [Table](TABLE.md)
+  - **AI Builder Assistant**
+    - [AIBuilderWorkspace](AI_BUILDER_WORKSPACE.md) — top-level wrapper (project picker + conversation list + embedded chat)
+    - [AIBuilderChat](AI_BUILDER_CHAT.md) — streaming chat surface
+    - [AIBuilderSettings](AI_BUILDER_SETTINGS.md) — runtime API key / model / token settings
   - [Utils](UTILS.md)
   - [Styles](STYLES.md)
 - [How to Build Widgets](#how-to-build-widgets)
@@ -88,7 +105,83 @@ bundle.widgets.CustomWidget.instances;
 
 ## Available Widgets
 
-### Markdown
+### Bundle UI Widgets
+
+These widgets let form designers compose UI that historically required React code — page layouts, chrome (header pieces), navigation, and more. They share a consistent way of describing click behavior (`clickAction`) and where a click opens (`target`), documented in [Chrome Widget Actions](CHROME_ACTIONS.md).
+
+#### BundleContainer
+
+Mounts a slot in your form that renders any bundle page (a form, a kapp landing, etc.) inside it. Supports navigation via API, events, or URL sync. Containers can be nested.
+
+[BundleContainer Documentation &#x2B9E;](BUNDLE_CONTAINER.md)
+
+#### BundleChrome
+
+A configurable nav strip — vertical (sidebar) or horizontal (header) — that hosts links, dividers, section labels, and other chrome widgets. Supports collapsed-rail and hidden modes, with hosted widgets adapting via a `setMode` contract.
+
+[BundleChrome Documentation &#x2B9E;](BUNDLE_CHROME.md)
+
+#### BundleChromeToggle
+
+An icon button that drives a `BundleChrome` from anywhere on the page. Late-binding registry means a header-mounted toggle can drive a per-kapp chrome that hasn't loaded yet.
+
+[BundleChromeToggle Documentation &#x2B9E;](BUNDLE_CHROME_TOGGLE.md)
+
+#### BundleHeader
+
+Renders the bundle's standard header inline at its mount point — useful for fullscreen-mode pages or for putting markup above/below the standard header.
+
+[BundleHeader Documentation &#x2B9E;](BUNDLE_HEADER.md)
+
+#### BundleLogo
+
+Renders the bundle's logo with configurable size and click behavior.
+
+[BundleLogo Documentation &#x2B9E;](BUNDLE_LOGO.md)
+
+#### BundleLink
+
+A configurable icon + text link / button. Generic enough for header navigation, footer links, or call-to-action buttons.
+
+[BundleLink Documentation &#x2B9E;](BUNDLE_LINK.md)
+
+#### BundleAvatar
+
+A user avatar — image or initial-letter placeholder. Defaults to the logged-in user; override with an explicit username for assignees, comment authors, etc.
+
+[BundleAvatar Documentation &#x2B9E;](BUNDLE_AVATAR.md)
+
+#### BundleSearch
+
+A styled trigger that opens the bundle's built-in search modal by default. Configurable to fire custom events or navigate elsewhere for bespoke search experiences.
+
+[BundleSearch Documentation &#x2B9E;](BUNDLE_SEARCH.md)
+
+#### BundleMenu
+
+A configurable menu — popover dropdown or inline list — with nested items, dividers, and section headers. Useful for hamburger nav, sidebars, footer link columns, action menus, etc.
+
+[BundleMenu Documentation &#x2B9E;](BUNDLE_MENU.md)
+
+#### BundleBanner
+
+A full-width informational bar — environment indicator (Dev / Staging / etc.) driven by a space attribute, or a hard-coded label like a security classification. Hides on production by default.
+
+[BundleBanner Documentation &#x2B9E;](BUNDLE_BANNER.md)
+
+#### BundleCounter
+
+A label-with-badge pair — text plus a count badge whose color can change with the value. Count source is either a static value or an integration (the badge displays the array length). Optional thresholds for color-coding (e.g. neutral up to 10, warning up to 20, error above).
+
+[BundleCounter Documentation &#x2B9E;](BUNDLE_COUNTER.md)
+
+---
+
+### Form-Field Widgets
+
+These widgets render inside form fields to provide complex field-level functionality (editors, signature pads, sub-forms, data tables).
+
+#### Markdown
 
 The markdown widget renders a markdown editor (or viewer when disabled), allowing users to use a WYSIWYG markdown editor to input content, which will then be stored in a text field of the form.
 

@@ -1,3 +1,17 @@
+import { AIBuilderChat } from './ai-builder-chat.jsx';
+import { AIBuilderSettings } from './ai-builder-settings.js';
+import { AIBuilderWorkspace } from './ai-builder-workspace.jsx';
+import { BundleAvatar } from './bundle-avatar.jsx';
+import { BundleBanner } from './bundle-banner.jsx';
+import { BundleChrome } from './bundle-chrome.jsx';
+import { BundleChromeToggle } from './bundle-chrome-toggle.jsx';
+import { BundleContainer } from './bundle-container.jsx';
+import { BundleCounter } from './bundle-counter.jsx';
+import { BundleHeader } from './bundle-header.jsx';
+import { BundleLink } from './bundle-link.jsx';
+import { BundleLogo } from './bundle-logo.jsx';
+import { BundleMenu } from './bundle-menu.jsx';
+import { BundleSearch } from './bundle-search.jsx';
 import { Markdown } from './markdown.js';
 import { Search } from './search.js';
 import { Signature } from './signature.js';
@@ -8,6 +22,20 @@ import utils from './utils.js';
 
 // Defines a map of available widgets
 const AVAILABLE_WIDGETS = {
+  AIBuilderChat,
+  AIBuilderSettings,
+  AIBuilderWorkspace,
+  BundleAvatar,
+  BundleBanner,
+  BundleChrome,
+  BundleChromeToggle,
+  BundleContainer,
+  BundleCounter,
+  BundleHeader,
+  BundleLink,
+  BundleLogo,
+  BundleMenu,
+  BundleSearch,
   Markdown,
   Search,
   Signature,

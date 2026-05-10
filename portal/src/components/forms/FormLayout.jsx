@@ -5,6 +5,10 @@ import { useLocation } from 'react-router-dom';
 import { getAttributeValue } from '../../helpers/records.js';
 import { Icon } from '../../atoms/Icon.jsx';
 import { PageHeading } from '../PageHeading.jsx';
+import {
+  RENDER_MODE_MODAL,
+  useRenderMode,
+} from '../../helpers/container-scope.js';
 
 /**
  * Generates a Layout component for CoreForm.
@@ -39,9 +43,22 @@ export const generateFormLayout = ({
     reviewPaginationControl,
   }) => {
     const spaceAdmin = useSelector(state => state.app.profile?.spaceAdmin);
+    const renderMode = useRenderMode();
     const location = useLocation();
     const backPath = location.state?.backPath;
     const icon = getAttributeValue(form, 'Icon', 'forms');
+
+    // In a modal the host already provides title/close chrome plus its own
+    // padding and card, so skip the page-style wrappers entirely. PageHeading
+    // suppresses itself in modal mode, so we don't render it here either.
+    if (renderMode === RENDER_MODE_MODAL) {
+      return (
+        <div className="flex-c-st gap-6">
+          {content}
+          {reviewPaginationControl}
+        </div>
+      );
+    }
 
     return (
       <div className="gutter">

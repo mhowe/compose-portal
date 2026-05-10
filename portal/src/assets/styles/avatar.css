@@ -5,19 +5,25 @@
  ******************************************************************************/
 
 @utility kavatar {
-  @apply rounded-field;
+  @apply rounded-field overflow-hidden;
   --kavatar-bg: var(--color-base-300);
   --kavatar-fg: var(--color-base-content);
+  > :is(div, img) {
+    @apply w-10 h-10;
+  }
   > div {
-    @apply w-10;
+    @apply flex items-center justify-center;
     background-color: var(--kavatar-bg);
     color: var(--kavatar-fg);
+  }
+  > img {
+    @apply object-cover;
   }
 }
 
 @utility kavatar-placeholder {
   > div {
-    @apply rounded-field uppercase font-semibold;
+    @apply uppercase font-semibold;
   }
 }
 
@@ -40,32 +46,30 @@
   }
 }
 
-@utility kavatar-xs {
-  > div {
-    @apply w-6 text-xs;
-  }
-}
-
 @utility kavatar-sm {
+  > :is(div, img) {
+    @apply w-8 h-8;
+  }
   > div {
-    @apply w-8 text-sm;
+    @apply text-sm;
   }
 }
 
 @utility kavatar-lg {
+  > :is(div, img) {
+    @apply w-12 h-12;
+  }
   > div {
-    @apply w-12 text-lg;
+    @apply text-lg;
   }
 }
 
 @utility kavatar-xl {
+  > :is(div, img) {
+    @apply w-14 h-14;
+  }
   > div {
-    @apply w-14 text-xl;
+    @apply text-xl;
   }
 }
 
-@utility kavatar-2xl {
-  > div {
-    @apply w-20 text-4xl;
-  }
-}

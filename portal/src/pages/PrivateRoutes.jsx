@@ -1,33 +1,25 @@
-import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Home } from './home/Home.jsx';
-import { Actions } from './tickets/actions/Actions.jsx';
-import { Requests } from './tickets/requests/Requests.jsx';
-import { Form } from './forms/Form.jsx';
-import { Profile } from './profile/Profile.jsx';
-import { SettingsRouting } from './settings/index.jsx';
 import { Header } from '../components/header/Header.jsx';
 import { SearchModal } from '../components/search/SearchModal.jsx';
 import { Theme } from './theme/index.jsx';
-import { LandingResolver } from './landing/LandingResolver.jsx';
-import { EmbeddedLanding } from './landing/EmbeddedLanding.jsx';
-import { KappDefaultPage } from './kapp/KappDefaultPage.jsx';
-
-const Redirect = ({ to }) => {
-  const params = useParams();
-  return (
-    <Navigate
-      to={(typeof to === 'function' ? to(params) : to) || '/'}
-      replace={true}
-    />
-  );
-};
+import { BundleRoutes } from './BundleRoutes.jsx';
 
 export const PrivateRoutes = () => {
   const spaceAdmin = useSelector(state => state.app.profile?.spaceAdmin);
   return (
     <Routes>
-      {/* Theme page */}
+      {/* Theme editor — full-page (no header chrome) for both targets.
+          Both routes are admin-only; SpaceSettings provides the entry point
+          for /settings/space/theme. /theme remains as the legacy entry point
+          for the portal kapp's theme until the future Kapp Settings page
+          provides per-kapp routing. */}
+      {spaceAdmin && (
+        <Route
+          path="/settings/space/theme"
+          element={<Theme target="space" />}
+        />
+      )}
       {spaceAdmin && <Route path="/theme" element={<Theme />} />}
 
       {/* Other Routes*/}
@@ -38,52 +30,9 @@ export const PrivateRoutes = () => {
             {/* Shared header */}
             <Header />
 
-            <Routes>
-              {/* Canonical route for submissions */}
-              <Route
-                path="/kapps/:kappSlug/forms/:formSlug/submissions/:submissionId"
-                element={
-                  <Redirect
-                    to={params =>
-                      `/kapps/${params.kappSlug}/forms/${params.formSlug}/${params.submissionId}`
-                    }
-                  />
-                }
-              />
-              {/* Canonical route for forms */}
-              <Route
-                path="/kapps/:kappSlug/forms/:formSlug/:submissionId?"
-                element={<Form />}
-              />
-              {/* Space landing page — kapp cards + admin settings link.
-                  Always reachable via /kapps regardless of resolver defaults. */}
-              <Route path="/kapps" element={<EmbeddedLanding />} />
-              {/* Bundle-default kapp page (forms table). Admins can override by
-                  setting the kapp's 'Default Form Slug' attribute, which the
-                  landing resolver picks up. */}
-              <Route path="/kapps/:kappSlug" element={<KappDefaultPage />} />
-
-              {/* Portal routes */}
-              <Route path="/actions/*" element={<Actions />} />
-              <Route path="/requests/*" element={<Requests />} />
-              <Route
-                path="/forms/:formSlug/:submissionId?"
-                element={<Form />}
-              />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings/*" element={<SettingsRouting />} />
-              <Route path="/login" element={<Navigate to="/" />} />
-
-              {/* Reference: preserves momentum-portal's Home at a stable URL so
-                  we can use it as a visual/UX reference while building the
-                  form-driven replacement. Do not link to this in production UI. */}
-              <Route path="/_reference/legacy-home" element={<Home />} />
-
-              {/* Landing resolver at exact root. Other unmatched paths fall
-                  through to the legacy Home component for now. */}
-              <Route path="/" element={<LandingResolver />} />
-              <Route path="/*" element={<Home />} />
-            </Routes>
+            {/* Bundle's page routes (also used inside BundleContainer widget
+                so any page reachable here is reachable from a container) */}
+            <BundleRoutes />
 
             {/* Global search modal */}
             <SearchModal />

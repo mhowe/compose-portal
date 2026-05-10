@@ -12,22 +12,43 @@ import { Icon } from '../../atoms/Icon.jsx';
 import { Modal } from '../../atoms/Modal.jsx';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { StatusDot, StatusPill } from '../../components/tickets/StatusPill.jsx';
-import { themeActions } from '../../helpers/state.js';
+import { appActions } from '../../helpers/state.js';
+import { getAttributeValue } from '../../helpers/records.js';
 import { buildStyleObject, useDefaultTheme } from '../../helpers/theme.js';
+import { openConfirm } from '../../helpers/confirm.js';
 import logo from '../../assets/images/logo.svg';
-import { Menu } from '../../atoms/Menu.jsx';
 import { Portal } from '@ark-ui/react/portal';
 import { Tooltip } from '../../atoms/Tooltip.jsx';
 
-const updateThemeAttribute = async (kappSlug, theme) =>
-  updateKapp({
-    kappSlug,
-    kapp: { attributesMap: { Theme: [JSON.stringify(theme)] } },
+// Persists the editor's theme JSON onto the chosen target's `Theme` attribute.
+// Returns the @kineticdata/react response so the caller can drive UI states.
+const saveThemeAttribute = (target, slug, theme) => {
+  const attributesMap = { Theme: [JSON.stringify(theme)] };
+  if (target === 'space') {
+    return updateSpace({
+      space: { attributesMap },
+      include: 'attributesMap',
+    });
+  }
+  return updateKapp({
+    kappSlug: slug,
+    kapp: { attributesMap },
     include: 'attributesMap',
-  }).then(response => {
-    if (!response.error) themeActions.setTheme(response);
-    return response;
   });
+};
+
+// Parses a JSON Theme attribute value off a record. Returns {} for missing or
+// malformed values — invalid JSON is logged once at parse time.
+const parseSavedTheme = record => {
+  const raw = getAttributeValue(record, 'Theme');
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Error parsing saved Theme attribute:', e);
+    return {};
+  }
+};
 
 const useDirtyCheck = (currentTheme, savedTheme) => {
   const isDirty = !isEqualWith(savedTheme, currentTheme, (a, b) => {
@@ -229,21 +250,54 @@ const ColorWrapper = ({ name, children }) => (
   </div>
 );
 
-export const Theme = () => {
+export const Theme = ({ target = 'kapp' }) => {
   const location = useLocation();
   const backPath = location.state?.backPath || './..';
   const desktop = useSelector(state => state.view.desktop);
   const profile = useSelector(state => state.app.profile);
   const portalRef = useRef(null);
+  const space = useSelector(state => state.app.space);
   const kapp = useSelector(state => state.app.kapp);
-  const missingThemeAttributeDefinition = !kapp?.attributesMap?.['Theme'];
 
-  // Get the default theme by extracting it from the dom
+  // Resolve the record + identifying metadata for the active target. The
+  // editor reads/writes whichever record this points to; the cascade itself
+  // is owned by App.jsx + themeActions and updates automatically once the
+  // target record's Theme attribute changes in redux.
+  const targetRecord = target === 'space' ? space : kapp;
+  const targetSlug = target === 'space' ? null : kapp?.slug;
+  const targetName = target === 'space' ? space?.name : kapp?.name;
+  const targetTitle =
+    target === 'space' ? 'Space Theme' : `${targetName ?? 'Kapp'} Theme`;
+
+  // Look the Theme attribute *definition* up on the space record (which is
+  // fetched with both space + kapp attribute definitions included). The
+  // editor needs a definition to save against; falling back to a value-only
+  // check would mis-report a definition that's just empty.
+  const missingThemeAttributeDefinition = useMemo(() => {
+    if (!space) return false;
+    if (target === 'space') {
+      return !(space.spaceAttributeDefinitions || []).some(
+        d => d.name === 'Theme',
+      );
+    }
+    if (!targetSlug) return false;
+    const matchedKapp = (space.kapps || []).find(k => k.slug === targetSlug);
+    return !(matchedKapp?.kappAttributeDefinitions || []).some(
+      d => d.name === 'Theme',
+    );
+  }, [space, target, targetSlug]);
+
+  // Get the default theme by extracting it from the dom. NOTE: the global
+  // cascade is already applied at this point, so for a space-target editor
+  // the kapp's overrides leak into the baseline. Acceptable for v1 — a
+  // future polish pass can compute the editor baseline from the underlying
+  // layers only.
   const [defaultThemeRef, defaultTheme] = useDefaultTheme();
-  // Get the saved theme from state
-  const savedTheme = useSelector(state => state.theme.data || {});
+  // Get the saved theme directly from the target record so we see this
+  // target's contribution, not the cascade-merged result.
+  const savedTheme = useMemo(() => parseSavedTheme(targetRecord), [targetRecord]);
   // Create state for the current theme
-  const [currentTheme, setCurrentTheme] = useState(savedTheme || {});
+  const [currentTheme, setCurrentTheme] = useState(() => savedTheme || {});
 
   // Function for determining the color value for a variable
   const colorValue = name =>
@@ -294,33 +348,56 @@ export const Theme = () => {
     [savedTheme],
   );
 
+  // Apply the response of a save/reset back into redux. The App.jsx cascade
+  // effect watches state.app.space / state.app.kapp, so updating the target
+  // record's attributesMap reactively rebuilds the theme css too.
+  const applySaveResponse = useCallback(
+    response => {
+      if (target === 'space' && response.space) {
+        appActions.updateSpaceData({
+          attributesMap: response.space.attributesMap,
+        });
+      } else if (response.kapp) {
+        appActions.updateKappData({
+          attributesMap: response.kapp.attributesMap,
+        });
+      }
+    },
+    [target],
+  );
+
   // Handler for saving the changed
   const [saveState, setSaveState] = useState('idle');
   const saveChanges = useCallback(() => {
     setSaveState('pending');
-    updateThemeAttribute(kapp.slug, currentTheme).then(({ error }) => {
-      if (error) {
-        console.log('Error saving theme:', error);
+    saveThemeAttribute(target, targetSlug, currentTheme).then(response => {
+      if (response.error) {
+        console.log('Error saving theme:', response.error);
         setSaveState('error');
         return;
       }
+      applySaveResponse(response);
       setSaveState('success');
       setTimeout(
         () => setSaveState(status => (status === 'success' ? 'idle' : status)),
         4000,
       );
     });
-  }, [currentTheme, kapp]);
-  // Handler for resetting the saved theme
+  }, [currentTheme, target, targetSlug, applySaveResponse]);
+  // Handler for wiping the saved theme back to bundle defaults. Persists an
+  // empty object onto the target's Theme attribute so the cascade falls
+  // through to CSS defaults (and, for a kapp target, through to the space
+  // theme as well).
   const [resetState, setResetState] = useState('idle');
   const resetTheme = useCallback(() => {
     setResetState('pending');
-    updateThemeAttribute(kapp.slug, {}).then(({ error }) => {
-      if (error) {
-        console.log('Error resetting theme:', error);
+    saveThemeAttribute(target, targetSlug, {}).then(response => {
+      if (response.error) {
+        console.log('Error resetting theme:', response.error);
         setResetState('error');
         return;
       }
+      applySaveResponse(response);
       setResetState('success');
       setCurrentTheme({});
       setTimeout(
@@ -328,7 +405,21 @@ export const Theme = () => {
         4000,
       );
     });
-  }, []);
+  }, [target, targetSlug, applySaveResponse]);
+  // User-facing entry point for the destructive restore. Asks for confirmation
+  // before invoking resetTheme so an accidental click can't wipe the saved
+  // theme.
+  const restoreDefaults = useCallback(() => {
+    openConfirm({
+      title: 'Restore Default Theme',
+      description:
+        target === 'space'
+          ? 'This will wipe all saved space-level theme overrides and fall back to bundle defaults. This cannot be undone — but you can re-edit and save afterward. Continue?'
+          : `This will wipe all saved theme overrides on the ${targetName} kapp and fall back to the space theme (or bundle defaults). This cannot be undone — but you can re-edit and save afterward. Continue?`,
+      acceptLabel: 'Restore Defaults',
+      accept: resetTheme,
+    });
+  }, [target, targetName, resetTheme]);
 
   // Check if the theme is dirty, and if there are any changes from the default
   const [isDirty, isChanged] = useDirtyCheck(currentTheme, savedTheme);
@@ -364,31 +455,21 @@ export const Theme = () => {
                 <Icon name="arrow-left" />
               </Link>
               <div>
-                <h1 className="text-2xl">Theme Editor</h1>
-                <h2 className="text-base">{kapp?.name}</h2>
+                <h1 className="text-2xl">{targetTitle}</h1>
+                <h2 className="text-base">
+                  {target === 'space'
+                    ? 'Applies to the whole space'
+                    : `Applies to the ${targetName} kapp`}
+                </h2>
               </div>
-              {isChanged && (
-                <Menu
-                  alignment="end"
-                  items={[{ label: 'Reset Custom Theme', onClick: resetTheme }]}
-                >
-                  <button
-                    slot="trigger"
-                    type="button"
-                    className="ml-auto kbtn kbtn-ghost kbtn-circle kbtn-lg"
-                    aria-label="More Options"
-                  >
-                    <Icon name="dots-vertical" />
-                  </button>
-                </Menu>
-              )}
             </div>
             {missingThemeAttributeDefinition && (
               <div className="kalert kalert-error flex-ss gap-3">
                 <Icon name="alert-square-rounded" className="flex-none" />
                 <span>
-                  You must create a &#34;Theme&#34; kapp attribute definition in
-                  the {kapp.name} kapp in order to save a custom theme.
+                  {target === 'space'
+                    ? 'You must create a "Theme" space attribute definition before you can save a custom theme. Deploy it from Space Settings → Bundle Setup.'
+                    : `You must create a "Theme" kapp attribute definition in the ${targetName} kapp in order to save a custom theme.`}
                 </span>
               </div>
             )}
@@ -624,6 +705,18 @@ export const Theme = () => {
                 >
                   Reset
                 </button>
+                {isChanged && (
+                  <button
+                    type="button"
+                    className="kbtn kbtn-error kbtn-outline kbtn-lg"
+                    disabled={
+                      saveState === 'pending' || resetState === 'pending'
+                    }
+                    onClick={restoreDefaults}
+                  >
+                    Restore Defaults
+                  </button>
+                )}
               </div>
             )}
           </>

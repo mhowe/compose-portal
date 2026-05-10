@@ -1,10 +1,16 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { fetchForms } from '@kineticdata/react';
 import { useData } from '../../helpers/hooks/useData.js';
 import { ADMIN_KAPP_SLUG } from '../../helpers/constants.js';
-import { readSpaceDefaultFormSlug } from '../../helpers/setup.js';
+import {
+  FORM_DISPLAY_MODE_FULLSCREEN,
+  readFormDisplayMode,
+  readSpaceDefaultFormSlug,
+} from '../../helpers/setup.js';
+import { layoutActions } from '../../helpers/state.js';
+import { useInsideContainer } from '../../helpers/container-scope.js';
 import { Icon } from '../../atoms/Icon.jsx';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { Loading } from '../../components/states/Loading.jsx';
@@ -29,13 +35,15 @@ export const EmbeddedLanding = () => {
 
   // Confirm the configured form actually exists in the admin kapp. If it
   // doesn't, fall through to the built-in view rather than letting CoreForm
-  // render an error.
+  // render an error. We also pull attributesMap so we can read Display Mode
+  // off the same fetch.
   const formCheckParams = useMemo(
     () =>
       configuredFormSlug && adminKappExists
         ? {
             kappSlug: ADMIN_KAPP_SLUG,
             q: `slug = "${configuredFormSlug}"`,
+            include: 'attributesMap',
             limit: 1,
           }
         : null,
@@ -45,13 +53,33 @@ export const EmbeddedLanding = () => {
     fetchForms,
     formCheckParams,
   );
-  const formExists = (response?.forms || []).length > 0;
+  const form = response?.forms?.[0];
+  const formExists = !!form;
+  const willRenderForm =
+    configuredFormSlug && adminKappExists && formExists;
+  const isFullscreen =
+    willRenderForm &&
+    readFormDisplayMode(form) === FORM_DISPLAY_MODE_FULLSCREEN;
+
+  // Toggle the bundle's chrome based on the resolved display mode. Always
+  // restore on unmount so navigating away from a fullscreen landing brings
+  // the rest of the portal's chrome back. Skipped when this page is rendered
+  // inside a BundleContainer — chrome is owned by whatever page hosts that
+  // container, and an inner form must not flip global chrome state.
+  const insideContainer = useInsideContainer();
+  useEffect(() => {
+    if (insideContainer) return;
+    layoutActions.setChromeHidden(isFullscreen);
+    return () => layoutActions.setChromeHidden(false);
+  }, [isFullscreen, insideContainer]);
 
   if (formCheckParams && (!initialized || loading)) return <Loading />;
 
   // Render the custom form inline when configured and valid.
-  if (configuredFormSlug && adminKappExists && formExists) {
-    return (
+  if (willRenderForm) {
+    return isFullscreen ? (
+      <KineticForm kappSlug={ADMIN_KAPP_SLUG} formSlug={configuredFormSlug} />
+    ) : (
       <div className="gutter">
         <KineticForm
           kappSlug={ADMIN_KAPP_SLUG}

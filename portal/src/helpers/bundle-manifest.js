@@ -38,6 +38,12 @@ export const BUNDLE_MANIFEST = {
         description:
           'URLs of Compose Portal capability registry index.json files. Multiple allowed; the bundle fetches and merges each. Leave empty to hide the Capabilities section.',
       },
+      {
+        name: 'Theme',
+        required: false,
+        description:
+          'JSON theme overrides applied to the whole space (colors, radius, logo). Optional — bundle defaults are used when absent. Per-kapp Theme attributes layer on top of this.',
+      },
     ],
   },
   userProfile: {
@@ -60,6 +66,28 @@ export const BUNDLE_MANIFEST = {
         required: false,
         description:
           'Slug of the form rendered as the landing page for this kapp. When absent, the bundle shows the default kapp page.',
+      },
+      {
+        name: 'Theme',
+        required: false,
+        description:
+          "JSON theme overrides applied to this kapp. Layers on top of the space-level Theme; a key set here wins. Optional — falls through to the space's Theme (and then bundle defaults) when absent.",
+      },
+    ],
+  },
+  // Form attribute definitions the bundle reads. Each lives on a kapp's
+  // formAttributeDefinitions; whether it's defined on the admin kapp,
+  // every kapp, or just specific kapps is an installation concern. Kept
+  // separately from kapp.attributes so the deploy/setup flow can treat
+  // them appropriately when we wire that up.
+  form: {
+    attributes: [
+      {
+        name: 'Display Mode',
+        required: false,
+        description:
+          'Controls how the bundle frames a form when it is rendered as a landing page (space landing or kapp landing). "embedded" (default) renders inside the bundle chrome — header, navigation, avatar. "fullscreen" renders the form alone with no bundle chrome; the form is responsible for any chrome it wants via widgets.',
+        values: ['embedded', 'fullscreen'],
       },
     ],
   },

@@ -14,6 +14,7 @@ import { PrivateRoutes } from './pages/PrivateRoutes.jsx';
 import { PublicRoutes } from './pages/PublicRoutes.jsx';
 import { Login } from './pages/login/Login.jsx';
 import { ConfirmationModal } from './components/confirm/ConfirmationModal.jsx';
+import { ModalSlot } from './components/modal/ModalSlot.jsx';
 import { useData } from './helpers/hooks/useData.js';
 
 export const App = ({
@@ -116,9 +117,14 @@ export const App = ({
   useEffect(() => {
     if (kappInit && !kappLoading) {
       appActions.setKapp(kappData);
-      themeActions.setTheme(kappData);
     }
   }, [kappInit, kappLoading, kappData]);
+
+  // Recompute the cascade-merged theme any time space or kapp data changes.
+  // Both records contribute a layer; kapp overrides space.
+  useEffect(() => {
+    themeActions.setTheme({ space, kapp });
+  }, [space, kapp]);
 
   // Clear toasts and confirmation modals whenever we change routes
   useRouteChange((pathname, state) => {
@@ -181,6 +187,10 @@ export const App = ({
 
       {/* Global confirmation modal */}
       <ConfirmationModal />
+
+      {/* Programmatic modal stack — driven by bundle.utils.openModal and by
+          chrome widgets configured with target: 'modal'. */}
+      <ModalSlot />
     </>
   );
 };

@@ -1,9 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { fetchForms } from '@kineticdata/react';
 import { useData } from '../../helpers/hooks/useData.js';
-import { readKappDefaultFormSlug } from '../../helpers/setup.js';
+import {
+  FORM_DISPLAY_MODE_FULLSCREEN,
+  readFormDisplayMode,
+  readKappDefaultFormSlug,
+} from '../../helpers/setup.js';
+import { layoutActions } from '../../helpers/state.js';
+import { useInsideContainer } from '../../helpers/container-scope.js';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { Loading } from '../../components/states/Loading.jsx';
 import { KineticForm } from '../../components/kinetic-form/KineticForm.jsx';
@@ -26,16 +32,22 @@ export const KappDefaultPage = () => {
 
   // Confirm the kapp's Default Form Slug exists before rendering it — falls
   // through to the forms table on misconfiguration rather than erroring.
+  // attributesMap is included so we can read Display Mode off the same fetch.
   const defaultFormCheckParams = useMemo(
     () =>
       defaultFormSlug
-        ? { kappSlug, q: `slug = "${defaultFormSlug}"`, limit: 1 }
+        ? {
+            kappSlug,
+            q: `slug = "${defaultFormSlug}"`,
+            include: 'attributesMap',
+            limit: 1,
+          }
         : null,
     [kappSlug, defaultFormSlug],
   );
   const defaultFormCheck = useData(fetchForms, defaultFormCheckParams);
-  const defaultFormExists =
-    (defaultFormCheck.response?.forms || []).length > 0;
+  const defaultForm = defaultFormCheck.response?.forms?.[0];
+  const defaultFormExists = !!defaultForm;
 
   // Forms table is only needed when we're rendering the fallback. Skip the
   // fetch entirely when a valid default form will render instead.
@@ -44,6 +56,20 @@ export const KappDefaultPage = () => {
     defaultFormCheck.initialized &&
     !defaultFormCheck.loading &&
     defaultFormExists;
+  const isFullscreen =
+    willRenderDefaultForm &&
+    readFormDisplayMode(defaultForm) === FORM_DISPLAY_MODE_FULLSCREEN;
+
+  // Toggle bundle chrome based on the resolved display mode. Always restore
+  // on unmount so leaving the kapp landing brings the chrome back. Skipped
+  // when rendered inside a BundleContainer — see EmbeddedLanding for the
+  // same rationale (chrome is owned by the host page, not the inner form).
+  const insideContainer = useInsideContainer();
+  useEffect(() => {
+    if (insideContainer) return;
+    layoutActions.setChromeHidden(isFullscreen);
+    return () => layoutActions.setChromeHidden(false);
+  }, [isFullscreen, insideContainer]);
   const formsTableParams = useMemo(
     () =>
       willRenderDefaultForm
@@ -66,7 +92,9 @@ export const KappDefaultPage = () => {
   }
 
   if (willRenderDefaultForm) {
-    return (
+    return isFullscreen ? (
+      <KineticForm kappSlug={kappSlug} formSlug={defaultFormSlug} />
+    ) : (
       <div className="gutter">
         <PageHeading title={kapp?.name || kappSlug} backTo="/kapps" />
         <KineticForm kappSlug={kappSlug} formSlug={defaultFormSlug} />

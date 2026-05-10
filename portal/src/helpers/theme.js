@@ -32,40 +32,72 @@ export const THEME_SCHEMA = {
 export const themeState = {
   // Has the theme been initialized
   ready: false,
-  // The parsed theme data
+  // The parsed cascade-merged theme data
   data: {},
+  // The parsed space-level theme (cascade input)
+  spaceData: {},
+  // The parsed kapp-level theme (cascade input)
+  kappData: {},
   // A string of css variable overwrites to alter the theme
   css: null,
 };
 
 /**
- * Function that updates a state object with the provided theme data.
- *
- * @param {Object} state
- * @param {string} themeConfig JSON string of theme configurations.
- * @returns {Object}
+ * Parses a JSON theme configuration string into an object. Returns an empty
+ * object on missing input or parse error, after logging.
  */
-export const calculateThemeState = (state, themeConfig) => {
-  state.ready = true;
-
-  // If no data provided, clear the theme
-  if (!themeConfig) {
-    state.css = null;
-    state.data = {};
-    return state;
-  }
-
+const parseThemeConfig = themeConfig => {
+  if (!themeConfig) return {};
   try {
-    // Parse the provided attribute value
-    const config = JSON.parse(themeConfig);
-    state.data = config;
-    // Generate a css stylesheet from the config
-    state.css = buildStylesheet(config);
-    return state;
+    return JSON.parse(themeConfig);
   } catch (e) {
     console.error('Error parsing theme configuration:', e);
-    return state;
+    return {};
   }
+};
+
+/**
+ * Merges two theme objects shallowly per top-level section ('colors',
+ * 'radius', 'logo'). Values from `top` win over `bottom` when both are set
+ * for a key. Sections absent from both stay absent.
+ */
+const mergeThemes = (bottom, top) => {
+  const merged = {};
+  for (const section of ['colors', 'radius', 'logo']) {
+    const a = bottom?.[section];
+    const b = top?.[section];
+    if (a || b) merged[section] = { ...(a || {}), ...(b || {}) };
+  }
+  return merged;
+};
+
+/**
+ * Function that updates a state object with merged theme data from the
+ * cascade. Kapp-level Theme overrides space-level Theme overrides bundle
+ * defaults (defaults live in CSS — when both attributes are empty, `data` is
+ * empty and `css` is null so the stylesheet defaults shine through).
+ *
+ * @param {Object} state
+ * @param {{ space?: string, kapp?: string }} configs Raw JSON strings from
+ *   each level of the cascade. Either may be undefined.
+ * @returns {Object}
+ */
+export const calculateThemeState = (state, configs = {}) => {
+  state.ready = true;
+
+  const spaceData = parseThemeConfig(configs.space);
+  const kappData = parseThemeConfig(configs.kapp);
+  const merged = mergeThemes(spaceData, kappData);
+
+  state.data = merged;
+  // Track each level so editors can read just their own slice without
+  // re-parsing the source records.
+  state.spaceData = spaceData;
+  state.kappData = kappData;
+
+  // If no overrides, clear the stylesheet so CSS defaults apply.
+  state.css = Object.keys(merged).length === 0 ? null : buildStylesheet(merged);
+  return state;
 };
 
 export const buildStyleObject = config => {
