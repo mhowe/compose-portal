@@ -18,6 +18,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleMenu](BUNDLE_MENU.md)
     - [BundleBanner](BUNDLE_BANNER.md)
     - [BundleCounter](BUNDLE_COUNTER.md)
+    - [Chart](CHART.md)
   - **Form-Field Widgets**
     - [Markdown](MARKDOWN.md)
     - [Search](SEARCH.md)
@@ -174,6 +175,12 @@ A full-width informational bar — environment indicator (Dev / Staging / etc.) 
 A label-with-badge pair — text plus a count badge whose color can change with the value. Count source is either a static value or an integration (the badge displays the array length). Optional thresholds for color-coding (e.g. neutral up to 10, warning up to 20, error above).
 
 [BundleCounter Documentation &#x2B9E;](BUNDLE_COUNTER.md)
+
+#### Chart
+
+A single-element widget that renders either a single-value metric card (title / big number / description, with optional threshold colors, sparkline trend, and delta chip) or an ApexCharts chart (line / bar / area / donut / pie) with optional per-point drill-through. Whole-widget `clickAction` matches the standard chrome-widget shape.
+
+[Chart Documentation &#x2B9E;](CHART.md)
 
 ---
 

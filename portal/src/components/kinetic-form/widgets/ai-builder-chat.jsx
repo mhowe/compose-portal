@@ -3,7 +3,11 @@ import { Provider } from 'react-redux';
 import clsx from 'clsx';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { IconCheck, IconCopy } from '@tabler/icons-react';
+import {
+  IconCheck,
+  IconCopy,
+  IconPlayerStopFilled,
+} from '@tabler/icons-react';
 import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
 import { store } from '../../../redux.js';
 
@@ -593,23 +597,45 @@ const AIBuilderChatContent = ({ config, apiRef }) => {
           className="kinput kinput-bordered flex-1 resize-none min-h-[5rem] max-h-72 leading-relaxed py-2"
           placeholder={placeholder}
           value={draft}
-          disabled={streaming}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault();
+              // While streaming, send() is a no-op (guarded by
+              // streamingRef.current). The Send button is also hidden in
+              // that state, so this keypress just clears the modifier and
+              // doesn't fire anything until the stream completes.
               send();
             }
           }}
         />
-        <button
-          type="button"
-          className="kbtn kbtn-primary"
-          disabled={streaming || !draft.trim()}
-          onClick={() => send()}
-        >
-          {streaming ? '…' : 'Send'}
-        </button>
+        {streaming ? (
+          <button
+            type="button"
+            className="kbtn kbtn-neutral"
+            onClick={() => {
+              // Triggers the abort controller; the in-flight fetch errors out,
+              // the finally block clears `streaming`, and the textarea + Send
+              // button come back. Partial assistant text stays in the message
+              // list (the conversation is NOT saved on abort — same contract
+              // as the imperative `abort()` API).
+              if (abortRef.current) abortRef.current.abort();
+            }}
+            title="Stop generating"
+          >
+            <IconPlayerStopFilled size={14} />
+            <span className="ml-1">Stop</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="kbtn kbtn-primary"
+            disabled={!draft.trim()}
+            onClick={() => send()}
+          >
+            Send
+          </button>
+        )}
       </div>
     </div>
   );

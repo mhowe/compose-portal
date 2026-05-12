@@ -52,6 +52,27 @@ Defaults to `false`. Multiple containers each manage their own slot independentl
 
 The `slotPath` is auto-derived from the container's mount position relative to other BundleContainers — a top-level container with `id: 'main'` gets slot `main`; a nested container with the same id gets slot `main.main`. This prevents URL recursion when a form's container loads the same form (which has the same container id).
 
+![name=hideFormChrome](https://img.shields.io/badge/hideFormChrome-gray)
+![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
+When `true`, forms loaded inside this container render without their page wrapper — no icon / form name heading, no settings-share link, no gutter, no max-width centering, no bordered content card. The form's fields render directly inside the container so the host page can own all the surrounding layout.
+
+Defaults to `false` (today's behavior — forms render with their full page chrome inside containers).
+
+This is the container-side opt-in. There is also a form-side opt-in: setting a form's `Form Chrome` attribute to `bare` makes that form render without its page wrapper whenever it's loaded into any container, regardless of `hideFormChrome`. The two opt-ins are a union — either source set to bare wins; if you want a specific form to render with full chrome in spite of the container saying bare, today there is no override (`hideFormChrome: true` is authoritative).
+
+```js
+// Host page owns layout; render the form's fields with no wrapper:
+bundle.widgets.BundleContainer({
+  container: K('content[Page Container]').element(),
+  config: {
+    id: 'main',
+    initialPath: '/kapps/test-kapp---compose-portal/forms/display',
+    hideFormChrome: true,
+  },
+  id: 'main',
+});
+```
+
 </blockquote>
 </details>
 
@@ -226,4 +247,5 @@ window.dispatchEvent(
 - **Sizing.** The container fills its DOM element. Make sure the content element has a height (e.g. `min-height: 600px`) so the rendered page is visible.
 - **Recursion is allowed.** Configuring a container to load the same page it's on works fine — but if that loaded page also contains a container that loads the same page, you'll create an infinite loop. The bundle does not guard against this; it's the form designer's responsibility.
 - **Display Mode is ignored inside containers.** A form with `Display Mode = fullscreen` renders normally when loaded inside a container — the container's host page owns chrome.
+- **Form page chrome is opt-out.** A form loaded into a container shows its standard page wrapper (icon, form name, settings link for space admins, gutter, max-width container, bordered card) by default. To suppress it, either set `hideFormChrome: true` on the container (affects every form loaded into this container) or set the form's `Form Chrome` attribute to `bare` (affects this form everywhere it's loaded into any container).
 - **API addressing collision.** If two containers have the same `id`, both respond to events targeting that id, and `BundleContainer.get(id)` returns whichever was registered most recently. URL slots are auto-namespaced by mount position so they don't collide on the URL — but API and event addressing still does. The widget logs a `console.warn` at registration time when it detects this.

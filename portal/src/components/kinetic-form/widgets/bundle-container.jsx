@@ -6,6 +6,9 @@ import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
 import { store } from '../../../redux.js';
 import {
   ContainerHistoryContext,
+  FormChromeContext,
+  FORM_CHROME_BARE,
+  FORM_CHROME_DEFAULT,
   RenderModeContext,
   RENDER_MODE_CONTAINER,
   RENDER_MODE_MODAL,
@@ -287,7 +290,18 @@ const BundleContainerInner = forwardRef(
  * already find us via DOM walk) and removed on unmount.
  */
 const BundleContainerComponent = forwardRef(
-  ({ id, slotPath, containerEl, initialPath, urlSync, renderMode }, ref) => {
+  (
+    {
+      id,
+      slotPath,
+      containerEl,
+      initialPath,
+      urlSync,
+      renderMode,
+      hideFormChrome,
+    },
+    ref,
+  ) => {
     useEffect(() => {
       if (!containerEl) return;
       // Idempotent — set was already done synchronously in the registration
@@ -311,19 +325,22 @@ const BundleContainerComponent = forwardRef(
     const effectivePath = fromUrl || initialPath;
     const hasPath =
       typeof effectivePath === 'string' && effectivePath.length > 0;
+    const formChrome = hideFormChrome ? FORM_CHROME_BARE : FORM_CHROME_DEFAULT;
     return (
       <Provider store={store}>
         <KineticLib globals={globals} locale="en">
           <RenderModeContext.Provider value={renderMode}>
-            <MemoryRouter initialEntries={[hasPath ? effectivePath : '/']}>
-              <BundleContainerInner
-                ref={ref}
-                id={id}
-                slotPath={slotPath}
-                initiallyBlank={!hasPath}
-                urlSync={urlSync}
-              />
-            </MemoryRouter>
+            <FormChromeContext.Provider value={formChrome}>
+              <MemoryRouter initialEntries={[hasPath ? effectivePath : '/']}>
+                <BundleContainerInner
+                  ref={ref}
+                  id={id}
+                  slotPath={slotPath}
+                  initiallyBlank={!hasPath}
+                  urlSync={urlSync}
+                />
+              </MemoryRouter>
+            </FormChromeContext.Provider>
           </RenderModeContext.Provider>
         </KineticLib>
       </Provider>
@@ -354,6 +371,15 @@ const validateConfig = config => {
   if (config.urlSync != null && typeof config.urlSync !== 'boolean') {
     console.error(
       'BundleContainer Widget Error: `urlSync`, when provided, must be a boolean.',
+    );
+    return false;
+  }
+  if (
+    config.hideFormChrome != null &&
+    typeof config.hideFormChrome !== 'boolean'
+  ) {
+    console.error(
+      'BundleContainer Widget Error: `hideFormChrome`, when provided, must be a boolean.',
     );
     return false;
   }
@@ -437,6 +463,13 @@ const warnIfIdCollision = (id, newContainer) => {
  *   the render context. Defaults to 'container'. ModalSlot passes 'modal' so
  *   form chrome (PageHeading) is suppressed inside modals; the modal already
  *   provides its own title/close chrome.
+ * @param {boolean} [config.hideFormChrome] When true, forms loaded inside
+ *   this container render without their page wrapper — no PageHeading
+ *   (icon / form name / settings link), no gutter, no max-width centering,
+ *   no bordered content card. Use when the host page owns the layout and
+ *   only wants the form fields to appear. Default false. Overrides a per-
+ *   form `Form Chrome` attribute when set true; if false (the default), an
+ *   individual form can still opt into bare via its attribute.
  * @param {string} [id] Optional id used by registerWidget for instance
  *   tracking. When omitted, falls back to config.id.
  */
@@ -464,6 +497,7 @@ export const BundleContainer = ({ container, config, id } = {}) => {
         initialPath: config.initialPath,
         urlSync: !!config.urlSync,
         renderMode: config.renderMode || RENDER_MODE_CONTAINER,
+        hideFormChrome: !!config.hideFormChrome,
       },
       id: id || config.id,
       // BundleContainer provides its own MemoryRouter internally; the default

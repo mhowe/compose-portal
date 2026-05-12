@@ -6,7 +6,10 @@ import { getAttributeValue } from '../../helpers/records.js';
 import { Icon } from '../../atoms/Icon.jsx';
 import { PageHeading } from '../PageHeading.jsx';
 import {
+  FORM_CHROME_BARE,
+  RENDER_MODE_CONTAINER,
   RENDER_MODE_MODAL,
+  useFormChrome,
   useRenderMode,
 } from '../../helpers/container-scope.js';
 
@@ -44,14 +47,31 @@ export const generateFormLayout = ({
   }) => {
     const spaceAdmin = useSelector(state => state.app.profile?.spaceAdmin);
     const renderMode = useRenderMode();
+    const containerFormChrome = useFormChrome();
     const location = useLocation();
     const backPath = location.state?.backPath;
     const icon = getAttributeValue(form, 'Icon', 'forms');
 
-    // In a modal the host already provides title/close chrome plus its own
-    // padding and card, so skip the page-style wrappers entirely. PageHeading
-    // suppresses itself in modal mode, so we don't render it here either.
-    if (renderMode === RENDER_MODE_MODAL) {
+    // Bare layout — no heading chrome, no gutter, no max-width centering,
+    // no bordered content card; just the form content. Fires in three cases:
+    //   1. Modal mode: the host modal provides title/close chrome and its
+    //      own padding, so the page wrapper would double up.
+    //   2. Container mode with the host opting in via
+    //      `hideFormChrome: true` on BundleContainer — host page owns layout.
+    //   3. Container mode with the form itself opting in via the
+    //      `Form Chrome = bare` attribute — form has decided it doesn't
+    //      want its standard wrapper when embedded.
+    // PageHeading independently suppresses itself in modes 1 and 2 so any
+    // other caller (not just this layout) gets the same treatment.
+    const formAttrBare =
+      (getAttributeValue(form, 'Form Chrome', 'forms') || '')
+        .trim()
+        .toLowerCase() === FORM_CHROME_BARE;
+    const isBare =
+      renderMode === RENDER_MODE_MODAL ||
+      (renderMode === RENDER_MODE_CONTAINER &&
+        (containerFormChrome === FORM_CHROME_BARE || formAttrBare));
+    if (isBare) {
       return (
         <div className="flex-c-st gap-6">
           {content}

@@ -53,6 +53,9 @@
 @source inline("min-{w,h}-{0,auto,full,screen}");
 @source inline("{inline,block,inline-block,flex,inline-flex,hidden,sr-only}");
 @source inline("gap{,-x,-y}-{{0..24..1}}");
+@source inline("{,sm:,md:,lg:,xl:}grid-cols-{1..6}");
+@source inline("{,sm:,md:,lg:,xl:}col-span-{1..4}");
+@source inline("{,sm:,md:,lg:,xl:}row-span-{1..3}");
 @source inline("flex-{auto,initial,none,full,0,1,wrap}");
 @source inline("flex{,-c}-{ss,sc,se,st,cs,cc,ce,ct,es,ec,ee,et,bs,bc,be,bt}")
 @source inline("kbtn{,-{primary,seconday,accent,neutral,info,success,warning,error,outline,ghost,xs,sm,md,lg,xl,circle,block}}");

@@ -4,9 +4,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../atoms/Icon.jsx';
 import { useSelector } from 'react-redux';
 import {
+  FORM_CHROME_BARE,
   RENDER_MODE_CONTAINER,
   RENDER_MODE_MODAL,
   useContainerHistory,
+  useFormChrome,
   useRenderMode,
 } from '../helpers/container-scope.js';
 
@@ -33,6 +35,13 @@ import {
  *   modal:
  *     The host modal already provides title/close chrome, so this component
  *     renders nothing at all in modal context.
+ *
+ *   container + hideFormChrome:
+ *     A BundleContainer with `hideFormChrome: true` advertises that the host
+ *     page owns layout. This component renders nothing in that case so any
+ *     caller (not just FormLayout's bare branch) gets the same treatment.
+ *     The form-attribute opt-in (`Form Chrome = bare`) is handled by
+ *     FormLayout directly since PageHeading doesn't see the form record.
  */
 export const PageHeading = ({
   title,
@@ -47,10 +56,17 @@ export const PageHeading = ({
   const location = useLocation();
   const navigate = useNavigate();
   const renderMode = useRenderMode();
+  const formChrome = useFormChrome();
   const containerHistory = useContainerHistory();
   const goBack = useCallback(() => navigate(-1), [navigate]);
 
   if (renderMode === RENDER_MODE_MODAL) return null;
+  if (
+    renderMode === RENDER_MODE_CONTAINER &&
+    formChrome === FORM_CHROME_BARE
+  ) {
+    return null;
+  }
 
   const explicitBackPath = location.state?.backPath;
 

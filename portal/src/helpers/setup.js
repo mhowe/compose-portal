@@ -129,6 +129,25 @@ export const readFormDisplayMode = form => {
     : FORM_DISPLAY_MODE_EMBEDDED;
 };
 
+// Per-form preference for how a form renders when loaded inside a
+// BundleContainer. 'bare' strips PageHeading + the page wrappers (gutter,
+// max-width centering, bordered content card). 'default' (any other value or
+// missing) preserves today's full chrome. Only consulted in container mode;
+// has no effect on top-level page routes.
+export const FORM_CHROME_DEFAULT = 'default';
+export const FORM_CHROME_BARE = 'bare';
+
+/**
+ * Given a form record (with attributesMap included), reads its 'Form Chrome'
+ * attribute. Returns FORM_CHROME_BARE or FORM_CHROME_DEFAULT (the default).
+ */
+export const readFormChrome = form => {
+  const raw = readAttribute(form, 'Form Chrome');
+  return raw && raw.trim().toLowerCase() === FORM_CHROME_BARE
+    ? FORM_CHROME_BARE
+    : FORM_CHROME_DEFAULT;
+};
+
 /**
  * Returns the full status of every manifest item against the live space,
  * including optional items. Used by Space Settings to render every row the

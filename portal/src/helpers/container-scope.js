@@ -45,3 +45,16 @@ export const useInsideContainer = () =>
 export const ContainerHistoryContext = createContext(null);
 
 export const useContainerHistory = () => useContext(ContainerHistoryContext);
+
+// Form chrome control. Independent of render mode: a container in
+// RENDER_MODE_CONTAINER can additionally tell its inner tree to render the
+// form route without its page wrapper (PageHeading + gutter + bordered
+// content card) by providing 'bare' through this context. Default 'default'
+// preserves today's behavior outside a container or when the container
+// doesn't opt in.
+export const FORM_CHROME_DEFAULT = 'default';
+export const FORM_CHROME_BARE = 'bare';
+
+export const FormChromeContext = createContext(FORM_CHROME_DEFAULT);
+
+export const useFormChrome = () => useContext(FormChromeContext);

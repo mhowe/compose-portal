@@ -89,6 +89,13 @@ export const BUNDLE_MANIFEST = {
           'Controls how the bundle frames a form when it is rendered as a landing page (space landing or kapp landing). "embedded" (default) renders inside the bundle chrome — header, navigation, avatar. "fullscreen" renders the form alone with no bundle chrome; the form is responsible for any chrome it wants via widgets.',
         values: ['embedded', 'fullscreen'],
       },
+      {
+        name: 'Form Chrome',
+        required: false,
+        description:
+          'Controls how the form is wrapped when loaded inside a BundleContainer. "default" renders the standard page wrapper — icon, form name, settings link (space admins), gutter, max-width container, and bordered content card. "bare" strips all of that and renders just the form content, useful for forms embedded into a host page that owns its own layout. Only consulted in container mode; a BundleContainer with hideFormChrome=true overrides this to bare regardless of attribute value.',
+        values: ['default', 'bare'],
+      },
     ],
   },
 };

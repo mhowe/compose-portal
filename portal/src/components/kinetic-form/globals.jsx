@@ -31,6 +31,27 @@ window.bundle.config.fields = {
   time: { render: renderDateTimePickers },
 };
 
+// Widget reference docs — sourced from the .md files in
+// src/components/kinetic-form/widgets and exposed by widgetDocsPlugin in
+// vite.config.js. Forms can list and render the docs without knowing the
+// deploy path, since BASE_URL is substituted at build time.
+window.bundle.widgetDocs = {
+  list: () =>
+    fetch(`${import.meta.env.BASE_URL}widget-docs/index.json`).then(r => {
+      if (!r.ok) throw new Error(`widget-docs/index.json: ${r.status}`);
+      return r.json();
+    }),
+  get: idOrFile => {
+    const file = /\.md$/i.test(idOrFile)
+      ? idOrFile
+      : `${idOrFile.replace(/-/g, '_').toUpperCase()}.md`;
+    return fetch(`${import.meta.env.BASE_URL}widget-docs/${file}`).then(r => {
+      if (!r.ok) throw new Error(`widget-docs/${file}: ${r.status}`);
+      return r.text();
+    });
+  },
+};
+
 function renderDateTimePickers(field, trigger) {
   const isDateTime = field.type() === 'datetime';
   const toElementValue = isDateTime ? formatToIso : v => v;
