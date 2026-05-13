@@ -594,7 +594,7 @@ const AIBuilderChatContent = ({ config, apiRef }) => {
       <div className="flex gap-2 p-2 border-t border-base-300 items-end">
         <textarea
           ref={textareaRef}
-          className="kinput kinput-bordered flex-1 resize-none min-h-[5rem] max-h-72 leading-relaxed py-2"
+          className="ktextarea ktextarea-bordered flex-1 resize-none min-h-[5rem] max-h-72 leading-relaxed py-2"
           placeholder={placeholder}
           value={draft}
           onChange={e => setDraft(e.target.value)}
