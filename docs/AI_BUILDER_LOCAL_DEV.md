@@ -24,7 +24,7 @@ Plus two content sources the companion loads:
 
 ```
 ~/dev/
-├── ai-builder-companion/                      # Node service, port 4000 — local git only, no remote
+├── ai-builder-companion/                      # Node service, port 4000 (on GitHub: mhowe/ai-builder-companion)
 ├── bundle-development/
 │   ├── compose-portal/                        # The bundle (Vite, port 3000)
 │   │   └── portal/
@@ -42,7 +42,7 @@ Plus two content sources the companion loads:
 - `compose-portal` → on GitHub
 - `kinetic-platform-mgnt-mcp-server` → on GitHub (`kineticdata/kinetic-platform-mgnt-mcp-server`). Started from one of the community/internal forks; has local mods.
 - `kinetic-platform-ai-skills` → on GitHub
-- `ai-builder-companion` → **local git only.** Initialized 2026-05-13. No GitHub remote yet — open question whether this becomes its own public/private repo, gets folded into another repo, or ships as part of a "capability package."
+- `ai-builder-companion` → on GitHub (`mhowe/ai-builder-companion`). Initialized and published 2026-05-13. Long-term home (personal vs. `kineticdata` org, and how it ships to customers — standalone install vs. bundled into a "capability package") is still to be decided.
 
 ## Prerequisites
 
@@ -187,10 +187,7 @@ The companion's current local-file settings store (`data/settings.json`) becomes
 
 ## Open questions / strategic decisions still pending
 
-- **Companion service repo home.** Currently `~/dev/ai-builder-companion`, local-only git. Options:
-  - Standalone GitHub repo (mirrors how the skills repo works — clean separation, can be shared)
-  - Subdirectory of another existing repo
-  - Packaged into a "capability bundle" alongside the storage kapp + skills
+- **Companion service repo home.** Now published at `mhowe/ai-builder-companion`. Still TBD: whether it stays under a personal account or moves to the `kineticdata` org, and whether it ships to customers as a standalone install or gets packaged into a "capability bundle" alongside the storage kapp + skills.
 - **Encrypted settings storage** (v0.6.5b) — moves Anthropic API key out of the local JSON file
 - **Kinetic-issued auth tokens** between widget and companion
 - **MCP server event store** — current in-memory implementation doesn't survive pod restarts or horizontal scaling. Needs Redis or equivalent before serious prod load.
