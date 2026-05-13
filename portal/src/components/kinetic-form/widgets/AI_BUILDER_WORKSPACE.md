@@ -38,56 +38,45 @@ Also out of scope (not "rebuilding Claude Code"): branching/forking, conversatio
 
 ### Parameters
 
-![name=config](https://img.shields.io/badge/config-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)
+**`config`** — *Object*  
 
 <blockquote>
 
-![name=endpoint](https://img.shields.io/badge/endpoint-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
-![required](https://img.shields.io/badge/required-e74c3c)
+**`endpoint`** — *string*, required  
 The companion service `/chat/stream` URL. The widget derives `/projects` and `/conversations` by stripping the suffix — same pattern as `AIBuilderSettings`. Read it from a kapp attribute so one config value covers the whole AI Builder install.
 
 ```js
 endpoint: kapp('attribute:Companion Service URL')
 ```
 
-![name=userIdentifier](https://img.shields.io/badge/userIdentifier-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`userIdentifier`** — *string*  
 Username of the current user. Sent with chat requests and used as the default owner when creating new projects. Defaults to `'anonymous'`.
 
 ```js
 userIdentifier: identity('username')
 ```
 
-![name=storageKappSlug](https://img.shields.io/badge/storageKappSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`storageKappSlug`** — *string*  
 Kapp slug where the AI Builder storage forms (`ai-builder-conversations`, `ai-builder-projects`) live. Forwarded to all backend calls. When omitted, the companion uses its env-var fallback.
 
-![name=initialProjectSlug](https://img.shields.io/badge/initialProjectSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`initialProjectSlug`** — *string*  
 Pre-select a project on mount. Use the literal `'__none__'` to start in the orphan/generic bucket.
 
-![name=initialConversationId](https://img.shields.io/badge/initialConversationId-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`initialConversationId`** — *string*  
 Skip the picker and open straight to a conversation. The widget calls `AIBuilderChat.loadConversation(...)` after mount to populate it.
 
-![name=customCreateProject](https://img.shields.io/badge/customCreateProject-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)
+**`customCreateProject`** — *boolean*  
 When `true`, the inline new-project form is suppressed and clicking "New project" dispatches a `'ai-builder-new-project'` window event. Default: `false`. See [Custom create flow](#custom-create-project-flow).
 
-![name=chatConfig](https://img.shields.io/badge/chatConfig-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)
+**`chatConfig`** — *Object*  
 Extra config forwarded to the embedded `AIBuilderChat`. `endpoint`, `userIdentifier`, `storageKappSlug`, `projectSlug`, and `conversationId` are managed by the workspace and cannot be overridden here. Useful for `{ showUsage: false, showModel: false, placeholder: '...' }`.
 
-![name=height](https://img.shields.io/badge/height-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`height`** — *string*  
 One of `'sm'`, `'md'`, `'lg'` _(default)_, `'full'`, or any custom Tailwind height class.
 
 </blockquote>
 
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
+**`id`** — *string*  
 Instance id used by `bundle.widgets.AIBuilderWorkspace.get(id)`. Required if you want to retrieve the API later.
 
 ### Imperative API

@@ -13,6 +13,7 @@ import { BundleLogo } from './bundle-logo.jsx';
 import { BundleMenu } from './bundle-menu.jsx';
 import { BundleSearch } from './bundle-search.jsx';
 import { Chart } from './chart.jsx';
+import { Kapps } from './kapps.jsx';
 import { Markdown } from './markdown.js';
 import { Search } from './search.js';
 import { Signature } from './signature.js';
@@ -38,6 +39,7 @@ const AVAILABLE_WIDGETS = {
   BundleMenu,
   BundleSearch,
   Chart,
+  Kapps,
   Markdown,
   Search,
   Signature,

@@ -22,78 +22,48 @@ bundle.widgets.BundleMenu.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. All fields optional.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. All fields optional.
 
-![name=layout](https://img.shields.io/badge/layout-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-`'popover'` _(default)_ or `'inline'`.
+> **`layout`** — *string*  
+> `'popover'` _(default)_ or `'inline'`.
+>
+> - **`'popover'`** — render an icon/text trigger button; clicking opens a dropdown of items. Items close the popover on click.
+> - **`'inline'`** — render the items in place as a vertical list. No trigger.
+>
+> **`items`** — *Object[]*  
+> The list of items the menu displays. See [Item shapes](#item-shapes) below for the item config.
+>
+> **`trigger`** — *Object*  
+> Popover layout only. The clickable thing that opens the dropdown.
+>
+> > **`icon`** — *string*  
+> > [Tabler icon](https://tabler-icons.io/) name. Resolution:
+> >
+> > - Provide a string → use that icon.
+> > - Provide `text` only (no `icon`) → no icon (text-only trigger).
+> > - Provide neither `icon` nor `text` → default to `'menu-2'` (hamburger).
+> > - Pass `icon: null` (or `''`) → explicitly suppress the icon even when no text is provided.
+> >
+> > **`text`** — *string*  
+> > Optional label. Without text and without an icon, the trigger falls back to the hamburger icon as a sensible default.
+> >
+> > **`iconPosition`** — *string*  
+> > `'left'` _(default)_ or `'right'`.
+> >
+> > **`size`** — *string*  
+> > One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
+> >
+> > **`label`** — *string*  
+> > Accessibility label for the trigger button.
+> >
+> > **`className`** — *string*  
+> > Override the default ghost-button styling.
 
-- **`'popover'`** — render an icon/text trigger button; clicking opens a dropdown of items. Items close the popover on click.
-- **`'inline'`** — render the items in place as a vertical list. No trigger.
-
-![name=items](https://img.shields.io/badge/items-gray)
-![type=Array](https://img.shields.io/badge/Object[]-e66e22)  
-The list of items the menu displays. See [Item shapes](#item-shapes) below for the item config.
-
-<details>
-<summary>
-  <img alt="name=trigger" src="https://img.shields.io/badge/trigger-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Popover layout only. The clickable thing that opens the dropdown.
-</summary>
-<br>
-<blockquote>
-
-![name=icon](https://img.shields.io/badge/icon-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-[Tabler icon](https://tabler-icons.io/) name. Resolution:
-
-- Provide a string → use that icon.
-- Provide `text` only (no `icon`) → no icon (text-only trigger).
-- Provide neither `icon` nor `text` → default to `'menu-2'` (hamburger).
-- Pass `icon: null` (or `''`) → explicitly suppress the icon even when no text is provided.
-
-![name=text](https://img.shields.io/badge/text-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Optional label. Without text and without an icon, the trigger falls back to the hamburger icon as a sensible default.
-
-![name=iconPosition](https://img.shields.io/badge/iconPosition-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-`'left'` _(default)_ or `'right'`.
-
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Accessibility label for the trigger button.
-
-![name=className](https://img.shields.io/badge/className-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Override the default ghost-button styling.
-
-</blockquote>
-</details>
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
 
 ### Item shapes
@@ -357,8 +327,7 @@ Sorting and filtering happen on the **integration side** — the integration sho
 
 ### API
 
-![name=refresh](https://img.shields.io/badge/refresh%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`refresh()`** — *Function*  
 Re-fetches integration items. Useful when the underlying source changes (admin added a new submission, parameters changed, etc.). No-op when no `integration` is configured.
 
 ```js

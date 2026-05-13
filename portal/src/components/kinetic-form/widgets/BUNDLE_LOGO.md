@@ -14,50 +14,33 @@ bundle.widgets.BundleLogo.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. All fields optional.
-</summary>
-<br>
-<blockquote>
-
-![name=src](https://img.shields.io/badge/src-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Image source. One of:
-
-- `'theme'` _(default)_ — uses the space's themed logo, falling back to the bundled svg.
-- `'bundled'` — uses the bundled svg directly, ignoring the theme.
-- Any other string — treated as an explicit image URL.
-
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`. Controls the logo's height and max width.
-
-![name=clickAction](https://img.shields.io/badge/clickAction-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-What happens when the logo is clicked. Defaults to `{ type: 'none' }` (decorative, non-interactive). See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction) for the full list of types.
-
-![name=target](https://img.shields.io/badge/target-gray)
-![type=string](https://img.shields.io/badge/string_or_Object-e66e22)  
-Where the click opens. One of `'current'` _(default)_, `'new'`, `'modal'`, or an object form for modal options. See [Chrome Widget Actions](CHROME_ACTIONS.md#target) for details.
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Accessibility label / tooltip. Auto-derived for `clickAction.type: 'home'` ("Home") and `'external'` ("Open hostname.com"). Provide explicitly for `'internal'` and `'event'` types.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
+
+**`config`** — *Object*  
+An object of configurations for the widget. All fields optional.
+
+> **`src`** — *string*  
+> Image source. One of:
+> 
+> - `'theme'` *(default)* — uses the space's themed logo, falling back to the bundled svg.
+> - `'bundled'` — uses the bundled svg directly, ignoring the theme.
+> - Any other string — treated as an explicit image URL.
+> 
+> **`size`** — *string*  
+> One of `'sm'`, `'md'` *(default)*, `'lg'`, `'xl'`. Controls the logo's height and max width.
+> 
+> **`clickAction`** — *Object*  
+> What happens when the logo is clicked. Defaults to `{ type: 'none' }` (decorative, non-interactive). See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction) for the full list of types.
+> 
+> **`target`** — *string or Object*  
+> Where the click opens. One of `'current'` *(default)*, `'new'`, `'modal'`, or an object form for modal options. See [Chrome Widget Actions](CHROME_ACTIONS.md#target) for details.
+> 
+> **`label`** — *string*  
+> Accessibility label / tooltip. Auto-derived for `clickAction.type: 'home'` ("Home") and `'external'` ("Open hostname.com"). Provide explicitly for `'internal'` and `'event'` types.
 
 ### API
 
@@ -143,6 +126,11 @@ bundle.widgets.BundleLogo({
 
 When mounted as a hosted widget inside a [`BundleChrome`](BUNDLE_CHROME.md), the logo automatically shrinks in **rail** mode.
 
-- `railSize` (optional): one of `'sm' | 'md' | 'lg' | 'xl'`. The size to render at when the chrome is in rail mode. Defaults to `'sm'` so the logo fits in a typical rail strip.
-- `railSrc` (optional): an alternative image source to use in rail mode — useful when you have a separate "mark" version of your logo. Same syntax as `src` (`'theme'`, `'bundled'`, or a URL). Defaults to whatever `src` is.
-- `tooltip` (optional): shown by the chrome when the entry is in icon-only state. Defaults to `label` if omitted.
+**`railSize`** — *string*, optional  
+One of `'sm' | 'md' | 'lg' | 'xl'`. The size to render at when the chrome is in rail mode. Defaults to `'sm'` so the logo fits in a typical rail strip.
+
+**`railSrc`** — *string*, optional  
+An alternative image source to use in rail mode — useful when you have a separate "mark" version of your logo. Same syntax as `src` (`'theme'`, `'bundled'`, or a URL). Defaults to whatever `src` is.
+
+**`tooltip`** — *string*, optional  
+Shown by the chrome when the entry is in icon-only state. Defaults to `label` if omitted.

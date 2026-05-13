@@ -50,6 +50,81 @@ window.bundle.widgetDocs = {
       return r.text();
     });
   },
+
+  // Rewire <a> tags inside a rendered widget-doc so internal links work
+  // inside the viewer instead of leaking to the SPA router.
+  //
+  //   container: HTMLElement (or array-like) the Markdown widget rendered into
+  //   onNavigate({ file, anchor }): called when the user clicks an internal
+  //     `.md` link. `file` is the widget doc filename (e.g.
+  //     'BUNDLE_CONTAINER.md'), `anchor` is the optional fragment.
+  //
+  // External http(s) links open in a new tab. Pure `#anchor` links scroll
+  // to the matching heading inside `container` (TUI Viewer doesn't emit
+  // id attributes on headings, so we slug-match each heading's text).
+  rewireLinks: (container, { onNavigate, scrollTo } = {}) => {
+    const root = container?.[0] ?? container;
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+
+    const slug = s =>
+      s
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+
+    const scrollToAnchor = anchor => {
+      if (!anchor) return false;
+      const direct = root.querySelector(
+        `[id="${anchor}"], a[name="${anchor}"]`,
+      );
+      if (direct) {
+        direct.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      }
+      const heading = Array.from(
+        root.querySelectorAll('h1, h2, h3, h4, h5, h6'),
+      ).find(h => slug(h.textContent || '') === anchor);
+      if (heading) {
+        heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      }
+      return false;
+    };
+
+    root.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      if (/^https?:/i.test(href)) {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+        return;
+      }
+      if (href.startsWith('#')) {
+        const anchor = href.slice(1);
+        a.setAttribute('href', '#');
+        a.removeAttribute('target');
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          scrollToAnchor(anchor);
+        });
+        return;
+      }
+      const match = href.match(/^([A-Za-z0-9_-]+\.md)(?:#(.*))?$/);
+      if (!match) return;
+      const file = match[1];
+      const anchor = match[2] || null;
+      a.setAttribute('href', '#');
+      a.removeAttribute('target');
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        if (typeof onNavigate === 'function') onNavigate({ file, anchor });
+      });
+    });
+
+    // Cross-doc anchor: caller can ask for a scroll once links are wired.
+    if (scrollTo) scrollToAnchor(scrollTo);
+  },
 };
 
 function renderDateTimePickers(field, trigger) {

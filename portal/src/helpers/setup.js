@@ -96,20 +96,43 @@ export const resolveLandingKapp = (space, profile) => {
 };
 
 /**
- * Given a kapp record (with attributesMap included), reads its
- * 'Default Form Slug' attribute value. Returns the slug or undefined.
+ * Splits a comma-separated attribute value into an ordered list of slugs.
+ * Trims each entry and drops empties. Order is preserved deliberately — the
+ * landing resolvers walk the list and render the first slug the user can
+ * actually see, so admins can target user-group precedence by sequence
+ * (e.g. "vip-form, standard-form" lets space admins land on the VIP form
+ * while everyone else falls through to the standard one).
+ *
+ * Returns an empty array when the value is missing or only whitespace/commas.
  */
-export const readKappDefaultFormSlug = kapp =>
-  readAttribute(kapp, 'Default Form Slug');
+export const parseSlugCsv = value =>
+  typeof value === 'string'
+    ? value
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+    : [];
+
+/**
+ * Given a kapp record (with attributesMap included), reads its
+ * 'Default Form Slug' attribute as an ordered list of candidate slugs.
+ * The kapp landing page walks this list and renders the first form the
+ * user can access (and that is Active or New). Returns an empty array
+ * when the attribute is absent or empty.
+ */
+export const readKappDefaultFormSlugs = kapp =>
+  parseSlugCsv(readAttribute(kapp, 'Default Form Slug'));
 
 /**
  * Given a space record (with attributesMap included), reads its
- * 'Default Space Form Slug' attribute value. Returns the slug or undefined.
- *
- * That form is always expected to live in the admin kapp (ADMIN_KAPP_SLUG).
+ * 'Default Space Form Slug' attribute as an ordered list of candidate
+ * slugs. Forms are always expected to live in the admin kapp
+ * (ADMIN_KAPP_SLUG). The space landing walks this list and renders
+ * the first form the user can access (and that is Active or New).
+ * Returns an empty array when the attribute is absent or empty.
  */
-export const readSpaceDefaultFormSlug = space =>
-  readAttribute(space, 'Default Space Form Slug');
+export const readSpaceDefaultFormSlugs = space =>
+  parseSlugCsv(readAttribute(space, 'Default Space Form Slug'));
 
 // Bundle's chrome-or-not decision for landing forms. Anything other than
 // 'fullscreen' (case-insensitive, trimmed) is treated as embedded so the

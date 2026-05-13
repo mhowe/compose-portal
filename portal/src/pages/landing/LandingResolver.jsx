@@ -17,9 +17,11 @@ import { EmbeddedLanding } from './EmbeddedLanding.jsx';
  *   3. Neither → <EmbeddedLanding/>
  *
  * Form rendering is the kapp page's job: KappDefaultPage at /kapps/:slug
- * reads the kapp's 'Default Form Slug' and renders the form inline (or the
- * forms table when no form is configured). This resolver therefore only
- * cares which kapp to route to — it does not redirect to form URLs.
+ * reads the kapp's 'Default Form Slug' (which may be a comma-separated,
+ * ordered list of slugs — first one the user can see and that is Active
+ * or New wins) and renders the form inline, falling through to the forms
+ * table when no candidate resolves. This resolver therefore only cares
+ * which kapp to route to — it does not redirect to form URLs.
  */
 export const LandingResolver = () => {
   const space = useSelector(state => state.app.space);

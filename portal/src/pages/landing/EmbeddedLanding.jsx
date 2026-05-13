@@ -7,7 +7,7 @@ import { ADMIN_KAPP_SLUG } from '../../helpers/constants.js';
 import {
   FORM_DISPLAY_MODE_FULLSCREEN,
   readFormDisplayMode,
-  readSpaceDefaultFormSlug,
+  readSpaceDefaultFormSlugs,
 } from '../../helpers/setup.js';
 import { layoutActions } from '../../helpers/state.js';
 import { useInsideContainer } from '../../helpers/container-scope.js';
@@ -19,9 +19,11 @@ import { KineticForm } from '../../components/kinetic-form/KineticForm.jsx';
 /**
  * Space landing at /kapps.
  *
- * If the space's 'Default Space Form Slug' attribute is set and the form
- * exists in the admin kapp, render it inline here. Otherwise fall through to
- * the built-in kapp-cards view (plus a Space Settings link for admins).
+ * The space's 'Default Space Form Slug' attribute is treated as a
+ * comma-separated, ordered list of candidate form slugs that live in the
+ * admin kapp. The first slug whose form the user can see (and that is
+ * Active or New) is rendered inline. If none resolve, fall through to the
+ * built-in kapp-cards view (plus a Space Settings link for admins).
  *
  * Also shown as a fallback when the landing resolver at / cascades through
  * without a target kapp, or when setup is incomplete for a non-admin user.
@@ -31,32 +33,40 @@ export const EmbeddedLanding = () => {
   const spaceAdmin = useSelector(state => !!state.app.profile?.spaceAdmin);
   const kapps = space?.kapps || [];
   const adminKappExists = kapps.some(k => k.slug === ADMIN_KAPP_SLUG);
-  const configuredFormSlug = readSpaceDefaultFormSlug(space);
-
-  // Confirm the configured form actually exists in the admin kapp. If it
-  // doesn't, fall through to the built-in view rather than letting CoreForm
-  // render an error. We also pull attributesMap so we can read Display Mode
-  // off the same fetch.
-  const formCheckParams = useMemo(
-    () =>
-      configuredFormSlug && adminKappExists
-        ? {
-            kappSlug: ADMIN_KAPP_SLUG,
-            q: `slug = "${configuredFormSlug}"`,
-            include: 'attributesMap',
-            limit: 1,
-          }
-        : null,
-    [configuredFormSlug, adminKappExists],
+  // Memoize the parsed slug list — `readSpaceDefaultFormSlugs` builds a fresh
+  // array each call, which would otherwise re-trigger the params useMemo (and
+  // useData's setState) on every render and loop indefinitely.
+  const configuredFormSlugs = useMemo(
+    () => readSpaceDefaultFormSlugs(space),
+    [space],
   );
+
+  // Query every candidate slug in a single round trip; the first slug from
+  // the configured order that came back wins. Forms the user cannot see and
+  // inactive forms are filtered server-side. attributesMap is included so
+  // we can read Display Mode off the same fetch.
+  const formCheckParams = useMemo(() => {
+    if (configuredFormSlugs.length === 0 || !adminKappExists) return null;
+    const slugClause = configuredFormSlugs
+      .map(s => `slug = "${s}"`)
+      .join(' OR ');
+    return {
+      kappSlug: ADMIN_KAPP_SLUG,
+      q: `(${slugClause}) AND (status = "Active" OR status = "New")`,
+      include: 'attributesMap',
+      limit: configuredFormSlugs.length,
+    };
+  }, [configuredFormSlugs, adminKappExists]);
   const { initialized, loading, response } = useData(
     fetchForms,
     formCheckParams,
   );
-  const form = response?.forms?.[0];
-  const formExists = !!form;
-  const willRenderForm =
-    configuredFormSlug && adminKappExists && formExists;
+  const returnedForms = response?.forms || [];
+  const form = configuredFormSlugs
+    .map(slug => returnedForms.find(f => f.slug === slug))
+    .find(Boolean);
+  const configuredFormSlug = form?.slug;
+  const willRenderForm = !!form && adminKappExists;
   const isFullscreen =
     willRenderForm &&
     readFormDisplayMode(form) === FORM_DISPLAY_MODE_FULLSCREEN;

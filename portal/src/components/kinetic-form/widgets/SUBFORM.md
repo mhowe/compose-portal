@@ -14,138 +14,94 @@ bundle.widgets.Subform.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement-e66e22)  
+**`container`** — *HTMLElement*  
 The HTML element into which the widget should be rendered.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget.
 
-![name=kappSlug](https://img.shields.io/badge/kappSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The slug of the kapp in which the subform you want to render exists.
+> **`kappSlug`** — *string*  
+> The slug of the kapp in which the subform you want to render exists.
+>
+> **`formSlug`** — *string*  
+> The slug of the form you want to render.
+>
+> **`submissionId`** — *string*  
+> The submission id of the submission you want to render.
+>
+> **`fields`** — *Object[]*  
+> A list of custom field definitions to render as a form instead of using a Kinetic form.
+>
+> > **`label`** — *string*  
+> > The label of the field.
+> >
+> > **`property`** — *string*  
+> > The property name that this field's data will be stored under in the resulting data object.
+> >
+> > **`type`** — *string*  
+> > The type of field to render. Available options are 'text', 'checkbox', 'date', 'datetime', or 'time'. Fields without a type will not be rendered.
+> >
+> > **`defaultValue`** — ***  
+> > The default value for the field, used if the `values` configuration is not provided.
+> >
+> > **`required`** — *boolean*  
+> > Should the field be required. Defaults to false.
+> >
+> > **`disabled`** — *boolean*  
+> > Should the field be disabled. Defaults to false.
+> >
+> > **`validate(value, data)`** — *Function*  
+> > Validation function for validating this field. It should return an array of error messages if the field is invalid.
+>
+> **`values`** — *Object*  
+> Map of default field values to use for the form.
+>
+> **`disabled`** — *boolean*  
+> Should the form be rendered with disabled fields.
+>
+> **`onLoad(api)`** — *Function*  
+> Function that's called when the subform is loaded.  
+> It is passed an `api` object which contains the following properties:  
+> `kForm`: A function that returns the kinetic form object. Only available if a Kinetic subform is loaded.
+> `destroy`: A function that closes the subform.  
+> `toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
+>
+> **`onSave(data, api)`** — *Function*  
+> Function that's called when the save button of the widget is clicked. If omitted, the save button will not be rendered.  
+> It is passed a `data` object representing the form data, and an `api` object which contains the following properties:  
+> `destroy`: A function that closes the subform.  
+> `toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
+>
+> **`onError(api)`** — *Function*  
+> Function that's called when the subform fails to load. Only called if attempting to load a Kinetic form.  
+> It is passed an `api` object which contains the following properties:  
+> `destroy`: A function that closes the subform.  
+> `toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
+>
+> **`inline`** — *boolean*  
+> Should the form render inline instead of in a modal.
+>
+> **`modalTitle`** — *string*  
+> The title for the modal when the subform is rendered in a modal.
+>
+> **`modalSize`** — *string*  
+> The size of the modal when the subform is rendered in a modal. Accepts `sm` (default), `md`, `lg`, and `xl`.
+>
+> **`saveLabel`** — *string*  
+> The label for the save button.
 
-![name=formSlug](https://img.shields.io/badge/formSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The slug of the form you want to render.
-
-![name=submissionId](https://img.shields.io/badge/submissionId-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The submission id of the submission you want to render.
-
-<details>
-<summary>
-  <img alt="name=fields" src="https://img.shields.io/badge/fields-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object[]-e66e22">
-  <br>
-  A list of custom field definitions to render as a form instead of using a Kinetic form.
-</summary>
-<br>
-<blockquote>
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The label of the field.
-
-![name=property](https://img.shields.io/badge/property-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The property name that this field's data will be stored under in the resulting data object.
-
-![name=type](https://img.shields.io/badge/type-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The type of field to render. Available options are 'text', 'checkbox', 'date', 'datetime', or 'time'. Fields without a type will not be rendered.
-
-![name=defaultValue](https://img.shields.io/badge/defaultValue-gray)
-![type=*](https://img.shields.io/badge/*-e66e22)  
-The default value for the field, used if the `values` configuration is not provided.
-
-![name=required](https://img.shields.io/badge/required-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the field be required. Defaults to false.
-
-![name=disabled](https://img.shields.io/badge/disabled-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the field be disabled. Defaults to false.
-
-![name=validate](https://img.shields.io/badge/validate%28value,%20data%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Validation function for validating this field. It should return an array of error messages if the field is invalid.
-
-</blockquote>
-</details>
-
-![name=values](https://img.shields.io/badge/values-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-Map of default field values to use for the form.
-
-![name=disabled](https://img.shields.io/badge/disabled-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the form be rendered with disabled fields.
-
-![name=onLoad](https://img.shields.io/badge/onLoad%28api%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function that's called when the subform is loaded.  
-It is passed an `api` object which contains the following properties:  
-`kForm`: A function that returns the kinetic form object. Only available if a Kinetic subform is loaded.
-`destroy`: A function that closes the subform.  
-`toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
-
-![name=onSave](https://img.shields.io/badge/onSave%28data,%20api%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function that's called when the save button of the widget is clicked. If omitted, the save button will not be rendered.  
-It is passed a `data` object representing the form data, and an `api` object which contains the following properties:  
-`destroy`: A function that closes the subform.  
-`toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
-
-![name=onError](https://img.shields.io/badge/onError%28api%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function that's called when the subform fails to load. Only called if attempting to load a Kinetic form.  
-It is passed an `api` object which contains the following properties:  
-`destroy`: A function that closes the subform.  
-`toasterId`: A string id that can be provided to the Toast functions to render a toast inside the context of the subform modal.
-
-![name=inline](https://img.shields.io/badge/inline-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the form render inline instead of in a modal.
-
-![name=modalTitle](https://img.shields.io/badge/modalTitle-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The title for the modal when the subform is rendered in a modal.
-
-![name=modalSize](https://img.shields.io/badge/modalSize-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The size of the modal when the subform is rendered in a modal. Accepts `sm` (default), `md`, `lg`, and `xl`.
-
-![name=saveLabel](https://img.shields.io/badge/saveLabel-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The label for the save button.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 A unique id that can be used to retrieve the API of the widget.
 
 ### API
 
-![name=data](https://img.shields.io/badge/data%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`data()`** — *Function*  
 Returns the current data object.
 
-![name=kForm](https://img.shields.io/badge/kForm%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`kForm()`** — *Function*  
 Returns the Kinetic form object of the subform. Only available if a Kinetic subform was loaded.
 
-![name=toasterId](https://img.shields.io/badge/toasterId-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`toasterId`** — *string*  
 Id that can be passed into the toast utilities to render a toast in the context of the subform modal. This should be done if you want to render a toast while the modal remains open.
 
 ### Examples

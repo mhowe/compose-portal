@@ -35,7 +35,8 @@ Early-stage scaffold. What's working:
 - **Inline form rendering** driven by attributes:
   - `/kapps` renders the form named by space attribute `Default Space Form Slug` (expected to live in the `admin` kapp) when set; otherwise renders the kapp-cards landing.
   - `/kapps/:slug` renders the form named by the kapp's `Default Form Slug` attribute when set; otherwise renders the forms table.
-  - In both cases, if the configured slug doesn't exist, the bundle falls through to its built-in view.
+  - Both attributes accept a single slug or a comma-separated, ordered list — the bundle renders the first form in the list the current user can see (and that is Active or New). This lets admins give different user groups different landing forms (e.g. `vip-home, standard-home`).
+  - In both cases, if no configured slug resolves, the bundle falls through to its built-in view.
 - **Admin kapp convention** — a kapp with slug `admin` is expected on the space and is where bundle-level configuration forms live. Flagged by the setup check when missing.
 - **Setup check + Deploy action** — Space Settings detects missing attribute definitions and the admin kapp; clicking Deploy creates them via the SDK. Required-missing items block setup; optional items (per-kapp `Default Form Slug`) are surfaced informationally.
 - **Capability registry** — Space Settings reads registry URLs from the `Capability Registry URLs` space attribute, fetches index + manifests, displays available capabilities with installed-status detection (via `Capability Metadata` attribute on each kapp).

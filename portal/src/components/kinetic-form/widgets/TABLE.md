@@ -14,400 +14,246 @@ bundle.widgets.Table.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement-e66e22)  
+**`container`** — *HTMLElement*  
 The HTML element into which the widget should be rendered.
 
-![name=field](https://img.shields.io/badge/field-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
+**`field`** — *Object*  
 The Kinetic field object of a text field that should be used to store the stringified table data of the table. The value of the field will be parsed and used as the initial values for the table if no `data` or `integration` configurations are provided.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget.
-</summary>
-<br>
-<blockquote>
-
-![name=data](https://img.shields.io/badge/data-gray)
-![type=Object[]](https://img.shields.io/badge/Object[]-e66e22)  
-List of data used to populate the table when initialized.
-
-<details>
-<summary>
-  <img alt="name=integration" src="https://img.shields.io/badge/integration-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Data defining the integration to use for retrieving data for the table.
-</summary>
-<br>
-<blockquote>
-
-![name=kappSlug](https://img.shields.io/badge/kappSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The slug of the kapp in which the integration exists.
-
-![name=formSlug](https://img.shields.io/badge/formSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The slug of the form in which the integration exists. If omitted, a kapp integration will be used.
-
-![name=integrationName](https://img.shields.io/badge/integrationName-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The name of the integration to use.
-
-![name=listProperty](https://img.shields.io/badge/listProperty-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The name of the output property of the integration response that contains the list data to use.
-
-![name=errorProperty](https://img.shields.io/badge/errorProperty-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The name of the output property of the integration response that contains the error if one occurs when retrieving the data.
-
-![name=parameters](https://img.shields.io/badge/parameters-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-A map of parameters that should be passed into the integration.
-
-</blockquote>
-</details>
-
-![name=rowTransform](https://img.shields.io/badge/rowTransform%28row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A transform function which will be applied to each row of data before the data is used in the table.
-
-![name=onDataError](https://img.shields.io/badge/onDataError%28error%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A callback function that is triggered if there is an error retrieving the data for the table.
-
-![name=onDataSuccess](https://img.shields.io/badge/onDataSuccess%28rows%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A callback function that is triggered when the data for the table is successfully retrieved. This happens on initialization, and each time the data is reloaded.
-
-![name=sortable](https://img.shields.io/badge/sortable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the table allow sorting the data. Defaults to `true`.
-
-![name=filterable](https://img.shields.io/badge/filterable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the table allow filtering the data. Defaults to `true`.
-
-![name=toggleable](https://img.shields.io/badge/toggleable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the table allow changing the visibility of columns. Defaults to `true`.
-
-<details>
-<summary>
-  <img alt="name=columns" src="https://img.shields.io/badge/columns-gray">
-  <img alt="type=Object[]" src="https://img.shields.io/badge/Object[]-e66e22">
-  <br>
-  List of configurations for defining the columns of the table.
-</summary>
-<br>
-<blockquote>
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The text to render in the header cell of the column.
-
-![name=property](https://img.shields.io/badge/property-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The key used to retrieve the value for this column from the row data. This is required and must be unique across all columns.
-
-![name=displayTransform](https://img.shields.io/badge/displayTransform%28value,%20row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A transform function whose result will be rendered in the body cell of the column. This can be used to change or format the value. Defaults to the actual value.  
-It is passed the `value` of the cell, and the `row` object, containing all values for the row.
-
-![name=sortable](https://img.shields.io/badge/sortable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Can the table be sorted by this column (if the table allows sorting). Defaults to `true`.
-
-![name=sortTransform](https://img.shields.io/badge/sortTransform%28value,%20row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A transform function whose result will be used when sorting by this column. Defaults to the actual value.  
-It is passed the `value` of the cell, and the `row` object, containing all values for the row.
-
-![name=filterable](https://img.shields.io/badge/filterable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Can the table be filtered on this column's data (if the table allows filtering). Defaults to `true`.
-
-![name=filterTransform](https://img.shields.io/badge/filterTransform%28value,%20row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A transform function whose result will be used when filtering data. Defaults to the actual value.  
-It is passed the `value` of the cell, and the `row` object, containing all values for the row.
-
-![name=filterOperator](https://img.shields.io/badge/filterOperator-gray)
-![type=string](https://img.shields.io/badge/'matches'%7C'equals'%7C'startsWith'-e66e22)  
-The type of operator used when filtering this column's data. All filtering is case-insensitive. Defaults to `matches`.  
-Possible options are:  
-`matches` - checks if the query matches any part of cell value.  
-`equals` - checks if the query exactly matches the entire cell value.  
-`startsWith` - checks if the query matches the start of the cell value.
-
-![name=filterFn](https://img.shields.io/badge/filterFn%28query,%20value,%20row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A custom function used when filtering data. It should return `true` if the cell matches the query. When provided, the `filterOperator` is ignored.  
-It is passed the `query` value, the `value` of the cell, and the `row` object containing all values for the row.  
-The provided `query` and `value` parameters have not had their case synchronized.
-
-![name=visible](https://img.shields.io/badge/visible-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the column be visible when the table is rendered.
-
-![name=toggleable](https://img.shields.io/badge/toggleable-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Can the visibility of the column be toggles (if the table allows toggling column visibility).
-
-![name=onClick](https://img.shields.io/badge/onClick%28row,%20index,%20tableApi%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function that when provided, the cell value will be rendered as a button, and this function will be triggered when the cell value is clicked.  
-It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
-
-![name=footerTransform](https://img.shields.io/badge/footerTransform%28currentRows,%20tableApi%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function that generates a value for the footer of the column. A footer is only rendered if at least one column provides this function.  
-It is passed a `currentRows` list containing the currently visible rows of the table, and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
-
-![name=headerCellClass](https://img.shields.io/badge/headerCellClass-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-A string of classes to add to the header cell of this column.
-
-![name=bodyCellClass](https://img.shields.io/badge/bodyCellClass-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-A string of classes to add to the body cell of this column.
-
-![name=footerCellClass](https://img.shields.io/badge/footerCellClass-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-A string of classes to add to the footer cell of this column.
-
-![name=headerCellStyles](https://img.shields.io/badge/headerCellStyles-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-An object of styles to add to the header cell of this column. Any style names that have hyphens should instead use camelCase.
-
-![name=bodyCellStyles](https://img.shields.io/badge/bodyCellStyles-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-An object of styles to add to the body cell of this column. Any style names that have hyphens should instead use camelCase.
-
-![name=footerCellStyles](https://img.shields.io/badge/footerCellStyles-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-An object of styles to add to the footer cell of this column. Any style names that have hyphens should instead use camelCase.
-
-<details>
-<summary>
-  <img alt="name=fieldConfig" src="https://img.shields.io/badge/fieldConfig-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Configuration object used for rendering the columns as a form, used for the built-in row add and update actions. This data is passed to the `fields` configuration of the `Subform` widget, which is used behind the scenes for this functionality.  
-</summary>
-<br>
-<blockquote>
-
-![name=type](https://img.shields.io/badge/type-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The type of field to render. Available options are 'text', 'checkbox', 'date', 'datetime', or 'time'. Fields without a type will not be rendered.
-
-![name=required](https://img.shields.io/badge/required-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the field be required. Defaults to false.
-
-![name=disabled](https://img.shields.io/badge/disabled-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the field be disabled. Defaults to false.
-
-![name=validate](https://img.shields.io/badge/validate%28value,%20data%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Validation function for validating this field. It should return an array of error messages if the field is invalid.
-
-</blockquote>
-</details>
-
-</blockquote>
-</details>
-
-<details>
-<summary>
-  <img alt="name=addAction" src="https://img.shields.io/badge/addAction-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Configuration for the add row button. If omitted, the button will not be rendered.
-</summary>
-<br>
-<blockquote>
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The label for the add row button. Defaults to 'Add Row'.
-
-![name=icon](https://img.shields.io/badge/icon-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The name of the Tabler icon to use for the add row button. Defaults to 'plus'.
-
-![name=onClick](https://img.shields.io/badge/onClick%28tableApi%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function to call when the add row button is clicked.  
-It is passed a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
-
-</blockquote>
-</details>
-
-<details>
-<summary>
-  <img alt="name=rowActions" src="https://img.shields.io/badge/rowActions-gray">
-  <img alt="type=Object[]" src="https://img.shields.io/badge/Object[]-e66e22">
-  <br>
-  List of configurations for buttons that should be rendered in each row of the table.
-</summary>
-<br>
-<blockquote>
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The label for the button. It is not rendered but used for accessibility.
-
-![name=icon](https://img.shields.io/badge/icon-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The name of the Tabler icon to use for the button.
-
-![name=onClick](https://img.shields.io/badge/onClick%28row,%20index,%20tableApi%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function to call when the button is clicked.  
-It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
-
-</blockquote>
-</details>
-
-<details>
-<summary>
-  <img alt="name=selectAction" src="https://img.shields.io/badge/selectAction-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Configuration for the row click/select callback. If omitted, rows will not be clickable.
-</summary>
-<br>
-<blockquote>
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-A label for the hidden select button. It is not rendered but used for accessibility.
-
-![name=onClick](https://img.shields.io/badge/onClick%28row,%20index,%20tableApi%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-Function to call when the row is clicked.  
-It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
-
-</blockquote>
-</details>
-
-![name=pageSize](https://img.shields.io/badge/pageSize-gray)
-![type=number](https://img.shields.io/badge/number-e66e22)  
-The number of rows that should be shown per page. Use `0` to show all rows. Defaults to `10`.
-
-![name=pageSizes](https://img.shields.io/badge/pageSizes-gray)
-![type=number[]](https://img.shields.io/badge/number[]-e66e22)  
-List of page sizes that the user can select from. Set to an empty array to disable changing the page size. Defaults to `[10, 25, 50]`.
-
-![name=defaultSort](https://img.shields.io/badge/defaultSort-gray)
-![type=number|[number,string]](https://img.shields.io/badge/number%20|%20[number,%20string]-e66e22)  
-The default sort configuration. It can either be a number representing which column to sort by, or an array containing a number representing the column, and a direction of `asc` or `desc`.
-
-![name=title](https://img.shields.io/badge/title-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The heading text to render above the table.
-
-![name=allowExport](https://img.shields.io/badge/allowExport-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-Should the table allow exporting its data to a CSV. Default to `true`. The above `title` will be used as the filename.
-
-<details>
-<summary>
-  <img alt="name=messages" src="https://img.shields.io/badge/messages-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Map of messages to render during various table states.
-</summary>
-<br>
-<blockquote>
-
-![name=empty](https://img.shields.io/badge/empty-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The text to render when there are no rows in the table. Defaults to `No rows found.`.
-
-![name=loading](https://img.shields.io/badge/loading-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The text to render when the data is loading. Defaults to `Loading...`.
-
-![name=noMatches](https://img.shields.io/badge/noMatches-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The text to render when no rows match the entered filter query. Defaults to `No rows match your filter.`.
-
-</blockquote>
-</details>
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`config`** — *Object*  
+An object of configurations for the widget.
+
+> **`data`** — *Object[]*  
+> List of data used to populate the table when initialized.
+>
+> **`integration`** — *Object*  
+> Data defining the integration to use for retrieving data for the table.
+>
+> > **`kappSlug`** — *string*  
+> > The slug of the kapp in which the integration exists.
+> >
+> > **`formSlug`** — *string*  
+> > The slug of the form in which the integration exists. If omitted, a kapp integration will be used.
+> >
+> > **`integrationName`** — *string*  
+> > The name of the integration to use.
+> >
+> > **`listProperty`** — *string*  
+> > The name of the output property of the integration response that contains the list data to use.
+> >
+> > **`errorProperty`** — *string*  
+> > The name of the output property of the integration response that contains the error if one occurs when retrieving the data.
+> >
+> > **`parameters`** — *Object*  
+> > A map of parameters that should be passed into the integration.
+>
+> **`rowTransform(row)`** — *Function*  
+> A transform function which will be applied to each row of data before the data is used in the table.
+>
+> **`onDataError(error)`** — *Function*  
+> A callback function that is triggered if there is an error retrieving the data for the table.
+>
+> **`onDataSuccess(rows)`** — *Function*  
+> A callback function that is triggered when the data for the table is successfully retrieved. This happens on initialization, and each time the data is reloaded.
+>
+> **`sortable`** — *boolean*  
+> Should the table allow sorting the data. Defaults to `true`.
+>
+> **`filterable`** — *boolean*  
+> Should the table allow filtering the data. Defaults to `true`.
+>
+> **`toggleable`** — *boolean*  
+> Should the table allow changing the visibility of columns. Defaults to `true`.
+>
+> **`columns`** — *Object[]*  
+> List of configurations for defining the columns of the table.
+>
+> > **`label`** — *string*  
+> > The text to render in the header cell of the column.
+> >
+> > **`property`** — *string*  
+> > The key used to retrieve the value for this column from the row data. This is required and must be unique across all columns.
+> >
+> > **`displayTransform(value, row)`** — *Function*  
+> > A transform function whose result will be rendered in the body cell of the column. This can be used to change or format the value. Defaults to the actual value.  
+> > It is passed the `value` of the cell, and the `row` object, containing all values for the row.
+> >
+> > **`sortable`** — *boolean*  
+> > Can the table be sorted by this column (if the table allows sorting). Defaults to `true`.
+> >
+> > **`sortTransform(value, row)`** — *Function*  
+> > A transform function whose result will be used when sorting by this column. Defaults to the actual value.  
+> > It is passed the `value` of the cell, and the `row` object, containing all values for the row.
+> >
+> > **`filterable`** — *boolean*  
+> > Can the table be filtered on this column's data (if the table allows filtering). Defaults to `true`.
+> >
+> > **`filterTransform(value, row)`** — *Function*  
+> > A transform function whose result will be used when filtering data. Defaults to the actual value.  
+> > It is passed the `value` of the cell, and the `row` object, containing all values for the row.
+> >
+> > **`filterOperator`** — *'matches'|'equals'|'startsWith'*  
+> > The type of operator used when filtering this column's data. All filtering is case-insensitive. Defaults to `matches`.  
+> > Possible options are:  
+> > `matches` - checks if the query matches any part of cell value.  
+> > `equals` - checks if the query exactly matches the entire cell value.  
+> > `startsWith` - checks if the query matches the start of the cell value.
+> >
+> > **`filterFn(query, value, row)`** — *Function*  
+> > A custom function used when filtering data. It should return `true` if the cell matches the query. When provided, the `filterOperator` is ignored.  
+> > It is passed the `query` value, the `value` of the cell, and the `row` object containing all values for the row.  
+> > The provided `query` and `value` parameters have not had their case synchronized.
+> >
+> > **`visible`** — *boolean*  
+> > Should the column be visible when the table is rendered.
+> >
+> > **`toggleable`** — *boolean*  
+> > Can the visibility of the column be toggles (if the table allows toggling column visibility).
+> >
+> > **`onClick(row, index, tableApi)`** — *Function*  
+> > Function that when provided, the cell value will be rendered as a button, and this function will be triggered when the cell value is clicked.  
+> > It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
+> >
+> > **`footerTransform(currentRows, tableApi)`** — *Function*  
+> > Function that generates a value for the footer of the column. A footer is only rendered if at least one column provides this function.  
+> > It is passed a `currentRows` list containing the currently visible rows of the table, and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
+> >
+> > **`headerCellClass`** — *string*  
+> > A string of classes to add to the header cell of this column.
+> >
+> > **`bodyCellClass`** — *string*  
+> > A string of classes to add to the body cell of this column.
+> >
+> > **`footerCellClass`** — *string*  
+> > A string of classes to add to the footer cell of this column.
+> >
+> > **`headerCellStyles`** — *Object*  
+> > An object of styles to add to the header cell of this column. Any style names that have hyphens should instead use camelCase.
+> >
+> > **`bodyCellStyles`** — *Object*  
+> > An object of styles to add to the body cell of this column. Any style names that have hyphens should instead use camelCase.
+> >
+> > **`footerCellStyles`** — *Object*  
+> > An object of styles to add to the footer cell of this column. Any style names that have hyphens should instead use camelCase.
+> >
+> > **`fieldConfig`** — *Object*  
+> > Configuration object used for rendering the columns as a form, used for the built-in row add and update actions. This data is passed to the `fields` configuration of the `Subform` widget, which is used behind the scenes for this functionality.
+> >
+> > > **`type`** — *string*  
+> > > The type of field to render. Available options are 'text', 'checkbox', 'date', 'datetime', or 'time'. Fields without a type will not be rendered.
+> > >
+> > > **`required`** — *boolean*  
+> > > Should the field be required. Defaults to false.
+> > >
+> > > **`disabled`** — *boolean*  
+> > > Should the field be disabled. Defaults to false.
+> > >
+> > > **`validate(value, data)`** — *Function*  
+> > > Validation function for validating this field. It should return an array of error messages if the field is invalid.
+>
+> **`addAction`** — *Object*  
+> Configuration for the add row button. If omitted, the button will not be rendered.
+>
+> > **`label`** — *string*  
+> > The label for the add row button. Defaults to 'Add Row'.
+> >
+> > **`icon`** — *string*  
+> > The name of the Tabler icon to use for the add row button. Defaults to 'plus'.
+> >
+> > **`onClick(tableApi)`** — *Function*  
+> > Function to call when the add row button is clicked.  
+> > It is passed a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
+>
+> **`rowActions`** — *Object[]*  
+> List of configurations for buttons that should be rendered in each row of the table.
+>
+> > **`label`** — *string*  
+> > The label for the button. It is not rendered but used for accessibility.
+> >
+> > **`icon`** — *string*  
+> > The name of the Tabler icon to use for the button.
+> >
+> > **`onClick(row, index, tableApi)`** — *Function*  
+> > Function to call when the button is clicked.  
+> > It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
+>
+> **`selectAction`** — *Object*  
+> Configuration for the row click/select callback. If omitted, rows will not be clickable.
+>
+> > **`label`** — *string*  
+> > A label for the hidden select button. It is not rendered but used for accessibility.
+> >
+> > **`onClick(row, index, tableApi)`** — *Function*  
+> > Function to call when the row is clicked.  
+> > It is passed a `row` object containing the data of the row, the `index` of the row (the absolute index from all data, not just the current page), and a `tableApi` parameter, which provides access to the [API](#api) functions defined below.
+>
+> **`pageSize`** — *number*  
+> The number of rows that should be shown per page. Use `0` to show all rows. Defaults to `10`.
+>
+> **`pageSizes`** — *number[]*  
+> List of page sizes that the user can select from. Set to an empty array to disable changing the page size. Defaults to `[10, 25, 50]`.
+>
+> **`defaultSort`** — *number | [number, string]*  
+> The default sort configuration. It can either be a number representing which column to sort by, or an array containing a number representing the column, and a direction of `asc` or `desc`.
+>
+> **`title`** — *string*  
+> The heading text to render above the table.
+>
+> **`allowExport`** — *boolean*  
+> Should the table allow exporting its data to a CSV. Default to `true`. The above `title` will be used as the filename.
+>
+> **`messages`** — *Object*  
+> Map of messages to render during various table states.
+>
+> > **`empty`** — *string*  
+> > The text to render when there are no rows in the table. Defaults to `No rows found.`.
+> >
+> > **`loading`** — *string*  
+> > The text to render when the data is loading. Defaults to `Loading...`.
+> >
+> > **`noMatches`** — *string*  
+> > The text to render when no rows match the entered filter query. Defaults to `No rows match your filter.`.
+
+**`id`** — *string*  
 A unique id that can be used to retrieve the API of the widget.
 
 ### API
 
-![name=getData](https://img.shields.io/badge/getData%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`getData()`** — *Function*  
 Returns the full list of data used by the table.
 
-![name=reloadData](https://img.shields.io/badge/reloadData%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`reloadData()`** — *Function*  
 Only available when the table uses an integration for its data. Re-fetches the data from the integration.
 
-![name=addRow](https://img.shields.io/badge/addRow%28row%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`addRow(row)`** — *Function*  
 Adds the provided `row` to the list of table data, and then re-sorts the table by the current sort, if any.
 
-![name=updateRow](https://img.shields.io/badge/updateRow%28row,%20index%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`updateRow(row, index)`** — *Function*  
 Updates the row at the provided absolute `index` with the data from the provided `row`.
 
-![name=deleteRow](https://img.shields.io/badge/deleteRow%28index%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`deleteRow(index)`** — *Function*  
 Deletes the row at the provided absolute `index`.
 
-<details>
-<summary>
-  <img alt="name=actions" src="https://img.shields.io/badge/actions-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  Actions that provide built-in functionality for editing the data.
-</summary>
-<br>
-<blockquote>
+**`actions`** — *Object*  
+Actions that provide built-in functionality for editing the data.
 
-![name=add](https://img.shields.io/badge/add%28options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A function that triggers a modal form to be rendered with fields for all columns that provided a `fieldConfig`. Completing the modal form adds a new row to the table.  
-It accepts an `options` object which is passed through to the config of the `Subform` widget that's used for this functionality.  
-The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was added successfully.`.
-
-![name=update](https://img.shields.io/badge/update%28row,%20,index,%20options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A function that triggers a modal form to be rendered with fields for all columns that provided a `fieldConfig`, and uses the provided `row` as the initial values. Completing the modal updates the row at the provided absolute `index`.  
-It accepts an `options` object as the third parameter, which is passed through to the config of the `Subform` widget that's used for this functionality.  
-The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was updated successfully.`.
-
-![name=delete](https://img.shields.io/badge/delete%28index,%20options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
-A function that triggers a confirmation modal to verify the user wants to delete the row. Accepting the confirmation deletes the row at the provided absolute `index`.  
-It accepts an `options` object as the second parameter, which is passed through to the config of the `openConfirm` utils function that's used for this functionality.  
-The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was deleted successfully.`.
-
-![name=subform](https://img.shields.io/badge/subform%28options%29-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-A shortcut to the `Subform` widget. Accepts an `options` object, same as one you would pass to the `Subform` widget itself. Using this function doesn't require you to pass a `container` because it will use a container provided by the `Table` widget.
-
-</blockquote>
-</details>
+> **`add(options)`** — *Function*  
+> A function that triggers a modal form to be rendered with fields for all columns that provided a `fieldConfig`. Completing the modal form adds a new row to the table.  
+> It accepts an `options` object which is passed through to the config of the `Subform` widget that's used for this functionality.  
+> The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was added successfully.`.
+>
+> **`update(row, ,index, options)`** — *Function*  
+> A function that triggers a modal form to be rendered with fields for all columns that provided a `fieldConfig`, and uses the provided `row` as the initial values. Completing the modal updates the row at the provided absolute `index`.  
+> It accepts an `options` object as the third parameter, which is passed through to the config of the `Subform` widget that's used for this functionality.  
+> The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was updated successfully.`.
+>
+> **`delete(index, options)`** — *Function*  
+> A function that triggers a confirmation modal to verify the user wants to delete the row. Accepting the confirmation deletes the row at the provided absolute `index`.  
+> It accepts an `options` object as the second parameter, which is passed through to the config of the `openConfirm` utils function that's used for this functionality.  
+> The `options` object can also define a `successMessage` that is shown is the toast when the row is added. Defaults to `Row was deleted successfully.`.
+>
+> **`subform(options)`** — *Object*  
+> A shortcut to the `Subform` widget. Accepts an `options` object, same as one you would pass to the `Subform` widget itself. Using this function doesn't require you to pass a `container` because it will use a container provided by the `Table` widget.
 
 ### Examples
 

@@ -21,62 +21,44 @@ The widget has two distinct modes, picked by whether `attributeName` is set:
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. All fields optional.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. All fields optional.
 
-![name=attributeName](https://img.shields.io/badge/attributeName-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Name of the space attribute whose value drives color and visibility. Setting this puts the widget in **dynamic mode**. When omitted, the widget enters **static mode**.
+> **`attributeName`** — *string*  
+> Name of the space attribute whose value drives color and visibility. Setting this puts the widget in **dynamic mode**. When omitted, the widget enters **static mode**.
+>
+> **`template`** — *string*  
+> Display string. Defaults to `'{{value}}'`. Only `{{value}}` is interpolated (replaced with the resolved attribute value, or empty string in static mode). For richer text, compose the string in your bundle script and pass it here.
+>
+> **`color`** — *string*  
+> One of `'error'`, `'warning'`, `'success'`, `'info'`, `'neutral'`. Used in **static mode only** — ignored when `attributeName` is set (mapping decides). Defaults to `'neutral'` in static mode.
+>
+> **`className`** — *string*  
+> Extra classes applied to the inner text element. Use DaisyUI / `kd-*` semantic classes, not raw Tailwind utility chains.
+>
+> **`barClassName`** — *string*  
+> Extra classes applied to the parent bar element (where the background color lives). Use this to override default padding, height, border, etc., independently of the text.
+>
+> **`mapping`** — *Object*  
+> Override of the default value→bucket mapping. **Extends** the defaults — buckets you don't mention keep their default words.
+>
+> Default mapping:
+>
+> | Bucket    | Words                                                                              |
+> | --------- | ---------------------------------------------------------------------------------- |
+> | `error`   | `dev`, `development`, `devel`, `sandbox`, `local`                                  |
+> | `warning` | `test`, `testing`, `tst`, `uat`, `staging`, `stage`, `qa`, `demo`                  |
+> | `success` | _(empty)_                                                                          |
+> | `info`    | _(empty)_                                                                          |
+> | `neutral` | _(empty)_                                                                          |
+> | `hide`    | `prod`, `production`, `live`, `prd`                                                |
+>
+> Match is case-insensitive after trimming. A value that matches no bucket is treated the same as one matched into `hide` — the banner does not render.
 
-![name=template](https://img.shields.io/badge/template-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Display string. Defaults to `'{{value}}'`. Only `{{value}}` is interpolated (replaced with the resolved attribute value, or empty string in static mode). For richer text, compose the string in your bundle script and pass it here.
-
-![name=color](https://img.shields.io/badge/color-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'error'`, `'warning'`, `'success'`, `'info'`, `'neutral'`. Used in **static mode only** — ignored when `attributeName` is set (mapping decides). Defaults to `'neutral'` in static mode.
-
-![name=className](https://img.shields.io/badge/className-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Extra classes applied to the inner text element. Use DaisyUI / `kd-*` semantic classes, not raw Tailwind utility chains.
-
-![name=barClassName](https://img.shields.io/badge/barClassName-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Extra classes applied to the parent bar element (where the background color lives). Use this to override default padding, height, border, etc., independently of the text.
-
-![name=mapping](https://img.shields.io/badge/mapping-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-Override of the default value→bucket mapping. **Extends** the defaults — buckets you don't mention keep their default words.
-
-Default mapping:
-
-| Bucket    | Words                                                                              |
-| --------- | ---------------------------------------------------------------------------------- |
-| `error`   | `dev`, `development`, `devel`, `sandbox`, `local`                                  |
-| `warning` | `test`, `testing`, `tst`, `uat`, `staging`, `stage`, `qa`, `demo`                  |
-| `success` | _(empty)_                                                                          |
-| `info`    | _(empty)_                                                                          |
-| `neutral` | _(empty)_                                                                          |
-| `hide`    | `prod`, `production`, `live`, `prd`                                                |
-
-Match is case-insensitive after trimming. A value that matches no bucket is treated the same as one matched into `hide` — the banner does not render.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
 
 ### API

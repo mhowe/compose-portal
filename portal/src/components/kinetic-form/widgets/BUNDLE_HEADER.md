@@ -11,12 +11,10 @@ bundle.widgets.BundleHeader({ container, id });
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render the header into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking. Multiple BundleHeader instances on the same page should each get a distinct id.
 
 ### API

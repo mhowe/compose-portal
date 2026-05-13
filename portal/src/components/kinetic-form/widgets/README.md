@@ -19,6 +19,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleBanner](BUNDLE_BANNER.md)
     - [BundleCounter](BUNDLE_COUNTER.md)
     - [Chart](CHART.md)
+    - [Kapps](KAPPS.md)
   - **Form-Field Widgets**
     - [Markdown](MARKDOWN.md)
     - [Search](SEARCH.md)
@@ -181,6 +182,12 @@ A label-with-badge pair — text plus a count badge whose color can change with 
 A single-element widget that renders either a single-value metric card (title / big number / description, with optional threshold colors, sparkline trend, and delta chip) or an ApexCharts chart (line / bar / area / donut / pie) with optional per-point drill-through. Whole-widget `clickAction` matches the standard chrome-widget shape.
 
 [Chart Documentation &#x2B9E;](CHART.md)
+
+#### Kapps
+
+Renders the kapps a user can see as pills, square tiles, or rich cards — ideal for a space landing page. Driven by per-kapp `Display - *` attributes for icon, description, accent color, hidden flag, category, and sort order. Supports filtering, allow/deny lists, grouping by category with collapsible accordion headings, and multiple icon placements per type.
+
+[Kapps Documentation &#x2B9E;](KAPPS.md)
 
 ---
 

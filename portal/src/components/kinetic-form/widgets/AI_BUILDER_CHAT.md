@@ -30,104 +30,79 @@ The widget handles the full conversation lifecycle:
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. <code>endpoint</code> is required; everything else is optional.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. <code>endpoint</code> is required; everything else is optional.
 
-![name=endpoint](https://img.shields.io/badge/endpoint-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
-![required](https://img.shields.io/badge/required-e74c3c)  
-Full URL of the companion service `/chat/stream` endpoint. Typically read from a kapp attribute set by the space admin at install time:
+> **`endpoint`** — *string*, required  
+> Full URL of the companion service `/chat/stream` endpoint. Typically read from a kapp attribute set by the space admin at install time:
+>
+> ```js
+> endpoint: kapp('attribute:Companion Service URL')
+> ```
+>
+> **`userIdentifier`** — *string*  
+> Username of the current user. Sent with every request and stored on conversation/project records. Defaults to `'anonymous'`.
+>
+> ```js
+> userIdentifier: identity('username')
+> ```
+>
+> **`storageKappSlug`** — *string*  
+> Kapp slug where the AI Builder Assistant's `ai-builder-conversations` and `ai-builder-projects` forms live. Sent with every request as `storage_kapp_slug`. The companion service reads this and routes all reads/writes (conversation persistence, project memory, list_conversations, list_projects, etc.) to that kapp.
+>
+> Form code typically reads this from a kapp attribute on the AI Builder kapp (e.g. `Data Storage Kapp Slug`), falling back to the kapp's own slug:
+>
+> ```js
+> storageKappSlug:
+>   kapp('attribute:Data Storage Kapp Slug') || kapp('slug')
+> ```
+>
+> When omitted, the companion service falls back to its `STORAGE_KAPP_SLUG` env var. This is intended for desktop/curl testing without the widget.
+>
+> **`projectSlug`** — *string*  
+> Project slug to load on conversation start. When set, the companion service injects that project's memory into the system prompt — Claude sees the project's current state, decisions, and open questions automatically. Can be changed later via the `setProject` API.
+>
+> **`conversationId`** — *string*  
+> Resume a specific past conversation by id. When omitted, a new conversation is started on first send (the companion service generates a UUID).
+>
+> **`initialModel`** — *string*  
+> Pre-set the model used for the first turn (e.g., `'claude-opus-4-7'`). When omitted, the widget fetches the configured default from the companion service `/settings` on mount. Resuming a stored conversation overrides this with that conversation's `Last Model Used` value.
+>
+> **`placeholder`** — *string*  
+> Input placeholder text. Default: `'Type a message — Cmd/Ctrl+Enter to send'`.
+>
+> **`height`** — *string*  
+> One of `'sm'` (h-64), `'md'` _(default, h-96)_, `'lg'` (h-[36rem]), `'full'` (h-full), or any custom Tailwind height class. The widget fills its container; the height class scopes the messages region.
+>
+> **`showUsage`** — *boolean*  
+> When true _(default)_, shows a small token-usage pill in the header reflecting cumulative spend on the current conversation. Hide it when embedding the widget somewhere that doesn't have horizontal room for chrome.
+>
+> **`showModel`** — *boolean*  
+> When true _(default)_, shows a model selector dropdown in the header. The dropdown is populated from `available_models` fetched from the companion service `/settings` endpoint. Selecting a different model applies to all *future* turns in the current conversation (not retroactively) and persists across resumes via the conversation's `Last Model Used` field. Hide it when you want the form to control the model purely via the imperative `setModel(...)` API.
+>
+> **`onSent`** — *function*  
+> Called with the user's message text when they hit Send. Useful for analytics, logging, or wiring to other widgets on the same page.
+>
+> **`onComplete`** — *function*  
+> Called with the final `done` event payload when the assistant finishes a turn. Payload shape:
+>
+> ```js
+> {
+>   conversation_id: 'uuid',
+>   project_slug: 'hr-onboarding' | null,
+>   iterations: 4,
+>   tools_used: [{ tool: 'core_listKapps', input: {} }, ...],
+>   usage: { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens },
+>   cumulative_usage: { ...same shape, accumulated across the conversation... },
+>   stop_reason: 'end_turn' | 'max_iterations',
+>   reply: 'Final assistant text'
+> }
+> ```
 
-```js
-endpoint: kapp('attribute:Companion Service URL')
-```
-
-![name=userIdentifier](https://img.shields.io/badge/userIdentifier-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Username of the current user. Sent with every request and stored on conversation/project records. Defaults to `'anonymous'`.
-
-```js
-userIdentifier: identity('username')
-```
-
-![name=storageKappSlug](https://img.shields.io/badge/storageKappSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Kapp slug where the AI Builder Assistant's `ai-builder-conversations` and `ai-builder-projects` forms live. Sent with every request as `storage_kapp_slug`. The companion service reads this and routes all reads/writes (conversation persistence, project memory, list_conversations, list_projects, etc.) to that kapp.
-
-Form code typically reads this from a kapp attribute on the AI Builder kapp (e.g. `Data Storage Kapp Slug`), falling back to the kapp's own slug:
-
-```js
-storageKappSlug:
-  kapp('attribute:Data Storage Kapp Slug') || kapp('slug')
-```
-
-When omitted, the companion service falls back to its `STORAGE_KAPP_SLUG` env var. This is intended for desktop/curl testing without the widget.
-
-![name=projectSlug](https://img.shields.io/badge/projectSlug-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Project slug to load on conversation start. When set, the companion service injects that project's memory into the system prompt — Claude sees the project's current state, decisions, and open questions automatically. Can be changed later via the `setProject` API.
-
-![name=conversationId](https://img.shields.io/badge/conversationId-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Resume a specific past conversation by id. When omitted, a new conversation is started on first send (the companion service generates a UUID).
-
-![name=initialModel](https://img.shields.io/badge/initialModel-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Pre-set the model used for the first turn (e.g., `'claude-opus-4-7'`). When omitted, the widget fetches the configured default from the companion service `/settings` on mount. Resuming a stored conversation overrides this with that conversation's `Last Model Used` value.
-
-![name=placeholder](https://img.shields.io/badge/placeholder-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Input placeholder text. Default: `'Type a message — Cmd/Ctrl+Enter to send'`.
-
-![name=height](https://img.shields.io/badge/height-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'` (h-64), `'md'` _(default, h-96)_, `'lg'` (h-[36rem]), `'full'` (h-full), or any custom Tailwind height class. The widget fills its container; the height class scopes the messages region.
-
-![name=showUsage](https://img.shields.io/badge/showUsage-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-When true _(default)_, shows a small token-usage pill in the header reflecting cumulative spend on the current conversation. Hide it when embedding the widget somewhere that doesn't have horizontal room for chrome.
-
-![name=showModel](https://img.shields.io/badge/showModel-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-When true _(default)_, shows a model selector dropdown in the header. The dropdown is populated from `available_models` fetched from the companion service `/settings` endpoint. Selecting a different model applies to all *future* turns in the current conversation (not retroactively) and persists across resumes via the conversation's `Last Model Used` field. Hide it when you want the form to control the model purely via the imperative `setModel(...)` API.
-
-![name=onSent](https://img.shields.io/badge/onSent-gray)
-![type=function](https://img.shields.io/badge/function-e66e22)  
-Called with the user's message text when they hit Send. Useful for analytics, logging, or wiring to other widgets on the same page.
-
-![name=onComplete](https://img.shields.io/badge/onComplete-gray)
-![type=function](https://img.shields.io/badge/function-e66e22)  
-Called with the final `done` event payload when the assistant finishes a turn. Payload shape:
-
-```js
-{
-  conversation_id: 'uuid',
-  project_slug: 'hr-onboarding' | null,
-  iterations: 4,
-  tools_used: [{ tool: 'core_listKapps', input: {} }, ...],
-  usage: { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens },
-  cumulative_usage: { ...same shape, accumulated across the conversation... },
-  stop_reason: 'end_turn' | 'max_iterations',
-  reply: 'Final assistant text'
-}
-```
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by `registerWidget` for instance tracking. Use it to retrieve the API later: `bundle.widgets.AIBuilderChat.get(id)`.
 
 ### Imperative API

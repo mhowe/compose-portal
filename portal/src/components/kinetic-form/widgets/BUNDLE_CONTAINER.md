@@ -16,80 +16,62 @@ bundle.widgets.BundleContainer.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render the container into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()` — no `[0]` or jQuery required. Use a content element rather than a field, since this is a presentation widget that displays content rather than collects data.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget.
 
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string_(required)-e66e22)  
-A unique identifier for this container. Used as the event-target key (so events can address a specific container) and — when `urlSync` is enabled — as the URL slot key. Must be a non-empty string. **Required.**
+> **`id`** — *string (required)*  
+> A unique identifier for this container. Used as the event-target key (so events can address a specific container) and — when `urlSync` is enabled — as the URL slot key. Must be a non-empty string. **Required.**
+>
+> **`initialPath`** — *string*  
+> The path the container opens at when first rendered (e.g. `'/kapps'`, `'/kapps/services'`, `'/forms/some-form'`). Must start with `/`.
+>
+> If omitted, set to `null`, or set to `''`, the container mounts **blank** (no routed content visible) until something calls its `navigate()` API or fires a `bundle:container:navigate` event. Useful when the form designer wants to wait for a user action before showing any content.
+>
+> **`urlSync`** — *boolean*  
+> When `true`, the container's current path round-trips through the URL hash as a search param keyed `ctr.<slotPath>` (e.g. `https://your-space/#/your-form?ctr.main=/kapps/services`). Effects:
+>
+> - F5 / page refresh restores the inner state (URL slot wins over `initialPath` on mount).
+> - The browser back button navigates the container.
+> - Links are bookmarkable / shareable.
+>
+> Defaults to `false`. Multiple containers each manage their own slot independently.
+>
+> The `slotPath` is auto-derived from the container's mount position relative to other BundleContainers — a top-level container with `id: 'main'` gets slot `main`; a nested container with the same id gets slot `main.main`. This prevents URL recursion when a form's container loads the same form (which has the same container id).
+>
+> **`hideFormChrome`** — *boolean*  
+> When `true`, forms loaded inside this container render without their page wrapper — no icon / form name heading, no settings-share link, no gutter, no max-width centering, no bordered content card. The form's fields render directly inside the container so the host page can own all the surrounding layout.
+>
+> Defaults to `false` (today's behavior — forms render with their full page chrome inside containers).
+>
+> This is the container-side opt-in. There is also a form-side opt-in: setting a form's `Form Chrome` attribute to `bare` makes that form render without its page wrapper whenever it's loaded into any container, regardless of `hideFormChrome`. The two opt-ins are a union — either source set to bare wins; if you want a specific form to render with full chrome in spite of the container saying bare, today there is no override (`hideFormChrome: true` is authoritative).
+>
+> ```js
+> // Host page owns layout; render the form's fields with no wrapper:
+> bundle.widgets.BundleContainer({
+>   container: K('content[Page Container]').element(),
+>   config: {
+>     id: 'main',
+>     initialPath: '/kapps/test-kapp---compose-portal/forms/display',
+>     hideFormChrome: true,
+>   },
+>   id: 'main',
+> });
+> ```
 
-![name=initialPath](https://img.shields.io/badge/initialPath-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The path the container opens at when first rendered (e.g. `'/kapps'`, `'/kapps/services'`, `'/forms/some-form'`). Must start with `/`.
-
-If omitted, set to `null`, or set to `''`, the container mounts **blank** (no routed content visible) until something calls its `navigate()` API or fires a `bundle:container:navigate` event. Useful when the form designer wants to wait for a user action before showing any content.
-
-![name=urlSync](https://img.shields.io/badge/urlSync-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-When `true`, the container's current path round-trips through the URL hash as a search param keyed `ctr.<slotPath>` (e.g. `https://your-space/#/your-form?ctr.main=/kapps/services`). Effects:
-
-- F5 / page refresh restores the inner state (URL slot wins over `initialPath` on mount).
-- The browser back button navigates the container.
-- Links are bookmarkable / shareable.
-
-Defaults to `false`. Multiple containers each manage their own slot independently.
-
-The `slotPath` is auto-derived from the container's mount position relative to other BundleContainers — a top-level container with `id: 'main'` gets slot `main`; a nested container with the same id gets slot `main.main`. This prevents URL recursion when a form's container loads the same form (which has the same container id).
-
-![name=hideFormChrome](https://img.shields.io/badge/hideFormChrome-gray)
-![type=boolean](https://img.shields.io/badge/boolean-e66e22)  
-When `true`, forms loaded inside this container render without their page wrapper — no icon / form name heading, no settings-share link, no gutter, no max-width centering, no bordered content card. The form's fields render directly inside the container so the host page can own all the surrounding layout.
-
-Defaults to `false` (today's behavior — forms render with their full page chrome inside containers).
-
-This is the container-side opt-in. There is also a form-side opt-in: setting a form's `Form Chrome` attribute to `bare` makes that form render without its page wrapper whenever it's loaded into any container, regardless of `hideFormChrome`. The two opt-ins are a union — either source set to bare wins; if you want a specific form to render with full chrome in spite of the container saying bare, today there is no override (`hideFormChrome: true` is authoritative).
-
-```js
-// Host page owns layout; render the form's fields with no wrapper:
-bundle.widgets.BundleContainer({
-  container: K('content[Page Container]').element(),
-  config: {
-    id: 'main',
-    initialPath: '/kapps/test-kapp---compose-portal/forms/display',
-    hideFormChrome: true,
-  },
-  id: 'main',
-});
-```
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 A unique id used by the widget machinery for instance tracking. When omitted, falls back to `config.id`.
 
 ### API
 
-![name=navigate](https://img.shields.io/badge/navigate%28path%2C%20options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`navigate(path, options)`** — *Function*  
 Navigates the container to the given path. `path` must be a string starting with `/`. Calling this also un-blanks the container if it was previously blank.
 
 The optional second argument is `{ replace: boolean }`. When `replace: true`, the new path replaces the current entry in the container's history rather than pushing a new one — the browser back button skips it. Useful for things like a redirect-after-submit that shouldn't leave a "back to the form you just submitted" entry behind.
 
-![name=getCurrent](https://img.shields.io/badge/getCurrent%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`getCurrent()`** — *Function*  
 Returns the container's current path string. Returns `''` while the container is blank.
 
 ### Events

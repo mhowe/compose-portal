@@ -6,7 +6,7 @@ import { useData } from '../../helpers/hooks/useData.js';
 import {
   FORM_DISPLAY_MODE_FULLSCREEN,
   readFormDisplayMode,
-  readKappDefaultFormSlug,
+  readKappDefaultFormSlugs,
 } from '../../helpers/setup.js';
 import { layoutActions } from '../../helpers/state.js';
 import { useInsideContainer } from '../../helpers/container-scope.js';
@@ -17,36 +17,52 @@ import { KineticForm } from '../../components/kinetic-form/KineticForm.jsx';
 /**
  * Renders at /kapps/:kappSlug.
  *
- * If the kapp's 'Default Form Slug' attribute is set and the form exists,
- * render it inline as the kapp's home. Otherwise fall through to the built-in
- * forms table (New Request link works; View Submissions is a stub).
+ * The kapp's 'Default Form Slug' attribute is treated as a comma-separated,
+ * ordered list of candidate form slugs. The first slug whose form the user
+ * can see (and that is Active or New) is rendered inline as the kapp's home.
+ * If none of the candidates resolve, fall through to the built-in forms
+ * table (New Request link works; View Submissions is a stub).
  *
- * Admins who want a richer kapp home should set 'Default Form Slug' to point
- * at a form that renders the experience they want.
+ * Admins who want a richer kapp home should set 'Default Form Slug' to a
+ * single slug or a precedence-ordered list — e.g. "vip-home, standard-home"
+ * to give space admins / VIP teams the first form while everyone else lands
+ * on the second.
  */
 export const KappDefaultPage = () => {
   const { kappSlug } = useParams();
   const space = useSelector(state => state.app.space);
   const kapp = (space?.kapps || []).find(k => k.slug === kappSlug);
-  const defaultFormSlug = readKappDefaultFormSlug(kapp);
-
-  // Confirm the kapp's Default Form Slug exists before rendering it — falls
-  // through to the forms table on misconfiguration rather than erroring.
-  // attributesMap is included so we can read Display Mode off the same fetch.
-  const defaultFormCheckParams = useMemo(
-    () =>
-      defaultFormSlug
-        ? {
-            kappSlug,
-            q: `slug = "${defaultFormSlug}"`,
-            include: 'attributesMap',
-            limit: 1,
-          }
-        : null,
-    [kappSlug, defaultFormSlug],
+  // Memoize the parsed slug list — `readKappDefaultFormSlugs` builds a fresh
+  // array each call, which would otherwise re-trigger the params useMemo (and
+  // useData's setState) on every render and loop indefinitely.
+  const defaultFormSlugs = useMemo(
+    () => readKappDefaultFormSlugs(kapp),
+    [kapp],
   );
+
+  // Query every candidate slug in a single round trip, then pick the first
+  // one from the configured order that came back. Forms the user cannot see
+  // (security policy) and inactive forms are filtered server-side, so a
+  // returned form is implicitly "accessible to this user". attributesMap is
+  // included so we can read Display Mode off the same fetch.
+  const defaultFormCheckParams = useMemo(() => {
+    if (defaultFormSlugs.length === 0) return null;
+    const slugClause = defaultFormSlugs
+      .map(s => `slug = "${s}"`)
+      .join(' OR ');
+    return {
+      kappSlug,
+      q: `(${slugClause}) AND (status = "Active" OR status = "New")`,
+      include: 'attributesMap',
+      limit: defaultFormSlugs.length,
+    };
+  }, [kappSlug, defaultFormSlugs]);
   const defaultFormCheck = useData(fetchForms, defaultFormCheckParams);
-  const defaultForm = defaultFormCheck.response?.forms?.[0];
+  const returnedForms = defaultFormCheck.response?.forms || [];
+  const defaultForm = defaultFormSlugs
+    .map(slug => returnedForms.find(f => f.slug === slug))
+    .find(Boolean);
+  const defaultFormSlug = defaultForm?.slug;
   const defaultFormExists = !!defaultForm;
 
   // Forms table is only needed when we're rendering the fallback. Skip the

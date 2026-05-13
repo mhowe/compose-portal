@@ -36,14 +36,11 @@ Settings live in a local JSON file on the companion service's disk (`data/settin
 
 ### Parameters
 
-![name=config](https://img.shields.io/badge/config-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)
+**`config`** — *Object*  
 
 <blockquote>
 
-![name=endpoint](https://img.shields.io/badge/endpoint-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)
-![required](https://img.shields.io/badge/required-e74c3c)  
+**`endpoint`** — *string*, required  
 URL of the companion service `/chat/stream` endpoint. The widget derives the settings routes (`/settings`, `/settings/test-api-key`) from this. Read it from the same kapp attribute the chat widget uses, so one place controls both.
 
 ```js
@@ -52,8 +49,7 @@ endpoint: kapp('attribute:Companion Service URL')
 
 </blockquote>
 
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Instance id used by `bundle.widgets.AIBuilderSettings.get(id)`. Required if you want to retrieve the API later.
 
 ### Imperative API

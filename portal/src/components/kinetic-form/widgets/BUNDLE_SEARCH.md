@@ -16,62 +16,42 @@ bundle.widgets.BundleSearch.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. All fields optional.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. All fields optional.
 
-![name=icon](https://img.shields.io/badge/icon-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-[Tabler icon](https://tabler-icons.io/) name. Defaults to `'search'`.
+> **`icon`** — *string*  
+> [Tabler icon](https://tabler-icons.io/) name. Defaults to `'search'`.
+>
+> **`text`** — *string*  
+> Optional label. By default the widget renders icon-only (matches the auto-rendered header). Add `text` for a wider button like "Search Services" or "Submit a Request".
+>
+> **`iconPosition`** — *string*  
+> `'left'` _(default)_ or `'right'`.
+>
+> **`size`** — *string*  
+> One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
+>
+> **`clickAction`** — *Object*  
+> Defaults to `{ type: 'openSearch', mode: 'searchOnly' }`. Override for different search behavior:
+>
+> - `{ type: 'openSearch', mode: 'full' }` — open the full search UI with categories carousel and popular forms.
+> - `{ type: 'event', name: 'open-it-search' }` — fire a custom event for your form to handle.
+> - `{ type: 'internal', path: '/forms/my-search-form' }` — navigate to a custom search form.
+> - Any other [clickAction](CHROME_ACTIONS.md#clickaction) type also works.
+>
+> **`target`** — *string or Object*  
+> Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
+>
+> **`label`** — *string*  
+> Accessibility label override.
+>
+> **`className`** — *string*  
+> Override the default ghost-button styling.
 
-![name=text](https://img.shields.io/badge/text-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Optional label. By default the widget renders icon-only (matches the auto-rendered header). Add `text` for a wider button like "Search Services" or "Submit a Request".
-
-![name=iconPosition](https://img.shields.io/badge/iconPosition-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-`'left'` _(default)_ or `'right'`.
-
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
-
-![name=clickAction](https://img.shields.io/badge/clickAction-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-Defaults to `{ type: 'openSearch', mode: 'searchOnly' }`. Override for different search behavior:
-
-- `{ type: 'openSearch', mode: 'full' }` — open the full search UI with categories carousel and popular forms.
-- `{ type: 'event', name: 'open-it-search' }` — fire a custom event for your form to handle.
-- `{ type: 'internal', path: '/forms/my-search-form' }` — navigate to a custom search form.
-- Any other [clickAction](CHROME_ACTIONS.md#clickaction) type also works.
-
-![name=target](https://img.shields.io/badge/target-gray)
-![type=string](https://img.shields.io/badge/string_or_Object-e66e22)  
-Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Accessibility label override.
-
-![name=className](https://img.shields.io/badge/className-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Override the default ghost-button styling.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
 
 ### API

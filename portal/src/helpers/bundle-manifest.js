@@ -29,7 +29,7 @@ export const BUNDLE_MANIFEST = {
         name: 'Default Space Form Slug',
         required: true,
         description:
-          "Slug of a form in the 'admin' kapp to render inline as the space landing page (/kapps). May be left empty; the bundle will fall back to the built-in kapp-cards landing.",
+          "Slug of a form in the 'admin' kapp to render inline as the space landing page (/kapps). Accepts a single slug or a comma-separated, ordered list — the bundle renders the first form in the list the current user can see (and that is Active or New), so admins can give different user groups different landing forms (e.g. 'vip-home, standard-home'). May be left empty; the bundle will fall back to the built-in kapp-cards landing.",
       },
       {
         name: 'Capability Registry URLs',
@@ -65,13 +65,50 @@ export const BUNDLE_MANIFEST = {
         name: 'Default Form Slug',
         required: false,
         description:
-          'Slug of the form rendered as the landing page for this kapp. When absent, the bundle shows the default kapp page.',
+          "Slug of the form rendered as the landing page for this kapp. Accepts a single slug or a comma-separated, ordered list — the bundle renders the first form in the list the current user can see (and that is Active or New), so admins can give different user groups different landing forms (e.g. 'vip-home, standard-home'). When absent or no candidate resolves, the bundle shows the default kapp page.",
       },
       {
         name: 'Theme',
         required: false,
         description:
           "JSON theme overrides applied to this kapp. Layers on top of the space-level Theme; a key set here wins. Optional — falls through to the space's Theme (and then bundle defaults) when absent.",
+      },
+      {
+        name: 'Display - Category',
+        required: false,
+        allowsMultiple: true,
+        description:
+          "Category labels used to group or filter kapps in the Kapps widget. A kapp with multiple categories appears in each of its groups when grouped, and matches any of its categories when filtered. Free text — e.g. 'Admin', 'Tools', 'Capabilities'.",
+      },
+      {
+        name: 'Display - Description',
+        required: false,
+        description:
+          'Short description shown on the Kapps widget card type. Falls back to the kapp record description when empty.',
+      },
+      {
+        name: 'Display - Icon',
+        required: false,
+        description:
+          'Tabler icon name rendered for this kapp by the Kapps widget (e.g. "settings", "users", "chart-bar").',
+      },
+      {
+        name: 'Display - Color',
+        required: false,
+        description:
+          'Accent color for this kapp in the Kapps widget. One of primary, secondary, accent, success, warning, error, info, neutral — or a hex string. Renders as an accent border on cards / tiles.',
+      },
+      {
+        name: 'Display - Hidden',
+        required: false,
+        description:
+          "When 'true', the Kapps widget hides this kapp by default. Honored unless the widget is configured with includeHidden=true.",
+      },
+      {
+        name: 'Display - Order',
+        required: false,
+        description:
+          'Numeric sort key for the Kapps widget when sort="order". Lower values appear first. Missing or non-numeric values sort to the end (alphabetical fallback).',
       },
     ],
   },

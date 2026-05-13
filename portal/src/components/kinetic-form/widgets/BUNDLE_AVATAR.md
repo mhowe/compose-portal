@@ -14,61 +14,41 @@ bundle.widgets.BundleAvatar.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. All fields optional.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. All fields optional.
 
-![name=username](https://img.shields.io/badge/username-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The username to display. The first letter (uppercased) is used for the placeholder when no image is shown. Defaults to the logged-in user's username when not provided.
+> **`username`** — *string*  
+> The username to display. The first letter (uppercased) is used for the placeholder when no image is shown. Defaults to the logged-in user's username when not provided.
+>
+> **`imageSrc`** — *string*  
+> URL of an image to display instead of the initial-letter placeholder. If the image fails to load, the avatar falls back to the placeholder gracefully (no broken-image icon).
+>
+> For dynamic image sources (gravatar, profile attribute, image library), resolve the URL form-side and pass the resolved string here. Don't put templating in the config.
+>
+> **`size`** — *string*  
+> One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
+>
+> **`color`** — *string*  
+> One of `'primary'` or `'neutral'`. Optional — leaving it undefined lets a `className`-supplied color apply without conflict.
+>
+> **`clickAction`** — *Object*  
+> What happens when the avatar is clicked. Defaults to `{ type: 'none' }`. See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction).
+>
+> **`target`** — *string or Object*  
+> Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
+>
+> **`label`** — *string*  
+> Accessibility label override. Auto-derived from `username` when not provided.
+>
+> **`className`** — *string*  
+> Override the default kavatar styling. Use DaisyUI semantic classes, not raw Tailwind utility chains.
+>
+> **Color caveat:** when you set both `config.color` and a `className` that also affects color, results are unpredictable — both target the same CSS variables and source order decides which wins. Pick one approach per usage.
 
-![name=imageSrc](https://img.shields.io/badge/imageSrc-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-URL of an image to display instead of the initial-letter placeholder. If the image fails to load, the avatar falls back to the placeholder gracefully (no broken-image icon).
-
-For dynamic image sources (gravatar, profile attribute, image library), resolve the URL form-side and pass the resolved string here. Don't put templating in the config.
-
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`.
-
-![name=color](https://img.shields.io/badge/color-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'primary'` or `'neutral'`. Optional — leaving it undefined lets a `className`-supplied color apply without conflict.
-
-![name=clickAction](https://img.shields.io/badge/clickAction-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-What happens when the avatar is clicked. Defaults to `{ type: 'none' }`. See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction).
-
-![name=target](https://img.shields.io/badge/target-gray)
-![type=string](https://img.shields.io/badge/string_or_Object-e66e22)  
-Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Accessibility label override. Auto-derived from `username` when not provided.
-
-![name=className](https://img.shields.io/badge/className-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Override the default kavatar styling. Use DaisyUI semantic classes, not raw Tailwind utility chains.
-
-**Color caveat:** when you set both `config.color` and a `className` that also affects color, results are unpredictable — both target the same CSS variables and source order decides which wins. Pick one approach per usage.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
 
 ### API

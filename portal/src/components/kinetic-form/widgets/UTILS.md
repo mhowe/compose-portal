@@ -28,38 +28,30 @@ _Only one confirmation modal may be rendered at a time._
 
 #### Functions
 
-![name=openConfirm](https://img.shields.io/badge/openConfirm%28options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`openConfirm(options)`** — *Function*  
 Renders a confirmation modal. See [Confirmation Modal Options](#confirmation-modal-options) for details on available options.
 
-![name=closeConfirm](https://img.shields.io/badge/closeConfirm%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`closeConfirm()`** — *Function*  
 Closes the open confirmation modal.
 
 #### Confirmation Modal Options
 
-![name=title](https://img.shields.io/badge/title-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`title`** — *string*  
 The title to render in the modal.
 
-![name=description](https://img.shields.io/badge/description-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`description`** — *string*  
 The description to render in the modal.
 
-![name=accept](https://img.shields.io/badge/accept%28%29-gray)
-![type=function](https://img.shields.io/badge/Function-e66e22)  
+**`accept()`** — *Function*  
 The function to call when the user clicks the accept button.
 
-![name=acceptLabel](https://img.shields.io/badge/acceptLabel-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`acceptLabel`** — *string*  
 The label for the accept button. Defaults to 'Continue'.
 
-![name=cancel](https://img.shields.io/badge/cancel%28%29-gray)
-![type=function](https://img.shields.io/badge/Function-e66e22)  
+**`cancel()`** — *Function*  
 The function to call when the user clicks the cancel button.
 
-![name=cancelLabel](https://img.shields.io/badge/cancelLabel-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`cancelLabel`** — *string*  
 The label for the cancel button. Defaults to 'Cancel'.
 
 #### Examples
@@ -93,34 +85,27 @@ Toasts render alert messages to the user, which are displayed at the top middle 
 
 #### Functions
 
-![name=toastSuccess](https://img.shields.io/badge/toastSuccess%28options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`toastSuccess(options)`** — *Function*  
 Renders a success toast on the page. See [Toast Options](#toast-options) for details on available options.
 
-![name=toastError](https://img.shields.io/badge/toastError%28options%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`toastError(options)`** — *Function*  
 Renders an error toast on the page. See [Toast Options](#toast-options) for details on available options.
 
-![name=clearToasts](https://img.shields.io/badge/clearToasts%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`clearToasts()`** — *Function*  
 Closes all currently open toasts.
 
 #### Toast Options
 
-![name=title](https://img.shields.io/badge/title-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`title`** — *string*  
 The title to render in the toast.
 
-![name=description](https://img.shields.io/badge/description-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`description`** — *string*  
 The description to render in the toast.
 
-![name=duration](https://img.shields.io/badge/duration-gray)
-![type=number](https://img.shields.io/badge/number-e66e22)  
+**`duration`** — *number*  
 The duration that the toast should be visible, in milliseconds. Success toasts default to 2 seconds, and error toasts default to 5 seconds.
 
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 An optional id if the toast should appear in a specific context, such as inside a modal. The id must match an existing toast context.
 
 #### Examples
@@ -152,12 +137,10 @@ Several chrome widgets ([BundleLogo](BUNDLE_LOGO.md), [BundleLink](BUNDLE_LINK.m
 
 #### Functions
 
-![name=onWidgetEvent](https://img.shields.io/badge/onWidgetEvent%28name,%20handler%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`onWidgetEvent(name, handler)`** — *Function*  
 Registers a handler for the given event name. **Replaces** any prior handler registered under the same name — safe to call on every form load without piling up listeners. Returns a cleanup function.
 
-![name=offWidgetEvent](https://img.shields.io/badge/offWidgetEvent%28name%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`offWidgetEvent(name)`** — *Function*  
 Removes the handler registered for an event name. No-op when nothing is registered.
 
 #### Why use `onWidgetEvent` instead of `window.addEventListener`?
@@ -199,46 +182,37 @@ The modal stack is global and stacked: a modal opened from inside another modal 
 
 #### Functions
 
-![name=openModal](https://img.shields.io/badge/openModal%28config%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`openModal(config)`** — *Function*  
 Opens a modal with the given configuration. Returns a close function that dismisses **this specific** modal.
 
-![name=closeModal](https://img.shields.io/badge/closeModal%28id%3F%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`closeModal(id?)`** — *Function*  
 Closes a modal. With no argument, closes the topmost modal on the stack. With an id, closes that specific modal (no-op if not on the stack).
 
-![name=closeAllModals](https://img.shields.io/badge/closeAllModals%28%29-gray)
-![type=Function](https://img.shields.io/badge/Function-e66e22)  
+**`closeAllModals()`** — *Function*  
 Closes every open modal. Useful for hard resets (e.g., after auth timeout).
 
 #### Modal Config Options
 
-![name=type](https://img.shields.io/badge/type-gray)
-![type=string](https://img.shields.io/badge/string_(required)-e66e22)  
+**`type`** — *string (required)*  
 One of:
 
 - `'internal'` — render a bundle path in the modal. Requires `path`.
 - `'home'` — render the user's resolved home (runs the landing resolver) in the modal. No additional fields.
 - `'external'` — render an external URL via iframe in the modal. Requires `url`. **Note:** sites that send `X-Frame-Options: DENY` will appear blank.
 
-![name=path](https://img.shields.io/badge/path-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`path`** — *string*  
 For `type: 'internal'`. Bundle path starting with `/` (e.g. `'/forms/help'`, `'/kapps/services'`).
 
-![name=url](https://img.shields.io/badge/url-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`url`** — *string*  
 For `type: 'external'`. Full URL to embed.
 
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`size`** — *string*  
 One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`, `'full'`.
 
-![name=title](https://img.shields.io/badge/title-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`title`** — *string*  
 Optional title displayed in the modal header.
 
-![name=closeOn](https://img.shields.io/badge/closeOn-gray)
-![type=array](https://img.shields.io/badge/string[]-e66e22)  
+**`closeOn`** — *string[]*  
 Subset of `['esc', 'backdrop', 'button']`. Default is all three. Pass `['esc', 'button']` to disable backdrop-click close (useful for forms where a stray click would lose work). Pass `[]` for fully programmatic-only close.
 
 #### Examples

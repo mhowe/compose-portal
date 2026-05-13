@@ -14,57 +14,37 @@ bundle.widgets.BundleLink.get(id);
 
 ### Parameters
 
-![name=container](https://img.shields.io/badge/container-gray)
-![type=HTMLElement](https://img.shields.io/badge/HTMLElement_or_array--like-e66e22)  
+**`container`** — *HTMLElement or array-like*  
 The DOM element to render into. Accepts either a real `HTMLElement` or the array-like wrapper returned by `K('content[Name]').element()`.
 
-<details>
-<summary>
-  <img alt="name=config" src="https://img.shields.io/badge/config-gray">
-  <img alt="type=Object" src="https://img.shields.io/badge/Object-e66e22">
-  <br>
-  An object of configurations for the widget. At least one of <code>icon</code> or <code>text</code> is required.
-</summary>
-<br>
-<blockquote>
+**`config`** — *Object*  
+An object of configurations for the widget. At least one of <code>icon</code> or <code>text</code> is required.
 
-![name=icon](https://img.shields.io/badge/icon-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-[Tabler icon](https://tabler-icons.io/) name (e.g. `'home'`, `'border-all'`, `'settings'`). Invalid names render as a clearly-marked "missing" icon glyph.
+> **`icon`** — *string*  
+> [Tabler icon](https://tabler-icons.io/) name (e.g. `'home'`, `'border-all'`, `'settings'`). Invalid names render as a clearly-marked "missing" icon glyph.
+>
+> **`text`** — *string*  
+> The label text. For dynamic values (user attributes, etc.), resolve form-side before calling the widget — e.g. `text: \`Welcome, ${identity('attribute:First Name')}\``.
+>
+> **`iconPosition`** — *string*  
+> `'left'` _(default)_ or `'right'`. Position of the icon relative to the text.
+>
+> **`size`** — *string*  
+> One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`. Controls padding, icon size, and font size as a coherent set.
+>
+> **`clickAction`** — *Object*  
+> What happens when the link is clicked. Defaults to `{ type: 'none' }`. See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction) for the full list.
+>
+> **`target`** — *string or Object*  
+> Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
+>
+> **`label`** — *string*  
+> Accessibility label override. Auto-derived from `text` when not provided.
+>
+> **`className`** — *string*  
+> Override the default ghost-button styling. Use DaisyUI semantic classes (e.g. `'kbtn kbtn-primary'`, `'kbtn kbtn-outline kbtn-lg'`), not raw Tailwind utility chains. Note: setting `className` replaces the `size`-derived classes — pick one approach per usage.
 
-![name=text](https://img.shields.io/badge/text-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-The label text. For dynamic values (user attributes, etc.), resolve form-side before calling the widget — e.g. `text: \`Welcome, ${identity('attribute:First Name')}\``.
-
-![name=iconPosition](https://img.shields.io/badge/iconPosition-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-`'left'` _(default)_ or `'right'`. Position of the icon relative to the text.
-
-![name=size](https://img.shields.io/badge/size-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-One of `'sm'`, `'md'` _(default)_, `'lg'`, `'xl'`. Controls padding, icon size, and font size as a coherent set.
-
-![name=clickAction](https://img.shields.io/badge/clickAction-gray)
-![type=Object](https://img.shields.io/badge/Object-e66e22)  
-What happens when the link is clicked. Defaults to `{ type: 'none' }`. See [Chrome Widget Actions](CHROME_ACTIONS.md#clickaction) for the full list.
-
-![name=target](https://img.shields.io/badge/target-gray)
-![type=string](https://img.shields.io/badge/string_or_Object-e66e22)  
-Where the click opens. See [Chrome Widget Actions](CHROME_ACTIONS.md#target).
-
-![name=label](https://img.shields.io/badge/label-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Accessibility label override. Auto-derived from `text` when not provided.
-
-![name=className](https://img.shields.io/badge/className-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
-Override the default ghost-button styling. Use DaisyUI semantic classes (e.g. `'kbtn kbtn-primary'`, `'kbtn kbtn-outline kbtn-lg'`), not raw Tailwind utility chains. Note: setting `className` replaces the `size`-derived classes — pick one approach per usage.
-
-</blockquote>
-</details>
-
-![name=id](https://img.shields.io/badge/id-gray)
-![type=string](https://img.shields.io/badge/string-e66e22)  
+**`id`** — *string*  
 Optional id used by the widget machinery for instance tracking.
 
 ### API
