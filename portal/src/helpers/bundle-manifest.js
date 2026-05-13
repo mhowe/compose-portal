@@ -120,6 +120,12 @@ export const BUNDLE_MANIFEST = {
   form: {
     attributes: [
       {
+        name: 'Icon',
+        required: false,
+        description:
+          'Tabler icon name rendered for this form across the bundle (form header, settings/datastore lists, tickets, home submission cards, search results). Falls back to a sensible default per surface when empty (e.g. "forms", "checklist").',
+      },
+      {
         name: 'Display Mode',
         required: false,
         description:
@@ -132,6 +138,31 @@ export const BUNDLE_MANIFEST = {
         description:
           'Controls how the form is wrapped when loaded inside a BundleContainer. "default" renders the standard page wrapper — icon, form name, settings link (space admins), gutter, max-width container, and bordered content card. "bare" strips all of that and renders just the form content, useful for forms embedded into a host page that owns its own layout. Only consulted in container mode; a BundleContainer with hideFormChrome=true overrides this to bare regardless of attribute value.',
         values: ['default', 'bare'],
+      },
+    ],
+  },
+  // Category attribute definitions the bundle reads. Each lives on a kapp's
+  // categoryAttributeDefinitions. Used by the search modal's category
+  // navigation; typically deployed on any kapp whose categories drive that UI.
+  category: {
+    attributes: [
+      {
+        name: 'Icon',
+        required: false,
+        description:
+          'Tabler icon name rendered for this category in the search modal navigation (e.g. "category", "settings", "tag"). Falls back to "category" when empty.',
+      },
+      {
+        name: 'Hidden',
+        required: false,
+        description:
+          'When "true", the search modal omits this category from its category navigation. The category and its forms remain reachable via other entry points.',
+      },
+      {
+        name: 'Parent',
+        required: false,
+        description:
+          'Slug of another category in the same kapp. When set, this category is rendered as a subcategory of the parent in the search modal\'s nested navigation. Empty means top-level.',
       },
     ],
   },

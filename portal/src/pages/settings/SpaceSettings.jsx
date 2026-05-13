@@ -27,7 +27,7 @@ import { toastError, toastSuccess } from '../../helpers/toasts.js';
 // Must match the include list in App.jsx so post-deploy refresh populates the
 // same fields the setup check + landing resolver + Space Settings rely on.
 const SPACE_INCLUDE =
-  'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions';
+  'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,kapps.categoryAttributeDefinitions,kapps.formAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions';
 
 // Module-level refresh — extracted so it's stable across renders and can be
 // referenced from useEffect without dep-array churn.
@@ -110,13 +110,24 @@ export const SpaceSettings = () => {
   const rowKey = row =>
     `${row.scope}:${row.kappSlug || ''}:${row.kind}:${row.name}`;
 
-  const setupRows = status.filter(r => r.scope !== 'kapp-attribute');
+  const setupRows = status.filter(
+    r =>
+      r.scope !== 'kapp-attribute' &&
+      r.scope !== 'category-attribute' &&
+      r.scope !== 'form-attribute',
+  );
   const missingItems = status.filter(r => !r.present);
   const setupMissingRequired = missingItems.filter(r => r.required);
   const setupOk = setupMissingRequired.length === 0;
 
   const kappAttrRows = status.filter(r => r.scope === 'kapp-attribute');
   const kappAttrMissing = kappAttrRows.filter(r => !r.present);
+
+  const categoryAttrRows = status.filter(r => r.scope === 'category-attribute');
+  const categoryAttrMissing = categoryAttrRows.filter(r => !r.present);
+
+  const formAttrRows = status.filter(r => r.scope === 'form-attribute');
+  const formAttrMissing = formAttrRows.filter(r => !r.present);
 
   const capabilityInstalled = capabilities.filter(c => c.installed).length;
   const capabilityUpgrades = capabilities.filter(c => c.upgradeAvailable).length;
@@ -234,6 +245,22 @@ export const SpaceSettings = () => {
     ),
   }));
 
+  const categoryAttrGroups = (BUNDLE_MANIFEST.category?.attributes || []).map(
+    attr => ({
+      attr,
+      rows: status.filter(
+        r => r.scope === 'category-attribute' && r.name === attr.name,
+      ),
+    }),
+  );
+
+  const formAttrGroups = (BUNDLE_MANIFEST.form?.attributes || []).map(attr => ({
+    attr,
+    rows: status.filter(
+      r => r.scope === 'form-attribute' && r.name === attr.name,
+    ),
+  }));
+
   const setupHeaderBadge = setupOk ? (
     <span className="kbadge kbadge-success">
       <Icon name="check" /> All set
@@ -248,6 +275,20 @@ export const SpaceSettings = () => {
     <span className="kbadge kbadge-ghost">
       {kappAttrRows.length - kappAttrMissing.length} defined ·{' '}
       {kappAttrMissing.length} not defined
+    </span>
+  );
+
+  const categoryAttrsHeaderBadge = (
+    <span className="kbadge kbadge-ghost">
+      {categoryAttrRows.length - categoryAttrMissing.length} defined ·{' '}
+      {categoryAttrMissing.length} not defined
+    </span>
+  );
+
+  const formAttrsHeaderBadge = (
+    <span className="kbadge kbadge-ghost">
+      {formAttrRows.length - formAttrMissing.length} defined ·{' '}
+      {formAttrMissing.length} not defined
     </span>
   );
 
@@ -370,6 +411,160 @@ export const SpaceSettings = () => {
           ) : (
             <div className="flex-c-ss gap-4">
               {kappAttrGroups.map(({ attr, rows }) => (
+                <div
+                  key={attr.name}
+                  className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100 w-full"
+                >
+                  <div className="flex-sc gap-2 flex-wrap">
+                    <span className="text-h4 font-semibold">{attr.name}</span>
+                    {attr.required && (
+                      <span className="kbadge kbadge-warning kbadge-sm">
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-base-content/70">
+                    {attr.description}
+                  </p>
+                  {rows.length === 0 ? (
+                    <div className="text-sm text-base-content/60 italic">
+                      No kapps found on this space.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-box border border-base-300 w-full">
+                      <table className="ktable w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left p-3">Kapp</th>
+                            <th className="text-left p-3 w-0 whitespace-nowrap">
+                              Status
+                            </th>
+                            <th className="text-right p-3 w-0 whitespace-nowrap" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map(row => (
+                            <tr
+                              key={rowKey(row)}
+                              className="border-t border-base-300"
+                            >
+                              <td className="p-3 font-medium whitespace-nowrap">
+                                {row.kappSlug}
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                {renderStatusCell(row)}
+                              </td>
+                              <td className="p-3 text-right whitespace-nowrap">
+                                {renderDeployCell(row)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </AccordionSection>
+
+        <AccordionSection
+          title="Category Attributes"
+          headerRight={categoryAttrsHeaderBadge}
+          initialOpen={false}
+        >
+          <p className="text-sm text-base-content/70 mb-3">
+            Category-level attribute definitions the bundle reads when present
+            (per kapp). Optional — the bundle falls through to sensible
+            defaults when not defined — but deploying them lets admins
+            customize the search modal's category navigation.
+          </p>
+
+          {categoryAttrGroups.length === 0 ? (
+            <div className="kd-callout">
+              No category attribute definitions are declared in the manifest yet.
+            </div>
+          ) : (
+            <div className="flex-c-ss gap-4">
+              {categoryAttrGroups.map(({ attr, rows }) => (
+                <div
+                  key={attr.name}
+                  className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100 w-full"
+                >
+                  <div className="flex-sc gap-2 flex-wrap">
+                    <span className="text-h4 font-semibold">{attr.name}</span>
+                    {attr.required && (
+                      <span className="kbadge kbadge-warning kbadge-sm">
+                        Required
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-base-content/70">
+                    {attr.description}
+                  </p>
+                  {rows.length === 0 ? (
+                    <div className="text-sm text-base-content/60 italic">
+                      No kapps found on this space.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-box border border-base-300 w-full">
+                      <table className="ktable w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left p-3">Kapp</th>
+                            <th className="text-left p-3 w-0 whitespace-nowrap">
+                              Status
+                            </th>
+                            <th className="text-right p-3 w-0 whitespace-nowrap" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map(row => (
+                            <tr
+                              key={rowKey(row)}
+                              className="border-t border-base-300"
+                            >
+                              <td className="p-3 font-medium whitespace-nowrap">
+                                {row.kappSlug}
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                {renderStatusCell(row)}
+                              </td>
+                              <td className="p-3 text-right whitespace-nowrap">
+                                {renderDeployCell(row)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </AccordionSection>
+
+        <AccordionSection
+          title="Form Attributes"
+          headerRight={formAttrsHeaderBadge}
+          initialOpen={false}
+        >
+          <p className="text-sm text-base-content/70 mb-3">
+            Form-level attribute definitions the bundle reads when present
+            (per kapp). Optional — the bundle falls through to sensible
+            defaults when not defined — but deploying them lets form builders
+            configure how individual forms render and behave.
+          </p>
+
+          {formAttrGroups.length === 0 ? (
+            <div className="kd-callout">
+              No form attribute definitions are declared in the manifest yet.
+            </div>
+          ) : (
+            <div className="flex-c-ss gap-4">
+              {formAttrGroups.map(({ attr, rows }) => (
                 <div
                   key={attr.name}
                   className="flex-c-ss gap-2 p-4 rounded-box border border-base-300 bg-base-100 w-full"

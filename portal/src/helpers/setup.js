@@ -179,7 +179,7 @@ export const readFormChrome = form => {
  *
  * Shape of each returned item:
  *   {
- *     scope: 'space' | 'userProfile' | 'kapp-existence' | 'kapp-attribute',
+ *     scope: 'space' | 'userProfile' | 'kapp-existence' | 'kapp-attribute' | 'category-attribute' | 'form-attribute',
  *     scopeLabel: string,       // human label for UI
  *     kind: 'attribute' | 'kapp',
  *     name: string,             // attribute name or kapp slug
@@ -187,7 +187,7 @@ export const readFormChrome = form => {
  *     required: boolean,        // true if this item blocks setup.ok
  *     present: boolean,
  *     attributeType?: string,   // SDK attribute type when kind === 'attribute'
- *     kappSlug?: string,        // which kapp this applies to, for kapp-attribute
+ *     kappSlug?: string,        // which kapp this applies to, for kapp-attribute / category-attribute / form-attribute
  *   }
  *
  * @param {Object} space Fetched space record. Must include space,
@@ -260,6 +260,44 @@ export const getManifestStatus = space => {
         required: !!attr.required,
         allowsMultiple: !!attr.allowsMultiple,
         present: kappDefs.has(attr.name),
+      });
+    }
+  }
+  for (const attr of (BUNDLE_MANIFEST.category?.attributes || [])) {
+    for (const kapp of kapps) {
+      const catDefs = new Set(
+        (kapp.categoryAttributeDefinitions || []).map(d => d.name),
+      );
+      rows.push({
+        scope: 'category-attribute',
+        scopeLabel: `Kapp: ${kapp.slug} — Categories`,
+        kind: 'attribute',
+        attributeType: 'categoryAttributeDefinitions',
+        kappSlug: kapp.slug,
+        name: attr.name,
+        description: attr.description,
+        required: !!attr.required,
+        allowsMultiple: !!attr.allowsMultiple,
+        present: catDefs.has(attr.name),
+      });
+    }
+  }
+  for (const attr of (BUNDLE_MANIFEST.form?.attributes || [])) {
+    for (const kapp of kapps) {
+      const formDefs = new Set(
+        (kapp.formAttributeDefinitions || []).map(d => d.name),
+      );
+      rows.push({
+        scope: 'form-attribute',
+        scopeLabel: `Kapp: ${kapp.slug} — Forms`,
+        kind: 'attribute',
+        attributeType: 'formAttributeDefinitions',
+        kappSlug: kapp.slug,
+        name: attr.name,
+        description: attr.description,
+        required: !!attr.required,
+        allowsMultiple: !!attr.allowsMultiple,
+        present: formDefs.has(attr.name),
       });
     }
   }
