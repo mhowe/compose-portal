@@ -32,6 +32,12 @@ export const BUNDLE_MANIFEST = {
           "Slug of a form in the 'admin' kapp to render inline as the space landing page (/kapps). Accepts a single slug or a comma-separated, ordered list — the bundle renders the first form in the list the current user can see (and that is Active or New), so admins can give different user groups different landing forms (e.g. 'vip-home, standard-home'). May be left empty; the bundle will fall back to the built-in kapp-cards landing.",
       },
       {
+        name: 'Default Profile Form Slug',
+        required: false,
+        description:
+          "Slug of a form in the 'admin' kapp to render inline at /profile in place of the bundle's standard profile page. Accepts a single slug or a comma-separated, ordered list — the bundle renders the first form in the list the current user can see (and that is Active or New), so admins can give different user groups different profile experiences (e.g. 'vip-profile, standard-profile'). May be left empty; the bundle will fall back to its built-in profile page.",
+      },
+      {
         name: 'Capability Registry URLs',
         required: true,
         allowsMultiple: true,

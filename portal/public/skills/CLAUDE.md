@@ -16,9 +16,11 @@ _The index is being seeded. Categories below have placeholders; populated entrie
 
 ### Widget recipes
 
-Composing the bundle widgets (`BundleHeader`, `BundleChrome`, `BundleContainer`, `BundleMenu`, `BundleLogo`, `BundleAvatar`, `BundleSearch`, `BundleLink`, `BundleBanner`, `BundleCounter`, `BundleChromeToggle`) into common UI surfaces.
+Composing the bundle widgets (`BundleHeader`, `BundleChrome`, `BundleContainer`, `BundleMenu`, `BundleLogo`, `BundleAvatar`, `BundleSearch`, `BundleLink`, `BundleBanner`, `BundleCounter`, `BundleChromeToggle`) into common UI surfaces. These are **strategies**, not canonical patterns — surface alternatives when more than one fits.
 
-_(none yet)_
+| Skill | Path | Read when you need to... |
+|-------|------|--------------------------|
+| Form picker via modal (one strategy) | `widget-recipes/form-picker-modal.md` | Build a "pick a form from a list" UI (categories browser, custom search picker) using a reusable presentation-only form opened in a modal, parameterized by URL params, that emits a single event for the host to handle. |
 
 ### Theming
 
@@ -42,6 +44,7 @@ Capability installs, storage kapp layout, file resource organization, Display Mo
 | Skill | Path | Read when you need to... |
 |-------|------|--------------------------|
 | Landing pages (space home & kapp home) | `bundle-conventions/landing-pages.md` | Update or create a space home page or kapp home page, set `Default Space Form Slug` / `Default Form Slug`, switch a landing between embedded and fullscreen, or test a new home page without disrupting the live one. |
+| Profile page (`/profile`) | `bundle-conventions/profile-page.md` | Replace the bundle's built-in profile page with a custom form via the space `Default Profile Form Slug` attribute, ship per-audience profile variants via the CSV-ordered list, or test a new profile form without disrupting the live one. |
 
 ## Authoring notes (for whoever adds skills here)
 

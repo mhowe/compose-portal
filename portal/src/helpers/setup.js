@@ -134,6 +134,18 @@ export const readKappDefaultFormSlugs = kapp =>
 export const readSpaceDefaultFormSlugs = space =>
   parseSlugCsv(readAttribute(space, 'Default Space Form Slug'));
 
+/**
+ * Given a space record (with attributesMap included), reads its
+ * 'Default Profile Form Slug' attribute as an ordered list of candidate
+ * slugs. Forms are always expected to live in the admin kapp
+ * (ADMIN_KAPP_SLUG). The /profile resolver walks this list and renders
+ * the first form the user can access (and that is Active or New),
+ * falling through to the built-in profile page when none resolve.
+ * Returns an empty array when the attribute is absent or empty.
+ */
+export const readSpaceDefaultProfileFormSlugs = space =>
+  parseSlugCsv(readAttribute(space, 'Default Profile Form Slug'));
+
 // Bundle's chrome-or-not decision for landing forms. Anything other than
 // 'fullscreen' (case-insensitive, trimmed) is treated as embedded so the
 // default — and any typo — keeps today's behavior.

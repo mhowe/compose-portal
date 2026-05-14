@@ -3,7 +3,7 @@ import { Home } from './home/Home.jsx';
 import { Actions } from './tickets/actions/Actions.jsx';
 import { Requests } from './tickets/requests/Requests.jsx';
 import { Form } from './forms/Form.jsx';
-import { Profile } from './profile/Profile.jsx';
+import { ProfileResolver } from './profile/ProfileResolver.jsx';
 import { SettingsRouting } from './settings/index.jsx';
 import { LandingResolver } from './landing/LandingResolver.jsx';
 import { EmbeddedLanding } from './landing/EmbeddedLanding.jsx';
@@ -61,7 +61,7 @@ export const BundleRoutes = () => {
       <Route path="/actions/*" element={<Actions />} />
       <Route path="/requests/*" element={<Requests />} />
       <Route path="/forms/:formSlug/:submissionId?" element={<Form />} />
-      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile" element={<ProfileResolver />} />
       <Route path="/settings/*" element={<SettingsRouting />} />
       <Route path="/login" element={<Navigate to="/" />} />
 
