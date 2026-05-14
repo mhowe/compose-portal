@@ -15,6 +15,7 @@ bundle.utils.utilityFunction(parameters);
 - [Toasts](#toasts)
 - [Widget Events](#widget-events)
 - [Programmatic Modals](#programmatic-modals)
+- [Navigation](#navigation)
 
 ---
 
@@ -252,3 +253,72 @@ bundle.utils.closeModal();
 // Close everything (e.g., on logout)
 bundle.utils.closeAllModals();
 ```
+
+---
+
+[Back to Top](#utils)
+
+### Navigation
+
+Navigates to another bundle page without reloading the app. Prefer this over `window.location.href` for any path inside the bundle — the React tree stays mounted (no re-fetch of space / profile / kapps), and the destination's back arrow can return to wherever the user came from automatically.
+
+#### Functions
+
+**`navigate(to, options?)`** — *Function*  
+Routes to `to` (a bundle path starting with `/`). By default, captures the user's current path and attaches it as `backPath` state so the destination's back arrow returns there.
+
+#### Navigate Options
+
+**`to`** — *string (required)*  
+Bundle path beginning with `/` — e.g. `'/settings/space'`, `'/kapps/services'`, `'/forms/help'`. Don't include the `#` — that's the HashRouter's concern, not yours.
+
+**`backTo`** — *string | null | false*  
+Override the destination's back target.
+
+- Omitted *(default)* — captures the current `pathname + search` at call time. The destination's back arrow returns here.
+- `string` — use this path verbatim as the back target.
+- `null` or `false` — don't attach any `backPath`. The destination's hardcoded `backTo` prop wins.
+
+**`replace`** — *boolean*  
+When `true`, replaces the current history entry instead of pushing a new one. Browser back will skip this navigation. Useful for redirects-after-action where you don't want the user to navigate "back" to a stale form state.
+
+**`state`** — *object*  
+Extra state to merge into the destination's `location.state`. Rarely needed — most pages don't read state beyond `backPath`.
+
+#### When to use `navigate` vs `window.location.href`
+
+| Situation | Use |
+| --- | --- |
+| Any in-bundle path (`/kapps/...`, `/settings/...`, `/forms/...`, `/profile`) | `bundle.utils.navigate(path)` |
+| External URL (`https://...`) | `window.open(url, '_blank')` or `<a target="_blank">` — not `navigate` |
+| Force a full app reboot (e.g. after changing a space attribute that affects setup or landing resolution) | `window.location.reload()` or `window.location.href = '/'` |
+| Switching to a different space/bundle | `window.location.href = absoluteUrl` |
+
+The cost of `window.location.href` for an in-bundle path is real: the browser tears down the page, React unmounts, redux is rebuilt, and space / profile / kapp data are re-fetched before the next page paints. SPA navigation skips all of that.
+
+#### How the back arrow knows where to go
+
+The portal's `PageHeading` component reads `location.state.backPath` first. If present, the back arrow links there. If absent, it falls back to the page's own hardcoded `backTo` prop (which often points at `/`, `/kapps`, or another general landing). So `navigate` defaulting to "current page as backPath" gives form authors the right behavior without thinking about it.
+
+#### Examples
+
+```js
+// Simplest — go to space settings, back arrow returns to the current page
+bundle.utils.navigate('/settings/space');
+
+// Override the back target — back arrow goes to a specific kapp
+bundle.utils.navigate('/settings/space', { backTo: '/kapps/services' });
+
+// Suppress the back hint — let the destination's own backTo apply
+bundle.utils.navigate('/profile', { backTo: null });
+
+// Replace current entry — browser back skips this navigation
+bundle.utils.navigate('/kapps/services', { replace: true });
+
+// Combine — most options can be mixed
+bundle.utils.navigate('/forms/contact', {
+  backTo: '/kapps/services',
+  replace: true,
+});
+```
+

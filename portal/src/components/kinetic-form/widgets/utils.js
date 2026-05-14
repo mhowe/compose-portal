@@ -1,4 +1,5 @@
 import { closeConfirm, openConfirm } from '../../../helpers/confirm.js';
+import { navigate } from '../../../helpers/navigation.js';
 import { modalActions } from '../../../helpers/state.js';
 import { store } from '../../../redux.js';
 import {
@@ -220,4 +221,6 @@ export default {
   openModal,
   closeModal,
   closeAllModals,
+  // SPA navigation — see helpers/navigation.js for the navigate docstring.
+  navigate,
 };

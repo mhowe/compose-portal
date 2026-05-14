@@ -15,6 +15,7 @@ import { PublicRoutes } from './pages/PublicRoutes.jsx';
 import { Login } from './pages/login/Login.jsx';
 import { ConfirmationModal } from './components/confirm/ConfirmationModal.jsx';
 import { ModalSlot } from './components/modal/ModalSlot.jsx';
+import { NavBridge } from './components/NavBridge.jsx';
 import { useData } from './helpers/hooks/useData.js';
 
 export const App = ({
@@ -191,6 +192,10 @@ export const App = ({
       {/* Programmatic modal stack — driven by bundle.utils.openModal and by
           chrome widgets configured with target: 'modal'. */}
       <ModalSlot />
+
+      {/* Bridges React Router's navigate into bundle.utils.navigate so form
+          scripts outside the React tree can do SPA navigations. */}
+      <NavBridge />
     </>
   );
 };
