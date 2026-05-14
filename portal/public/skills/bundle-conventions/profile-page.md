@@ -72,6 +72,8 @@ When no custom form resolves, the bundle renders its built-in profile UI (`porta
 
 A custom profile form should reproduce whichever of these the admin wants — there is no automatic merge with the built-in UI. Linking back to the built-in flow is not an option (any link to `/profile` re-enters this resolver and loops to the same custom form), so the form itself must include any password/logout affordances its users need.
 
+The `Profile` widget (see the widget docs index) is the recommended building block — it renders a Kinetic-themed editor for the user's core properties and selected User Attributes / User Profile Attributes, so most custom profile forms don't need to hand-roll input markup. Avatar, password change, and logout are deliberately separate widgets that the form composes alongside it.
+
 ---
 
 ## Display Mode

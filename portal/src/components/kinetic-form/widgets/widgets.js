@@ -15,6 +15,7 @@ import { BundleSearch } from './bundle-search.jsx';
 import { Chart } from './chart.jsx';
 import { Kapps } from './kapps.jsx';
 import { Markdown } from './markdown.js';
+import { Profile } from './profile.jsx';
 import { Search } from './search.js';
 import { Signature } from './signature.js';
 import { Subform } from './subform.js';
@@ -41,6 +42,7 @@ const AVAILABLE_WIDGETS = {
   Chart,
   Kapps,
   Markdown,
+  Profile,
   Search,
   Signature,
   Subform,

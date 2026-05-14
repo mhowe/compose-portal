@@ -59,7 +59,7 @@ export const App = ({
         ? loggedIn
           ? {
               include:
-                'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,kapps.categoryAttributeDefinitions,kapps.formAttributeDefinitions,spaceAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions',
+                'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,kapps.categoryAttributeDefinitions,kapps.formAttributeDefinitions,spaceAttributeDefinitions,userAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions',
             }
           : { public: true, include: 'attributesMap,kapps' }
         : null,

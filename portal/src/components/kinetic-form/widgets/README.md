@@ -20,6 +20,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleCounter](BUNDLE_COUNTER.md)
     - [Chart](CHART.md)
     - [Kapps](KAPPS.md)
+    - [Profile](PROFILE.md)
   - **Form-Field Widgets**
     - [Markdown](MARKDOWN.md)
     - [Search](SEARCH.md)
