@@ -39,7 +39,9 @@ Team naming conventions, ownership patterns, security policy expressions for sha
 
 Capability installs, storage kapp layout, file resource organization, Display Mode (fullscreen pages), AI Builder integration.
 
-_(none yet)_
+| Skill | Path | Read when you need to... |
+|-------|------|--------------------------|
+| Landing pages (space home & kapp home) | `bundle-conventions/landing-pages.md` | Update or create a space home page or kapp home page, set `Default Space Form Slug` / `Default Form Slug`, switch a landing between embedded and fullscreen, or test a new home page without disrupting the live one. |
 
 ## Authoring notes (for whoever adds skills here)
 
