@@ -51,12 +51,20 @@ export const appActions = regRedux(
       if (error) state.error = error;
       else {
         state.space = space;
-        state.kappSlug = getAttributeValue(
-          space,
-          'Service Portal Kapp Slug',
-          'service-portal',
-        );
+        // Only auto-set kappSlug if nothing has set it yet. The URL → kappSlug
+        // effect in App.jsx is the primary source; this remains the fallback
+        // when the user lands on a route outside /kapps/<slug>/... .
+        if (state.kappSlug == null) {
+          state.kappSlug = getAttributeValue(
+            space,
+            'Service Portal Kapp Slug',
+            'service-portal',
+          );
+        }
       }
+    },
+    setKappSlug(state, payload) {
+      state.kappSlug = payload;
     },
     setKapp(state, { error, kapp }) {
       if (error) state.error = state.error || error;

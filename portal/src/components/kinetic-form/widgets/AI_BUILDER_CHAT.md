@@ -22,6 +22,7 @@ The widget handles the full conversation lifecycle:
 - Tracks `conversation_id` across turns so follow-up messages continue the conversation
 - Auto-loads project memory when `projectSlug` is set (the companion service injects project context into the system prompt server-side; the widget just shows the project's name in its header)
 - Tracks cumulative token usage and surfaces it in a small inline pill
+- Accepts image and document attachments (paperclip button, drag/drop, paste); uploads them through the companion service to the Anthropic Files API and references them via `file_id` on the next send
 
 ### Requirements
 
@@ -202,6 +203,29 @@ K('content[Suggest Button]').element()[0].addEventListener('click', () => {
   chat.send('Suggest a kapp structure for our use case based on the requirements above.');
 });
 ```
+
+### Attachments
+
+The widget supports adding image and document attachments to any message — paperclip button next to the textarea, drag-and-drop onto the input area, or paste from the clipboard. Files are uploaded to the companion service's `/files/upload` endpoint, which forwards them to the Anthropic Files API and returns a `file_id`. Send is gated until in-flight uploads finish.
+
+| Kind | Allowed types | Per-file size cap |
+|---|---|---|
+| Image | `image/jpeg`, `image/png`, `image/gif`, `image/webp` | 10 MB |
+| Document | `application/pdf`, `text/plain`, `text/markdown`, `text/csv` | 32 MB |
+
+Files outside this list (or over the cap) are rejected client-side with an inline error chip; the user can remove and retry.
+
+**Chips are not clickable to reopen the original file.** Anthropic explicitly forbids downloading user uploads ([docs](https://platform.claude.com/docs/en/build-with-claude/files): "Files that you uploaded cannot be downloaded — only files created by skills or the code execution tool"). A live chip in the compose row shows the local image preview because the browser still has the `File` reference in memory; once sent and persisted, that preview is the only visual representation. Replayed chips show a generic kind label.
+
+A future enhancement — once the conversation `Attachments Metadata` field is being populated with tiny per-image thumbnails — will let users click to open the thumbnail in a new tab. That stays bounded (~5-10KB per image, in-record) instead of requiring a separate file store.
+
+**Storage / portability caveats** — surface these in your UI copy near the API key field (e.g., in the AIBuilderSettings panel):
+
+- **API-key rotation invalidates every persisted `file_id`.** Files are workspace-scoped on Anthropic's side, so swapping the key in `/settings` breaks resume for any conversation that referenced an attachment. Replayed user messages will still show a generic chip but Claude won't be able to read the file content on subsequent turns.
+- **Files persist on Anthropic's side until explicitly deleted.** No TTL — they accumulate in the workspace storage quota. A future files-management UI (planned for the AI dashboard) will surface workspace files and let admins reclaim space.
+- **Anthropic-direct only.** The Files API isn't available on Amazon Bedrock or Google Vertex AI. When those providers are added, attachments will need a separate backend (inline base64, S3/GCS pre-signed URLs, or a provider-specific equivalent) — the upload path on the companion service is the swap point.
+
+**Replay limitation** — only the `file_id` is persisted on the stored conversation content blocks. Filename, thumbnail, and size aren't recoverable on resume, so replayed user messages show a generic "Image" / "Document" pill rather than the original chip. Live (just-sent) messages render the full chip with thumbnail until the page reloads. Sidecar metadata persistence is a future enhancement.
 
 ### Behavior notes
 

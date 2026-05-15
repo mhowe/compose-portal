@@ -156,6 +156,7 @@ K('content[Test API Key Button]').element()[0].addEventListener('click', async (
 - **Updates take effect immediately.** The companion service rebuilds the Anthropic SDK client per request, so the next chat call after a successful save uses the new key/model. No restart needed.
 - **Clearing the API key.** Send `api_key: null` (or `''`) to delete the stored value. The companion service falls back to whatever's in `.env`.
 - **Source labeling.** `api_key_source` and `model_source` indicate whether the current effective value came from the settings file (`'settings'`), the env var (`'env'`), or neither / hardcoded default (`'none'` / `'default'`). Useful in the UI to show admins what's actually authoritative.
+- **Rotating the API key breaks attachment resume.** Files uploaded via [AIBuilderChat](AI_BUILDER_CHAT.md#attachments) are stored in Anthropic's workspace, scoped to the API key. Saving a new key here invalidates every `file_id` already persisted on past conversations — the conversation text still replays but Claude can no longer read the original attachments on follow-up turns. Surface a warning in the settings UI before saving a key swap.
 
 ### Future enhancements
 
