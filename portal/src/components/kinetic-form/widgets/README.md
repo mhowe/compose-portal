@@ -18,6 +18,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleMenu](BUNDLE_MENU.md)
     - [BundleBanner](BUNDLE_BANNER.md)
     - [BundleCounter](BUNDLE_COUNTER.md)
+    - [Categories](CATEGORIES.md)
     - [Chart](CHART.md)
     - [Kapps](KAPPS.md)
     - [Profile](PROFILE.md)
@@ -177,6 +178,12 @@ A full-width informational bar — environment indicator (Dev / Staging / etc.) 
 A label-with-badge pair — text plus a count badge whose color can change with the value. Count source is either a static value or an integration (the badge displays the array length). Optional thresholds for color-coding (e.g. neutral up to 10, warning up to 20, error above).
 
 [BundleCounter Documentation &#x2B9E;](BUNDLE_COUNTER.md)
+
+#### Categories
+
+Renders the current kapp's categories as cards (background image / side image / stacked / icon-only variants) and lets users drill into nested categories via a `Parent` attribute convention, with a breadcrumb on the detail view. Built for catalog-style wayfinding to forms; pairs with the Forms widget to compose a category-detail page. Slot-keyed `classNames` for per-region styling — same pattern as Profile.
+
+[Categories Documentation &#x2B9E;](CATEGORIES.md)
 
 #### Chart
 

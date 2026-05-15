@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import { useLocation } from 'react-router-dom';
 import t from 'prop-types';
 import clsx from 'clsx';
 import { fetchKapp, fetchProfile, fetchSpace } from '@kineticdata/react';
@@ -42,6 +43,22 @@ export const App = ({
   const { authenticated, kappSlug, error, space, kapp, profile } = useSelector(
     state => state.app,
   );
+
+  // Track the kapp slug from the URL so state.app.kapp follows the user as
+  // they navigate between kapps, rather than being pinned to whatever the
+  // space's default landing kapp is. The space-default still drives initial
+  // landing (the fallback in setSpace), and the user can land on a non-kapp
+  // route (e.g. /profile) where this effect doesn't override.
+  const location = useLocation();
+  const urlKappSlug = useMemo(() => {
+    const m = location.pathname.match(/^\/kapps\/([^/?#]+)/);
+    return m ? m[1] : null;
+  }, [location.pathname]);
+  useEffect(() => {
+    if (urlKappSlug && urlKappSlug !== kappSlug) {
+      appActions.setKappSlug(urlKappSlug);
+    }
+  }, [urlKappSlug, kappSlug]);
 
   // Set an `authenticated` flag in global state that is synced to the loggedIn
   // prop, and can be used in the app to determine if the user is authenticated
