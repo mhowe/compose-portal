@@ -15,11 +15,13 @@ import {
 import { getAttributeValue } from '../../helpers/records.js';
 import { Link } from 'react-router-dom';
 import { useData } from '../../helpers/hooks/useData.js';
+import { selectCurrentKapp } from '../../helpers/state.js';
 
 export const SearchModal = () => {
   // Get state from redux for the search modal and general app info
   const { open, searchOnly, popularForms } = useSelector(state => state.search);
-  const { kapp, kappSlug } = useSelector(state => state.app);
+  const kappSlug = useSelector(state => state.app.kappSlug);
+  const kapp = useSelector(selectCurrentKapp);
 
   /*** SEARCH FUNCTIONALITY ***************************************************/
 
@@ -62,19 +64,24 @@ export const SearchModal = () => {
 
   /*** POPULAR FORMS FUNCTIONALITY ********************************************/
 
-  // Parameters for the popular services query (if null, the query will not run)
-  const popularParams = useMemo(
-    () =>
-      !popularForms
-        ? {
-            kappSlug,
-            categorySlug: 'popular-services',
-            include:
-              'categorizations.form,categorizations.form.attributesMap,categorizations.form.categorizations.category',
-          }
-        : null,
-    [popularForms, kappSlug],
-  );
+  // Parameters for the popular services query (if null, the query will not run).
+  // Only fire the fetch when the *current* kapp actually has a
+  // `popular-services` category — per-kapp categories are independent, so
+  // unconditionally hitting that path returns a 404 on any kapp without it
+  // (e.g. capability kapps with no categories at all).
+  const popularParams = useMemo(() => {
+    if (popularForms || !kappSlug) return null;
+    const hasPopular = kapp?.categories?.some(
+      c => c.slug === 'popular-services',
+    );
+    if (!hasPopular) return null;
+    return {
+      kappSlug,
+      categorySlug: 'popular-services',
+      include:
+        'categorizations.form,categorizations.form.attributesMap,categorizations.form.categorizations.category',
+    };
+  }, [popularForms, kappSlug, kapp]);
   // Retrieve the popular requests if they're not saved in state
   const popularData = useData(fetchCategory, popularParams);
   useEffect(() => {

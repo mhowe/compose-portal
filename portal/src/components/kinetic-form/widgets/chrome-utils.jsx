@@ -354,6 +354,7 @@ export const ClickActionWrapper = ({
   widgetName,
   instanceId,
   className,
+  style,
   children,
 }) => {
   const effectiveLabel = label ?? getDefaultLabel(clickAction);
@@ -361,7 +362,7 @@ export const ClickActionWrapper = ({
 
   if (!clickAction || clickAction.type === 'none') {
     return (
-      <span className={className} aria-label={effectiveLabel}>
+      <span className={className} style={style} aria-label={effectiveLabel}>
         {children}
       </span>
     );
@@ -385,6 +386,7 @@ export const ClickActionWrapper = ({
         onClick={handle}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </button>
@@ -400,6 +402,7 @@ export const ClickActionWrapper = ({
         onClick={handle}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </button>
@@ -416,6 +419,7 @@ export const ClickActionWrapper = ({
         onClick={handle}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </button>
@@ -447,6 +451,7 @@ export const ClickActionWrapper = ({
         onClick={handle}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </button>
@@ -466,6 +471,7 @@ export const ClickActionWrapper = ({
         rel={rel}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </a>
@@ -480,6 +486,7 @@ export const ClickActionWrapper = ({
         rel={rel}
         aria-label={effectiveLabel}
         className={className}
+        style={style}
       >
         {children}
       </a>

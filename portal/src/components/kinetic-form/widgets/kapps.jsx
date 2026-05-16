@@ -1,11 +1,16 @@
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { Provider, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
-import { useInternalLinkInterceptor } from './chrome-utils.jsx';
+import {
+  ClickActionWrapper,
+  useInternalLinkInterceptor,
+  validateClickAction,
+  validateTarget,
+} from './chrome-utils.jsx';
 import { store } from '../../../redux.js';
 import { readAttribute, readAttributeValues } from '../../../helpers/setup.js';
+import { refreshKapps } from '../../../helpers/state.js';
 import { Icon } from '../../../atoms/Icon.jsx';
 
 const TYPES = ['pill', 'tile', 'card'];
@@ -19,6 +24,47 @@ const ICON_PLACEMENTS = {
 };
 const SORT_MODES = ['order', 'name'];
 const GROUP_BY = [null, 'category'];
+
+// Rendered refresh-button config. Corner positions float over the widget root
+// (which carries `position: relative`); above/below render as block siblings
+// of the grid.
+const REFRESH_POSITIONS = [
+  'top-right',
+  'top-left',
+  'bottom-right',
+  'bottom-left',
+  'above',
+  'below',
+];
+const REFRESH_VARIANTS = ['ghost', 'outline', 'solid'];
+const REFRESH_BUTTON_SIZES = ['xs', 'sm', 'md', 'lg', 'xl'];
+const REFRESH_DEFAULTS = {
+  position: 'top-right',
+  icon: 'refresh',
+  size: 'sm',
+  variant: 'ghost',
+};
+const REFRESH_VARIANT_CLASSES = {
+  ghost: 'kbtn-ghost',
+  outline: 'kbtn-outline',
+  solid: '',
+};
+const REFRESH_SIZE_CLASSES = {
+  xs: 'kbtn-xs',
+  sm: 'kbtn-sm',
+  md: 'kbtn-md',
+  lg: 'kbtn-lg',
+  xl: 'kbtn-xl',
+};
+const REFRESH_ICON_PX = { xs: 14, sm: 16, md: 20, lg: 24, xl: 28 };
+const REFRESH_POSITION_CLASSES = {
+  'top-right': 'absolute top-2 right-2 z-10',
+  'top-left': 'absolute top-2 left-2 z-10',
+  'bottom-right': 'absolute bottom-2 right-2 z-10',
+  'bottom-left': 'absolute bottom-2 left-2 z-10',
+  above: 'flex-ec mb-3',
+  below: 'flex-ec mt-3',
+};
 
 const COLOR_KEYS = [
   'primary',
@@ -66,7 +112,8 @@ const lc = v => (v == null ? '' : String(v).trim().toLowerCase());
 
 // Lowercases enum-style config fields and the values inside filter / include /
 // exclude. Free-text fields (emptyText, ungroupedLabel, className) are left
-// alone — case is meaningful for display copy.
+// alone — case is meaningful for display copy. clickAction.type, target, and
+// target.type are normalized too so builders can write 'Internal' / 'Modal'.
 const normalizeConfig = (config = {}) => {
   const out = { ...config };
   for (const key of [
@@ -91,7 +138,62 @@ const normalizeConfig = (config = {}) => {
   if (Array.isArray(out.exclude)) {
     out.exclude = out.exclude.map(v => (typeof v === 'string' ? lc(v) : v));
   }
+  if (out.clickAction && typeof out.clickAction === 'object') {
+    const ca = { ...out.clickAction };
+    if (typeof ca.type === 'string') ca.type = lc(ca.type);
+    if (typeof ca.mode === 'string') ca.mode = lc(ca.mode);
+    out.clickAction = ca;
+  }
+  if (typeof out.target === 'string') {
+    out.target = lc(out.target);
+  } else if (out.target && typeof out.target === 'object') {
+    const t = { ...out.target };
+    if (typeof t.type === 'string') t.type = lc(t.type);
+    if (typeof t.size === 'string') t.size = lc(t.size);
+    out.target = t;
+  }
+  if (out.refresh && typeof out.refresh === 'object') {
+    const r = { ...out.refresh };
+    if (typeof r.position === 'string') r.position = lc(r.position);
+    if (typeof r.size === 'string') r.size = lc(r.size);
+    if (typeof r.variant === 'string') r.variant = lc(r.variant);
+    if (typeof r.icon === 'string') r.icon = lc(r.icon);
+    out.refresh = r;
+  }
   return out;
+};
+
+// Default click behavior — preserves the original Kapps experience (navigate
+// to /kapps/<slug>) when no clickAction is configured. Token gets substituted
+// per kapp at render time.
+const DEFAULT_CLICK_ACTION = { type: 'internal', path: '/kapps/{{slug}}' };
+
+// Substitutes per-kapp tokens inside a string template. URL-encodes each value
+// so the result is safe to drop into a path or URL. Tokens with no matching
+// kapp field substitute to empty.
+const substituteKappTokens = (template, kapp) => {
+  if (typeof template !== 'string') return template;
+  return template
+    .replace(/\{\{\s*slug\s*\}\}/g, encodeURIComponent(kapp?.slug ?? ''))
+    .replace(/\{\{\s*name\s*\}\}/g, encodeURIComponent(kapp?.name ?? ''))
+    .replace(
+      /\{\{\s*description\s*\}\}/g,
+      encodeURIComponent(kapp?.description ?? ''),
+    );
+};
+
+// Builds a per-kapp clickAction by substituting tokens. Returns the original
+// object reference when nothing to substitute, so React's referential checks
+// stay stable.
+const buildPerKappClickAction = (clickAction, kapp) => {
+  if (!clickAction) return clickAction;
+  if (clickAction.type === 'internal' && clickAction.path) {
+    return { ...clickAction, path: substituteKappTokens(clickAction.path, kapp) };
+  }
+  if (clickAction.type === 'external' && clickAction.url) {
+    return { ...clickAction, url: substituteKappTokens(clickAction.url, kapp) };
+  }
+  return clickAction;
 };
 
 // Truthy text values for boolean-shaped attributes. Anything else (including
@@ -232,12 +334,77 @@ const KappIconNode = ({ name, size }) => {
   return <Icon name={name} size={size} />;
 };
 
-const KappPill = ({ kapp, sizeConfig, showIcon, iconPlacement, accentStyle }) => {
+// Per-kapp clickable wrapper. Delegates to the shared ClickActionWrapper for
+// the standard cases — except `type: 'event'`, which Kapps overrides so the
+// dispatched CustomEvent carries the clicked kapp as top-level detail.kapp
+// (instead of the wrapper's default detail.config). Mirrors the override
+// pattern Chart uses for per-point click events.
+const KappClickWrapper = ({
+  kapp,
+  clickAction,
+  target,
+  instanceId,
+  className,
+  style,
+  children,
+}) => {
+  if (clickAction?.type === 'event') {
+    const handle = () => {
+      window.dispatchEvent(
+        new CustomEvent(clickAction.name, {
+          detail: {
+            widget: 'Kapps',
+            id: instanceId,
+            kapp,
+          },
+        }),
+      );
+    };
+    return (
+      <button
+        type="button"
+        onClick={handle}
+        aria-label={kapp.name}
+        className={className}
+        style={style}
+      >
+        {children}
+      </button>
+    );
+  }
+  return (
+    <ClickActionWrapper
+      clickAction={clickAction}
+      target={target}
+      label={kapp.name}
+      widgetName="Kapps"
+      instanceId={instanceId}
+      className={className}
+      style={style}
+    >
+      {children}
+    </ClickActionWrapper>
+  );
+};
+
+const KappPill = ({
+  kapp,
+  sizeConfig,
+  showIcon,
+  iconPlacement,
+  accentStyle,
+  clickAction,
+  target,
+  instanceId,
+}) => {
   const iconName = readKappIconName(kapp);
   const hasIcon = showIcon && iconName && iconPlacement !== 'none';
   return (
-    <Link
-      to={`/kapps/${kapp.slug}`}
+    <KappClickWrapper
+      kapp={kapp}
+      clickAction={clickAction}
+      target={target}
+      instanceId={instanceId}
       style={{ minHeight: sizeConfig.minH, ...(accentStyle || {}) }}
       className={clsx(
         'kd-kapp-pill flex-cc gap-2 rounded-box bg-base-100 border border-base-300',
@@ -255,7 +422,7 @@ const KappPill = ({ kapp, sizeConfig, showIcon, iconPlacement, accentStyle }) =>
       {hasIcon && iconPlacement === 'right' && (
         <KappIconNode name={iconName} size={sizeConfig.iconSize} />
       )}
-    </Link>
+    </KappClickWrapper>
   );
 };
 
@@ -266,12 +433,18 @@ const KappTile = ({
   showName,
   iconPlacement,
   accentStyle,
+  clickAction,
+  target,
+  instanceId,
 }) => {
   const iconName = readKappIconName(kapp);
   const hasIcon = showIcon && iconName && iconPlacement !== 'none';
   return (
-    <Link
-      to={`/kapps/${kapp.slug}`}
+    <KappClickWrapper
+      kapp={kapp}
+      clickAction={clickAction}
+      target={target}
+      instanceId={instanceId}
       style={{ aspectRatio: '1', ...(accentStyle || {}) }}
       className={clsx(
         'kd-kapp-tile flex-c-cc gap-2 rounded-box bg-base-100 border border-base-300',
@@ -290,7 +463,7 @@ const KappTile = ({
           {kapp.name}
         </span>
       )}
-    </Link>
+    </KappClickWrapper>
   );
 };
 
@@ -302,6 +475,9 @@ const KappCard = ({
   showDescription,
   iconPlacement,
   accentStyle,
+  clickAction,
+  target,
+  instanceId,
 }) => {
   const iconName = readKappIconName(kapp);
   const description =
@@ -310,8 +486,11 @@ const KappCard = ({
   const heroIconSize = Math.round(sizeConfig.iconSize * 1.5);
 
   return (
-    <Link
-      to={`/kapps/${kapp.slug}`}
+    <KappClickWrapper
+      kapp={kapp}
+      clickAction={clickAction}
+      target={target}
+      instanceId={instanceId}
       style={accentStyle || undefined}
       className={clsx(
         'kd-kapp-card flex-c-ss rounded-box bg-base-100 border border-base-300 overflow-hidden',
@@ -361,7 +540,7 @@ const KappCard = ({
           </span>
         )}
       </div>
-    </Link>
+    </KappClickWrapper>
   );
 };
 
@@ -390,7 +569,60 @@ const KappGroupSection = ({ label, isOpen, isClickable, onToggle, children }) =>
   </div>
 );
 
-const KappsContent = ({ config: rawConfig }) => {
+// Resolves the refresh-button config into a concrete settings object, or
+// null when the button is disabled. `true` expands to defaults; an object
+// fills missing fields from the defaults.
+const resolveRefreshConfig = refresh => {
+  if (!refresh) return null;
+  const base =
+    refresh === true || typeof refresh !== 'object' ? {} : refresh;
+  return { ...REFRESH_DEFAULTS, ...base };
+};
+
+// Rendered refresh button. Calls bundle.refreshKapps() under the hood — the
+// only sensible refresh granularity for this widget, since the widget lists
+// every kapp the user can see (so picking up additions / removals matters).
+// While the fetch is in flight the button disables and the icon swaps to
+// `loader-2` for visual feedback.
+const KappsRefreshButton = ({ settings }) => {
+  const [refreshing, setRefreshing] = useState(false);
+  const { position, label, icon, size, variant, className } = settings;
+  const handle = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await refreshKapps();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  const isIconOnly = !label;
+  return (
+    <div className={clsx('kd-kapps-refresh', REFRESH_POSITION_CLASSES[position])}>
+      <button
+        type="button"
+        onClick={handle}
+        disabled={refreshing}
+        aria-label={label || 'Refresh kapps'}
+        className={clsx(
+          'kbtn',
+          REFRESH_VARIANT_CLASSES[variant],
+          REFRESH_SIZE_CLASSES[size],
+          isIconOnly && 'kbtn-circle',
+          className,
+        )}
+      >
+        <Icon
+          name={refreshing ? 'loader-2' : icon}
+          size={REFRESH_ICON_PX[size]}
+        />
+        {label ? <span>{label}</span> : null}
+      </button>
+    </div>
+  );
+};
+
+const KappsContent = ({ id: instanceId, config: rawConfig }) => {
   // Normalize all enum-like inputs to lowercase up front so designers can
   // enter values in any case without surprises.
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
@@ -411,6 +643,9 @@ const KappsContent = ({ config: rawConfig }) => {
     accordion = 'all-open',
     sort = 'order',
     emptyText = 'No kapps to display',
+    clickAction = DEFAULT_CLICK_ACTION,
+    target = 'current',
+    refresh = false,
     className,
   } = config;
 
@@ -482,19 +717,19 @@ const KappsContent = ({ config: rawConfig }) => {
     });
   }, [groupLabelKey, accordion, groups, groupLabels]);
 
-  // Empty-state condition: zero kapps after filter/access. Empty groups
-  // never render — the group filter below handles that.
-  if (visible.length === 0) {
-    return (
-      <div className={clsx('kd-kapps kd-kapps-empty kd-callout', className)}>
-        {emptyText}
-      </div>
-    );
-  }
-
   const renderKapp = kapp => {
     const accentStyle = resolveAccent(kapp, accentPlacement);
-    const shared = { kapp, sizeConfig, showIcon, iconPlacement, accentStyle };
+    const perKappClickAction = buildPerKappClickAction(clickAction, kapp);
+    const shared = {
+      kapp,
+      sizeConfig,
+      showIcon,
+      iconPlacement,
+      accentStyle,
+      clickAction: perKappClickAction,
+      target,
+      instanceId,
+    };
     if (resolvedType === 'pill') return <KappPill key={kapp.slug} {...shared} />;
     if (resolvedType === 'tile')
       return <KappTile key={kapp.slug} {...shared} showName={showName} />;
@@ -521,40 +756,66 @@ const KappsContent = ({ config: rawConfig }) => {
     </div>
   );
 
-  if (!groups) {
-    return (
-      <div className={clsx('kd-kapps', `kd-kapps-${resolvedType}`, className)}>
-        {renderGrid(visible)}
-      </div>
-    );
-  }
+  // Refresh button — resolved once per render. `null` when disabled.
+  const refreshSettings = resolveRefreshConfig(refresh);
+  const refreshNode = refreshSettings ? (
+    <KappsRefreshButton settings={refreshSettings} />
+  ) : null;
+  const refreshPos = refreshSettings?.position;
+  const isCorner =
+    refreshPos === 'top-right' ||
+    refreshPos === 'top-left' ||
+    refreshPos === 'bottom-right' ||
+    refreshPos === 'bottom-left';
+  const isAbove = refreshPos === 'above';
+  const isBelow = refreshPos === 'below';
+
+  // Empty-state condition: zero kapps after filter/access. Empty groups
+  // never render — the group filter below handles that.
+  const isEmpty = visible.length === 0;
+
+  const bodyContent = isEmpty
+    ? emptyText
+    : groups
+      ? groups
+          .filter(g => g.items.length > 0)
+          .map(({ label, items }) => {
+            const isClickable = accordion !== 'off';
+            const isOpen = !isClickable || openGroups[label] !== false;
+            return (
+              <KappGroupSection
+                key={label}
+                label={label}
+                isOpen={isOpen}
+                isClickable={isClickable}
+                onToggle={() =>
+                  setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }))
+                }
+              >
+                {renderGrid(items)}
+              </KappGroupSection>
+            );
+          })
+      : renderGrid(visible);
+
+  const rootClassName = clsx(
+    'kd-kapps',
+    isEmpty ? 'kd-kapps-empty kd-callout' : `kd-kapps-${resolvedType}`,
+    isCorner && 'relative',
+    className,
+  );
 
   return (
-    <div className={clsx('kd-kapps', `kd-kapps-${resolvedType}`, className)}>
-      {groups
-        .filter(g => g.items.length > 0)
-        .map(({ label, items }) => {
-          const isClickable = accordion !== 'off';
-          const isOpen = !isClickable || openGroups[label] !== false;
-          return (
-            <KappGroupSection
-              key={label}
-              label={label}
-              isOpen={isOpen}
-              isClickable={isClickable}
-              onToggle={() =>
-                setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }))
-              }
-            >
-              {renderGrid(items)}
-            </KappGroupSection>
-          );
-        })}
+    <div className={rootClassName}>
+      {isAbove && refreshNode}
+      {bodyContent}
+      {isBelow && refreshNode}
+      {isCorner && refreshNode}
     </div>
   );
 };
 
-const KappsComponent = forwardRef(({ config }, ref) => {
+const KappsComponent = forwardRef(({ id, config }, ref) => {
   const api = useRef({});
   const onClickCapture = useInternalLinkInterceptor();
   const [currentConfig, setCurrentConfig] = useState(config);
@@ -568,11 +829,16 @@ const KappsComponent = forwardRef(({ config }, ref) => {
   api.current.update = patch =>
     setCurrentConfig(prev => ({ ...prev, ...(patch || {}) }));
 
+  // Re-runs the bulk space fetch and primes the cache. Returns the SDK
+  // response so callers can detect errors. The widget re-renders automatically
+  // when state.app.space.kapps updates from setSpace.
+  api.current.refresh = () => refreshKapps();
+
   return (
     <Provider store={store}>
       <WidgetAPI ref={ref} api={api.current}>
         <div onClickCapture={onClickCapture}>
-          <KappsContent config={currentConfig} />
+          <KappsContent id={id} config={currentConfig} />
         </div>
       </WidgetAPI>
     </Provider>
@@ -594,7 +860,11 @@ const checkEnum = (value, allowed, fieldName) => {
   return true;
 };
 
-const validateConfig = (config = {}) => {
+const validateConfig = (rawConfig = {}) => {
+  // Normalize once so the shared validators (validateClickAction /
+  // validateTarget) see lowercased enum values and accept any-case input
+  // from designers (e.g. clickAction.type: 'Internal').
+  const config = normalizeConfig(rawConfig);
   if (!checkEnum(config.type, TYPES, 'type')) return false;
   if (!checkEnum(config.size, SIZES, 'size')) return false;
   for (const k of ['showIcon', 'showName', 'showDescription', 'includeHidden']) {
@@ -627,7 +897,7 @@ const validateConfig = (config = {}) => {
   }
   if (
     config.groupBy != null &&
-    !(typeof config.groupBy === 'string' && GROUP_BY.includes(lc(config.groupBy)))
+    !(typeof config.groupBy === 'string' && GROUP_BY.includes(config.groupBy))
   ) {
     console.error("Kapps Widget Error: groupBy must be 'category' or null.");
     return false;
@@ -645,6 +915,55 @@ const validateConfig = (config = {}) => {
   if (config.className != null && typeof config.className !== 'string') {
     console.error('Kapps Widget Error: className must be a string.');
     return false;
+  }
+  if (!validateClickAction(config.clickAction, 'Kapps')) return false;
+  if (!validateTarget(config.target, 'Kapps')) return false;
+  if (!validateRefresh(config.refresh)) return false;
+  return true;
+};
+
+// Refresh config accepts false (default — no button), true (defaults), or an
+// object with position / label / icon / size / variant / className.
+const validateRefresh = refresh => {
+  if (refresh == null || refresh === false || refresh === true) return true;
+  if (typeof refresh !== 'object' || Array.isArray(refresh)) {
+    console.error(
+      'Kapps Widget Error: refresh must be false, true, or an object.',
+    );
+    return false;
+  }
+  if (
+    refresh.position != null &&
+    !REFRESH_POSITIONS.includes(refresh.position)
+  ) {
+    console.error(
+      `Kapps Widget Error: refresh.position must be one of ${REFRESH_POSITIONS.join(', ')}.`,
+    );
+    return false;
+  }
+  if (
+    refresh.size != null &&
+    !REFRESH_BUTTON_SIZES.includes(refresh.size)
+  ) {
+    console.error(
+      `Kapps Widget Error: refresh.size must be one of ${REFRESH_BUTTON_SIZES.join(', ')}.`,
+    );
+    return false;
+  }
+  if (
+    refresh.variant != null &&
+    !REFRESH_VARIANTS.includes(refresh.variant)
+  ) {
+    console.error(
+      `Kapps Widget Error: refresh.variant must be one of ${REFRESH_VARIANTS.join(', ')}.`,
+    );
+    return false;
+  }
+  for (const k of ['label', 'icon', 'className']) {
+    if (refresh[k] != null && typeof refresh[k] !== 'string') {
+      console.error(`Kapps Widget Error: refresh.${k} must be a string.`);
+      return false;
+    }
   }
   return true;
 };
@@ -711,6 +1030,20 @@ const validateConfig = (config = {}) => {
  *   alphabetical) | 'name'.
  * @param {string} [config.emptyText] Shown when no kapps are visible.
  *   Default `'No kapps to display'`.
+ * @param {Object} [config.clickAction] Per-kapp click behavior — the standard
+ *   chrome `clickAction` shape (see CHROME_ACTIONS.md). Default
+ *   `{ type: 'internal', path: '/kapps/{{slug}}' }`. Tokens `{{slug}}`,
+ *   `{{name}}`, `{{description}}` are substituted with the clicked kapp's
+ *   values (URL-encoded). For `type: 'event'`, the dispatched CustomEvent's
+ *   `detail` is `{ widget: 'Kapps', id, kapp }` — `kapp` is the full cached
+ *   record.
+ * @param {string|Object} [config.target] Where the click opens. Standard
+ *   chrome `target` shape — `'current'` (default), `'new'`, modal config, or
+ *   container reference (see CHROME_ACTIONS.md).
+ * @param {boolean|Object} [config.refresh] Rendered refresh button. `false`
+ *   (default) hides it. `true` applies defaults (top-right, icon-only). An
+ *   object overrides any of: `position`, `label`, `icon`, `size`, `variant`,
+ *   `className`. Click calls `bundle.refreshKapps()`. Disabled while in flight.
  * @param {string} [config.className] Extra classes on the root element.
  * @param {string} [id] Optional id used by registerWidget for instance
  *   tracking.
@@ -721,7 +1054,7 @@ export const Kapps = ({ container, config = {}, id } = {}) => {
     return registerWidget(Kapps, {
       container: resolved,
       Component: KappsComponent,
-      props: { config },
+      props: { id, config },
       id,
     });
   }

@@ -4,6 +4,7 @@ import { MemoryRouter, useNavigate, useLocation } from 'react-router-dom';
 import { KineticLib } from '@kineticdata/react';
 import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
 import { store } from '../../../redux.js';
+import { containerActions } from '../../../helpers/state.js';
 import {
   ContainerHistoryContext,
   FormChromeContext,
@@ -14,6 +15,15 @@ import {
   RENDER_MODE_MODAL,
 } from '../../../helpers/container-scope.js';
 import { BundleRoutes } from '../../../pages/BundleRoutes.jsx';
+
+// Parses a kapp slug out of a container's inner path. Same shape as the
+// outer URL parser in App.jsx — keeps the resolution rule consistent across
+// the global and per-container scopes.
+const parseKappSlugFromPath = path => {
+  if (typeof path !== 'string') return null;
+  const m = path.match(/^\/kapps\/([^/?#]+)/);
+  return m ? m[1] : null;
+};
 
 // Globals (jQuery, moment, date-fns) needed by CoreForm. Kicked off as a
 // promise import the way the top-level app does it; CoreForm awaits it.
@@ -167,6 +177,18 @@ const BundleContainerInner = forwardRef(
       );
     }, [id, location.pathname, isBlank]);
 
+    // Publish the container's "current kapp" slug to state.containers[slotPath]
+    // so widgets rendered inside this container can observe it via
+    // useKappContext. Slug is parsed from the container's inner path — blank
+    // and non-kapp paths publish null.
+    useEffect(() => {
+      const path = isBlank ? '' : location.pathname;
+      containerActions.setContainerKappSlug({
+        slot: slotPath,
+        slug: parseKappSlugFromPath(path),
+      });
+    }, [slotPath, location.pathname, isBlank]);
+
     // urlSync bookkeeping: tracks the last value we either wrote to the URL
     // or read from it during an external change. Effect 1 only writes when
     // the inner state diverges from this ref, which prevents feedback loops
@@ -315,6 +337,10 @@ const BundleContainerComponent = forwardRef(
         if (containerEl.getAttribute(SLOT_DATA_ATTR) === slotPath) {
           containerEl.removeAttribute(SLOT_DATA_ATTR);
         }
+        // Drop this container's published kapp slug from global state so
+        // widgets that may briefly outlive the container don't observe a
+        // stale slug from a re-mounted same-slot container.
+        containerActions.removeContainer(slotPath);
       };
     }, [containerEl, slotPath]);
 
@@ -484,6 +510,22 @@ export const BundleContainer = ({ container, config, id } = {}) => {
       ? `${parentSlot}.${config.id}`
       : config.id;
     resolved.setAttribute(SLOT_DATA_ATTR, slotPath);
+
+    // Publish the initial kapp slug synchronously, before any descendant
+    // widget mounts. Without this, kapp-aware widgets inside the container
+    // would render once with no scope, then re-render after the inner-
+    // location effect fires. The initial value matches what
+    // BundleContainerInner computes from its first render's effective path.
+    const initialResolvedPath =
+      (config.urlSync ? readContainerPath(slotPath) : '') ||
+      config.initialPath ||
+      '';
+    containerActions.setContainerKappSlug({
+      slot: slotPath,
+      slug: initialResolvedPath
+        ? parseKappSlugFromPath(initialResolvedPath)
+        : null,
+    });
 
     warnIfIdCollision(config.id, resolved);
 

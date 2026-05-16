@@ -14,6 +14,7 @@ import { BundleMenu } from './bundle-menu.jsx';
 import { BundleSearch } from './bundle-search.jsx';
 import { Categories } from './categories.jsx';
 import { Chart } from './chart.jsx';
+import { Forms } from './forms.jsx';
 import { Kapps } from './kapps.jsx';
 import { Markdown } from './markdown.js';
 import { Profile } from './profile.jsx';
@@ -42,6 +43,7 @@ const AVAILABLE_WIDGETS = {
   BundleSearch,
   Categories,
   Chart,
+  Forms,
   Kapps,
   Markdown,
   Profile,

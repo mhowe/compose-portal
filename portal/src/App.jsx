@@ -3,12 +3,17 @@ import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import t from 'prop-types';
 import clsx from 'clsx';
-import { fetchKapp, fetchProfile, fetchSpace } from '@kineticdata/react';
+import { fetchProfile, fetchSpace } from '@kineticdata/react';
 import { Toaster } from './atoms/Toaster.jsx';
 import { Loading } from './components/states/Loading.jsx';
 import { Error } from './components/states/Error.jsx';
 import { closeConfirm } from './helpers/confirm.js';
-import { appActions, themeActions } from './helpers/state.js';
+import {
+  appActions,
+  selectCurrentKapp,
+  SPACE_INCLUDE,
+  themeActions,
+} from './helpers/state.js';
 import { clearToasts } from './helpers/toasts.js';
 import useRouteChange from './helpers/hooks/useRouteChange.js';
 import { PrivateRoutes } from './pages/PrivateRoutes.jsx';
@@ -40,14 +45,19 @@ export const App = ({
   }, [themeCSS]);
 
   // Get redux app state
-  const { authenticated, kappSlug, error, space, kapp, profile } = useSelector(
+  const { authenticated, kappSlug, error, space, profile } = useSelector(
     state => state.app,
   );
+  // The current kapp is the cached record for the current global kappSlug.
+  // Reads through selectCurrentKapp so per-scope context can layer in later
+  // without each consumer re-wiring.
+  const kapp = useSelector(selectCurrentKapp);
 
-  // Track the kapp slug from the URL so state.app.kapp follows the user as
-  // they navigate between kapps, rather than being pinned to whatever the
-  // space's default landing kapp is. The space-default still drives initial
-  // landing (the fallback in setSpace), and the user can land on a non-kapp
+  // Track the kapp slug from the URL so the global current-kapp context
+  // follows the user as they navigate between kapps, rather than being pinned
+  // to whatever the space's default landing kapp is. The space-default still
+  // drives initial landing (the fallback in setSpace), and the user can land
+  // on a non-kapp
   // route (e.g. /profile) where this effect doesn't override.
   const location = useLocation();
   const urlKappSlug = useMemo(() => {
@@ -69,15 +79,15 @@ export const App = ({
   }, [authenticated, loggedIn]);
 
   // Fetch space data. We'll assume that the space record is available publicly
-  // so we can get the config data stored in space attributes
+  // so we can get the config data stored in space attributes. The authenticated
+  // include uses the shared SPACE_INCLUDE constant, which nests full kapp
+  // detail (attributes, categories, categorizations) under kapps.* — one
+  // round trip primes state.app.kappCache for every kapp the user can see.
   const spaceParams = useMemo(
     () =>
       initialized
         ? loggedIn
-          ? {
-              include:
-                'attributesMap,kapps,kapps.attributesMap,kapps.kappAttributeDefinitions,kapps.categoryAttributeDefinitions,kapps.formAttributeDefinitions,spaceAttributeDefinitions,userAttributeDefinitions,userProfileAttributeDefinitions,teamAttributeDefinitions',
-            }
+          ? { include: SPACE_INCLUDE }
           : { public: true, include: 'attributesMap,kapps' }
         : null,
     [initialized, loggedIn],
@@ -114,32 +124,10 @@ export const App = ({
     }
   }, [profileInit, profileLoading, profileData]);
 
-  // Fetch kapp data once the user is logged in and a kapp slug is set, which
-  // happens after the space is retrieved
-  const kappParams = useMemo(
-    () =>
-      initialized && loggedIn && kappSlug
-        ? {
-            kappSlug,
-            include: 'attributesMap,categories,categories.attributesMap',
-          }
-        : null,
-    [initialized, loggedIn, kappSlug],
-  );
-  const {
-    initialized: kappInit,
-    loading: kappLoading,
-    response: kappData,
-  } = useData(fetchKapp, kappParams);
-  // Set the kapp data into redux
-  useEffect(() => {
-    if (kappInit && !kappLoading) {
-      appActions.setKapp(kappData);
-    }
-  }, [kappInit, kappLoading, kappData]);
-
   // Recompute the cascade-merged theme any time space or kapp data changes.
-  // Both records contribute a layer; kapp overrides space.
+  // Both records contribute a layer; kapp overrides space. The current kapp
+  // record comes from the cache (populated by the space fetch), so no
+  // separate fetchKapp is needed here.
   useEffect(() => {
     themeActions.setTheme({ space, kapp });
   }, [space, kapp]);

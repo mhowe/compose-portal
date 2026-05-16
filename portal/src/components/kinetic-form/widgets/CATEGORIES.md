@@ -2,7 +2,7 @@
 
 ## Categories Widget
 
-`Categories` renders the current kapp's categories as cards in a CSS-grid layout. Clicking a card drills into that category's sub-categories — nesting follows the `Parent` attribute convention, with a breadcrumb at the top of the detail view. The widget is the wayfinding half of a "browse to a form" experience; the forms half is its own widget (see the `Forms` widget, separate).
+`Categories` renders the current kapp's categories as cards in a CSS-grid layout. Clicking a card drills into that category's sub-categories — nesting follows the `Parent` attribute convention, with a breadcrumb at the top of the detail view. The widget is the wayfinding half of a "browse to a form" experience; pair it with the [Forms widget](FORMS.md), which auto-binds to the current category selection.
 
 ```js
 // Initialize the Categories widget
@@ -55,21 +55,62 @@ The DOM element to render into. Accepts either a real `HTMLElement` or the array
 **`config`** — *Object*
 An object of configurations for the widget. All fields optional.
 
+> #### Presentation
+>
+> **`presentation`** — *string*
+> `'cards'` _(default)_ | `'list'`. Top-level mode switch.
+>
+> - **`'cards'`** — visual card grid. All the card knobs (`cardVariant`, `size`, `iconSize`, `textVertical`/`textHorizontal`, `showFormCount`, slot system, etc.) apply.
+> - **`'list'`** — hierarchical text tree. Every category is visible at once with nested sub-categories indented one step further. Click any name to drill (sets `currentSlug` + fires `categoryClickAction`, same as a card click). The picked category gets the `listItemActive` slot extras for visual feedback. List mode uses a slimmer slot set (`listRoot`, `listItem`, `listItemActive`, `listIcon`, `listIndent`) and skips the breadcrumb / `subCategoriesTitle` since the full hierarchy is already in view.
+>
+> A `picker` presentation (compact dropdown for fast selection) was scoped for this round but deferred — that use case is being rethought as a separate unified category+form picker widget rather than another mode on this one.
+>
 > #### Scope
 >
 > **`kappSlug`** — *string*
-> Explicit kapp to render categories for. When omitted (the common case), the widget reads from the kapp currently in Redux — which follows the URL: `/kapps/services` puts the `services` kapp in `state.app.kapp`, and so on. Set `kappSlug` when you need to render a specific kapp's categories regardless of where the user is — e.g. a "Help" widget that always shows the `support` kapp's categories from anywhere in the portal. When `kappSlug` differs from the URL's kapp, the widget fetches the named kapp independently and does not disturb global state.
+> Explicit kapp to render categories for. When omitted (the common case), the widget resolves the kapp scope automatically via `useKappContext`:
+>
+> - If the widget is rendered **inside a `BundleContainer`**, it follows the container's inner path (`/kapps/<slug>/...`) — so the widget reflects "this container's current kapp."
+> - Otherwise it falls back to the global URL-driven slug — `/kapps/services` puts the `services` kapp in scope, etc.
+>
+> Set `kappSlug` to a specific value when you need to render a known kapp's categories regardless of where the widget lives — e.g. a "Help" widget that always shows the `support` kapp's categories from anywhere in the portal. Set `kappSlug: 'global'` to opt out of container-aware resolution even inside a container. All three resolution paths read from the same `state.app.kappCache` populated by the bulk space fetch, so no extra network call happens.
 >
 > #### Presentation
 >
 > **`cardVariant`** — *string*
 > `'background' | 'side' | 'stacked' (default) | 'icon-only'`. See the variants table above.
 >
+> **`size`** — *string*
+> `'sm' | 'md' (default) | 'lg' | 'xl'`. Scales the grid's column-width range, the card body padding, title and description font sizes, the per-variant fixed dimension (background's min-height, side's media width / min-height, stacked's media height), and the variant's default media icon size. `md` matches the pre-size-scale defaults, so existing configs keep their look without setting `size` explicitly.
+>
+> **`cardWidth`** — *string*
+> `'fixed'` _(default)_ | `'stretch'`.
+>
+> Both modes calculate the number of cards per row at the size's `min` width, so a full row has the same number of cards in both modes. What differs is what happens when there are fewer cards than fit on a row:
+>
+> - **`'fixed'`** — empty tracks stay reserved as ghost slots, so each occupied card keeps the same width whether the row is full or sparse. Drilling from 5 cards to 2 leaves the 2 at the same width, with empty space on the right.
+> - **`'stretch'`** — empty tracks collapse and the survivors stretch to fill the row. 5 cards → 2 cards on a wide screen makes the 2 nearly 2½× as wide. The pre-`cardWidth` behavior; use when you want a fluid grid.
+>
+> | size | min col | body padding | title    | description | background min-h | side media | stacked media | icon (background / side / stacked / icon-only) |
+> | ---- | ------- | ------------ | -------- | ----------- | ---------------- | ---------- | ------------- | ---------------------------------------------- |
+> | sm   | 140–240 | `p-3`        | `text-sm`  | `text-xs`   | `min-h-36`       | `w-1/3 min-h-24` | `h-24`   | 48 / 32 / 32 / 40 |
+> | md   | 180–320 | `p-4`        | `text-base`| `text-sm`   | `min-h-44`       | `w-1/3 min-h-32` | `h-32`   | 64 / 48 / 48 / 56 |
+> | lg   | 240–400 | `p-5`        | `text-lg`  | `text-base` | `min-h-52`       | `w-1/3 min-h-40` | `h-40`   | 80 / 64 / 64 / 72 |
+> | xl   | 300–480 | `p-6`        | `text-xl`  | `text-base` | `min-h-64`       | `w-1/3 min-h-48` | `h-52`   | 96 / 80 / 80 / 88 |
+>
+> `iconSize` (separate config) still wins over the per-size icon default if set explicitly.
+>
 > **`iconAttribute`** — *string*
 > Category attribute name whose value is a Tabler icon name. Default `'Icon'`. Set to `null` to disable icon rendering entirely.
 >
 > **`imageAttribute`** — *string*
 > Category attribute name whose value is an image URL. Default `'Background Image'`. Set to `null` to disable image rendering entirely.
+>
+> **`textVertical`** — *string*
+> Vertical alignment of the card's text block (title + form count + description) within the card body. `'top'` _(default)_ | `'middle'` | `'bottom'`. Use `'bottom'` on the `side` variant when you have a long title that would otherwise wrap into the top-right corner badge.
+>
+> **`textHorizontal`** — *string*
+> Horizontal alignment of the card's text block. `'left'` _(default)_ | `'center'` | `'right'`. The `'right'` option pairs naturally with `formCountPlacement: 'title-right'` to anchor both ends of the title row. For the `icon-only` variant, pass `'center'` explicitly to get the historical centered look — the variant no longer hard-codes center alignment so the per-card text positioning stays consistent across variants.
 >
 > **`iconSize`** — *string or number*
 > Icon rendering size. Accepts either a preset string or a custom pixel number; overrides the per-variant default (`background: 64`, `side: 48`, `stacked: 48`, `icon-only: 56`).
@@ -86,10 +127,29 @@ An object of configurations for the widget. All fields optional.
 > **`showDescription`** — *boolean*
 > Render the description line. Default `true`.
 >
+> **`showFormCount`** — *boolean*
+> Render an "N forms" count on each card, derived from the kapp's `categorizations` array (direct forms only — forms in descendant categories aren't summed). Default `false`. Always renders a value when enabled, including `'0 forms'` for empty categories, so cards stay visually consistent across the grid.
+>
+> **`formCountPlacement`** — *string*
+> Where the count renders on each card. Default `'title-right'`. Ignored when `showFormCount` is `false`.
+>
+> | Value           | Behavior                                                                                                                                                                                              |
+> | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `'title-right'` _(default)_ | Same row as the title, right-justified via flex. Title takes remaining width.                                                                                                                          |
+> | `'inline'`      | Appended to the title as part of the same text node, separated by a `·`. Compact; reads as one heading.                                                                                                |
+> | `'corner'`      | Absolute-positioned pill in the top-right corner of the card. Renders over the media area; uses a translucent `bg-base-100/80` + `backdrop-blur-sm` treatment so it stays legible over background-variant images. |
+>
 > #### Filtering
 >
 > **`hideHidden`** — *boolean*
 > Default `true`. When `true`, categories with `Hidden = 'true'` are excluded. Set `false` for an admin view.
+>
+> **`hideEmpty`** — *false | true | `'direct'` | `'subtree'`*
+> Default `false`. When set, categories with no attached forms are filtered out. The form list comes from the kapp's `categorizations` array — no additional fetches.
+>
+> - `false` / omitted — show every category, populated or not.
+> - `true` / `'direct'` — hide categories that have zero **direct** form attachments. A category whose only forms live in a child still gets hidden.
+> - `'subtree'` — hide a category only when neither it nor any descendant category (via the `Parent` chain) has any form attachments. Useful for navigation roots that exist purely to group children.
 >
 > **`filterAttribute`** — *string*
 > Attribute name to require as truthy. Useful for "Promoted" subsets. Example: `filterAttribute: 'Promoted'` shows only categories whose `Promoted` attribute is `'true'` (or `'yes'`, `'1'`, `'on'`).
@@ -127,13 +187,10 @@ An object of configurations for the widget. All fields optional.
 > Heading rendered above the sub-category grid on detail views. Default `'Categories'`. Set to an empty string to suppress.
 >
 > **`emptyText`** — *string*
-> Shown when the filtered list (top-level or sub-category) is empty. Default `'No categories to display'`.
->
-> **`loadingText`** — *string*
-> Shown while a cross-kapp fetch is in progress (only applies when `kappSlug` is set and points to a kapp other than the one currently in Redux). Default `'Loading categories…'`.
+> Shown when the top-level filtered list is empty (the kapp has no categories the widget can display). Default `'No categories to display'`. **Not shown in detail view** — when the user has drilled into a category that has no sub-categories, the widget renders only the breadcrumb so that a Forms widget (or whatever else is composed on the page) can take over without an awkward "no categories" message above its content.
 >
 > **`debug`** — *boolean*
-> When `true`, the widget logs a `[Categories widget] data snapshot` group to the console every render — showing which source it's using (redux / fetch), the target kapp slug, and a table of every category with its slug, name, `hidden` value, `parent` value, and `displayOrder` value. Useful when the widget renders empty and you need to distinguish "no kapp loaded" from "all filtered out" from "all nested." Default `false`.
+> When `true`, the widget logs a `[Categories widget] data snapshot` group to the console every render — showing the target kapp slug, whether the kapp is in the cache, and a table of every category with its slug, name, `hidden` value, `parent` value, and `displayOrder` value. Useful when the widget renders empty and you need to distinguish "kapp not in cache yet" from "all filtered out" from "all nested." Default `false`.
 >
 > #### Escape hatches
 >
@@ -164,12 +221,18 @@ An object of configurations for the widget. All fields optional.
 > | `cardImage`           | `w-full h-full object-cover`                                                         | The `<img>` element when `imageAttribute` resolves a URL.                            |
 > | `cardBody`            | `kd-category-body flex-c-ss gap-2 p-4 w-full`                                        | Title + description container.                                                       |
 > | `cardTitle`           | `kd-category-title font-semibold text-base`                                          | Category name.                                                                       |
+> | `cardFormCount`       | `kd-category-form-count text-xs font-medium text-base-content/60`                    | Form-count badge ("N forms") rendered when `showFormCount: true`. Placement layout is layered on by `formCountPlacement` — the slot default keeps text styling only. |
 > | `cardDescription`     | `kd-category-description text-sm text-base-content/70 line-clamp-2`                   | Description line.                                                                    |
 > | `breadcrumb`          | `kd-category-breadcrumb flex-sc flex-wrap gap-1 text-sm text-base-content/70 mb-4`    | Breadcrumb container on detail views.                                                |
 > | `breadcrumbItem`      | `kd-category-breadcrumb-item kbtn kbtn-ghost kbtn-xs`                                | Each clickable crumb (home link + every ancestor).                                   |
 > | `breadcrumbSeparator` | `kd-category-breadcrumb-separator opacity-50 px-1`                                   | The `/` between crumbs.                                                              |
 > | `sectionTitle`        | `kd-category-section-title text-sm font-semibold text-base-content/60 uppercase mt-6 mb-3` | Heading rendered above the sub-category list on detail views.                  |
-> | `emptyState`          | `kd-category-empty text-base-content/60 italic py-8 text-center`                     | Shown when the filtered list is empty (and when a cross-kapp fetch is loading).      |
+> | `emptyState`          | `kd-category-empty text-base-content/60 italic py-8 text-center`                     | Shown when the filtered list is empty.                                                |
+> | `listRoot`            | `kd-category-list flex-c-st gap-0 m-0 p-0 list-none w-full`                          | Outer `<ul>` of the list presentation. Only used when `presentation: 'list'`.        |
+> | `listItem`            | `kd-category-list-item flex-sc gap-2 w-full px-3 py-2 rounded-md cursor-pointer hover:bg-base-200 transition text-left text-base-content` | Each row's clickable button. Depth indentation is applied as inline `padding-left` per nesting level. |
+> | `listItemActive`      | `bg-base-200 font-semibold`                                                          | Extras layered onto `listItem` when the row's slug matches `currentSlug`.            |
+> | `listIcon`            | `kd-category-list-icon flex-cc w-4 shrink-0 text-base-content/60`                    | Icon wrapper inside a list row. Renders unconditionally when `iconAttribute` is configured — even for categories with no icon value — so names align across rows. Width matches the rendered icon size. |
+> | `listIndent`          | `kd-category-list-indent`                                                            | Reserved for indent treatment (tree lines, bullets, etc.). Empty by default; depth padding is applied inline. |
 >
 > Unknown slot names produce a console warning and are ignored. Slot values must be strings (or the `{ add?, remove? }` object shape, or omitted).
 >
@@ -187,6 +250,16 @@ Merges `patch` into the widget's config and re-renders. Works for any field.
 bundle.widgets.Categories.get('catalog').update({ cardVariant: 'background' });
 ```
 
+**`getSelection()`** — *Function*
+Returns the currently-drilled category's slug, or `null` when no category is selected (the top-level view). Useful for forms and other widgets that need to read "where am I right now?" without reaching into Redux.
+
+```js
+const slug = bundle.widgets.Categories.get('catalog').getSelection();
+// → 'hr' when drilled into the HR category, null at the top level
+```
+
+The same value is published to `state.widgets.categorySelection[kappSlug]` for React consumers — `useSelector(selectCategorySelection(kappSlug))` works inside other widget trees.
+
 ### Examples
 
 #### Service catalog landing — stacked cards, default everything
@@ -198,6 +271,31 @@ bundle.widgets.Categories({
   id: 'service-catalog',
 });
 ```
+
+#### Large background cards for a headline section
+
+```js
+bundle.widgets.Categories({
+  container: K('content[Featured]').element(),
+  config: { cardVariant: 'background', size: 'lg' },
+  id: 'featured',
+});
+```
+
+#### Hierarchical text tree (list presentation)
+
+```js
+bundle.widgets.Categories({
+  container: K('content[Tree]').element(),
+  config: {
+    presentation: 'list',
+    iconAttribute: 'Icon',   // omit or set null for plain text
+  },
+  id: 'tree',
+});
+```
+
+Every category renders at once; nested sub-categories are indented under their parent. Clicking any name fires the same drill / `categoryClickAction` flow as the card variant.
 
 #### Promoted-only top 6 with image-driven cards
 
@@ -245,6 +343,41 @@ bundle.widgets.Categories({
 });
 ```
 
+#### Hide empty categories + show a form-count badge
+
+```js
+bundle.widgets.Categories({
+  container: K('content[Catalog]').element(),
+  config: {
+    cardVariant: 'side',
+    hideEmpty: 'subtree',          // suppress categories whose subtree has zero forms
+    showFormCount: true,           // "N forms" on each card
+    formCountPlacement: 'corner',  // pill in the top-right; legible over images
+  },
+  id: 'catalog',
+});
+```
+
+Both `hideEmpty` and `showFormCount` read from the kapp's `categorizations` array, which is already in the bundle's kapp cache (populated by the bulk space fetch at startup) — no additional network calls are made.
+
+#### Reposition the text block on a side-variant card
+
+```js
+bundle.widgets.Categories({
+  container: K('content[Catalog]').element(),
+  config: {
+    cardVariant: 'side',
+    showFormCount: true,
+    formCountPlacement: 'corner',  // pill in the top-right
+    textVertical: 'bottom',        // push title/description to the bottom
+    textHorizontal: 'left',
+  },
+  id: 'side-catalog',
+});
+```
+
+`textVertical` and `textHorizontal` flow into the cardBody slot as flex `justify-*` and `items-*` (plus `text-*`) — both axes are independent.
+
 #### Restyle slots via classNames
 
 ```js
@@ -286,16 +419,13 @@ When you only need to add classes, use the string form. When you need to drop a 
 - **Case-insensitive enums.** `cardVariant`, `orderBy`, `orderDirection`, `navigationMode`, and `Hidden` / `<filterAttribute>` truthy values are all lowercased before comparison. Free-text fields (`emptyText`, `subCategoriesTitle`, etc.) preserve case.
 - **Numeric coerce for `Display Order`.** Stored as text on the record; parsed with `parseFloat` so `"10"` sorts after `"2"`. Missing / non-numeric values sort to the end with alphabetical tie-break.
 - **Cycle protection on Parent walk.** A `Parent` chain that loops back triggers a `console.warn` and stops the walk at the repeat — the UI never hangs.
-- **Current-kapp source.** The widget reads `state.app.kapp.categories` from Redux, which App.jsx loads with `include: 'attributesMap,categories,categories.attributesMap'`. `state.app.kapp` follows the URL — navigating to `/kapps/<slug>` updates Redux so the widget renders that kapp's categories without any per-widget configuration.
-- **Cross-kapp source.** Set `config.kappSlug` to render another kapp's categories from anywhere in the portal. The widget fetches that kapp independently (via `useData(fetchKapp, ...)`) and does not write to global state, so the rest of the portal's "current kapp" doesn't change.
+- **Auto kapp scope.** The widget resolves which kapp to show via `useKappContext`. When rendered inside a `BundleContainer`, it observes that container's published kapp slug (driven by the container's inner path) — so a kapp loaded into a container "looks like the current kapp" to widgets inside, even when the outer browser URL hasn't changed. Outside any container it falls back to `state.app.kappSlug` (URL-driven). See [Kapp Cache](KAPP_CACHE.md#per-container-scope) for the contract.
+- **Cross-kapp source.** Set `config.kappSlug` to a specific slug to render that kapp's categories regardless of where the widget lives. Set `config.kappSlug: 'global'` to opt out of container-aware resolution and pin to the outer URL's kapp even inside a container. All sources read from `state.app.kappCache[<slug>]` — populated up front by the bulk space fetch, no extra network call.
 - **Modal-safe navigation.** v1's `'widget'` navigation mode keeps drill state internal — embedding the widget inside a form rendered in a modal works without disrupting the underlying page.
 - **Console errors, not silent failures.** Invalid enum values, mistyped slot names, etc. log to the console at registration time and either reject the init promise or are silently dropped (slot names warn but don't block).
 
 ### Future ideas (not implemented)
 
-- **Forms display.** A separate `Forms` widget that renders forms within a category — composed on a category detail page alongside Categories. Will reuse the same `cardVariant` / `classNames` / icon / image vocabulary.
-- **Favorites.** Per-user form favorites stored via `upsertUserPreference`, namespaced with `bundle.spaceSlug()`. Will land with the Forms widget.
 - **`url` and `page` navigation modes.** Sync the selection to `?category=<slug>` (for deep-linking) or render category cards as `Link`s to a configured detail route (for distinct detail-page layouts).
-- **Configurable columns.** Today the grid uses CSS Grid `auto-fit` with a per-variant minimum column width. Per-breakpoint column counts (`{ sm: 1, md: 2, lg: 3 }`) are a future addition.
-- **Per-variant size scale.** A `size` config like the Kapps widget, modulating padding, icon size, and minimum column width.
-- **Form-count badge.** A "(N forms)" hint on each card. Requires a per-category form fetch, deferred until the Forms widget is in place.
+- **Configurable columns.** Today the grid uses CSS Grid `auto-fit` with a per-variant, per-size minimum column width. Per-breakpoint column counts (`{ sm: 1, md: 2, lg: 3 }`) are a future addition.
+- **Subtree form-count badge.** Today the badge shows direct form counts only. A `formCountMode: 'direct' | 'subtree'` option would show roll-up counts on parent categories. The compute is already done internally when `hideEmpty: 'subtree'` is set — just not surfaced as a badge mode.

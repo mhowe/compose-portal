@@ -18,6 +18,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { generateKey } from '@kineticdata/react';
 import { callIfFn } from '../../../helpers/index.js';
+import { BundleWidgetContext } from '../../../helpers/widget-context.js';
 
 // Create a registry for tracking widget instances
 const registry = {};
@@ -162,12 +163,17 @@ export const registerWidget = (
         destroy={() => callIfFn(state.api.destroy)}
       />
     );
+    // Wrap with BundleWidgetContext so anything inside the widget tree can
+    // discover its host DOM element (e.g. to walk up to a parent
+    // BundleContainer via [data-bundle-container-slot]) and its instance id.
+    // See helpers/widget-context.js.
+    const wrapped = (
+      <BundleWidgetContext.Provider value={{ container, id }}>
+        {renderedComponent}
+      </BundleWidgetContext.Provider>
+    );
     state.root.render(
-      skipRouter ? (
-        renderedComponent
-      ) : (
-        <HashRouter>{renderedComponent}</HashRouter>
-      ),
+      skipRouter ? wrapped : <HashRouter>{wrapped}</HashRouter>,
     );
   });
 };

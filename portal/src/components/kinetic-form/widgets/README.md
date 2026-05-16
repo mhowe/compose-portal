@@ -20,6 +20,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleCounter](BUNDLE_COUNTER.md)
     - [Categories](CATEGORIES.md)
     - [Chart](CHART.md)
+    - [Forms](FORMS.md)
     - [Kapps](KAPPS.md)
     - [Profile](PROFILE.md)
   - **Form-Field Widgets**
@@ -34,6 +35,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [AIBuilderSettings](AI_BUILDER_SETTINGS.md) — runtime API key / model / token settings
   - [Utils](UTILS.md)
   - [Styles](STYLES.md)
+  - [Kapp Cache](KAPP_CACHE.md)
 - [How to Build Widgets](#how-to-build-widgets)
 
 ---
@@ -191,6 +193,12 @@ A single-element widget that renders either a single-value metric card (title / 
 
 [Chart Documentation &#x2B9E;](CHART.md)
 
+#### Forms
+
+Renders a kapp's forms as cards (background / side / stacked / icon-only variants) using the same vocabulary as Categories. Scope resolves in order: `config.categorySlug` → sibling Categories widget's current selection → all forms in the kapp. Fetches per-kapp form metadata (attributes + categorizations, no layout) lazily on mount and caches it; pair with `bundle.refreshKappForms(slug)` to invalidate.
+
+[Forms Documentation &#x2B9E;](FORMS.md)
+
 #### Kapps
 
 Renders the kapps a user can see as pills, square tiles, or rich cards — ideal for a space landing page. Driven by per-kapp `Display - *` attributes for icon, description, accent color, hidden flag, category, and sort order. Supports filtering, allow/deny lists, grouping by category with collapsible accordion headings, and multiple icon placements per type.
@@ -248,6 +256,14 @@ Utils are a collection of helper functions that provide various functionality, s
 This portal uses Tailwind CSS and DaisyUI for styling, which is compiled to only include classes that are used. This means that not all classes are available to be used in forms. This documentation lists the classes that have been made available.
 
 [Styles Documentation &#x2B9E;](STYLES.md)
+
+---
+
+### Kapp Cache
+
+Kapp data (attributes, categories, categorizations) is loaded once at app start and held in a Redux cache keyed by slug, so widgets read kapp data from local state instead of issuing fetches. `bundle.refreshKapp(slug)` and `bundle.refreshKapps()` let forms request a re-fetch when the cache is known to be stale.
+
+[Kapp Cache Documentation &#x2B9E;](KAPP_CACHE.md)
 
 ---
 

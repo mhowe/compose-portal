@@ -2,7 +2,7 @@
 
 ## Kapps Widget
 
-`Kapps` renders the kapps the current user can see — as **pills**, square **tiles**, or rich **cards** — into a content element on the form. Built for space landing pages, but works anywhere you want a "pick a kapp" surface. Each item links to its kapp landing page (`/kapps/<slug>`).
+`Kapps` renders the kapps the current user can see — as **pills**, square **tiles**, or rich **cards** — into a content element on the form. Built for space landing pages, but works anywhere you want a "pick a kapp" surface. Each item links to its kapp landing page (`/kapps/<slug>`) by default, or fires whatever `clickAction` you configure — including custom events that carry the clicked kapp, navigation into a `BundleContainer`, or opening a modal.
 
 ```js
 // Initialize the Kapps widget
@@ -120,6 +120,52 @@ An object of configurations for the widget. All fields optional.
 > **`emptyText`** — *string*
 > Rendered when zero kapps are visible after filtering and access checks. Default `'No kapps to display'`. Empty groups never get a per-group empty message — they simply don't render.
 >
+> #### Click behavior
+>
+> Click behavior follows the standard chrome-widget shape — `clickAction` is *what* happens, `target` is *where*. See [Chrome Widget Actions](CHROME_ACTIONS.md) for the full discriminated-union vocabulary and modal/container target details.
+>
+> **`clickAction`** — *Object*
+> Per-kapp click behavior. Default `{ type: 'internal', path: '/kapps/{{slug}}' }` — preserves today's navigation. Supported types: `'none'`, `'internal'`, `'external'`, `'event'`, plus the shared `'home'` / `'openSearch'` variants.
+>
+> Inside `path` (for `'internal'`) and `url` (for `'external'`), three tokens are substituted with the clicked kapp's data, URL-encoded:
+>
+> - `{{slug}}` — the kapp's slug
+> - `{{name}}` — the kapp's name
+> - `{{description}}` — the kapp's description
+>
+> So `path: '/custom/{{slug}}/details'` becomes `/custom/services/details` when "services" is clicked.
+>
+> For `type: 'event'`, the widget dispatches a `CustomEvent` with the clicked kapp on the event detail (overriding the wrapper's default detail shape). The detail is:
+>
+> ```js
+> { widget: 'Kapps', id: '<instanceId>', kapp: { slug, name, description, attributesMap, categories, ... } }
+> ```
+>
+> Event name substitution is *not* performed — event names should be static identifiers, not data-dependent. Put the kapp data in the listener (`e.detail.kapp`) rather than baking it into the name.
+>
+> **`target`** — *string or Object*
+> Where the click opens. `'current'` (default), `'new'`, `'modal'`, or `{ type: 'container', id: 'main' }`. With `type: 'container'`, clicking a kapp navigates the named `BundleContainer` inline — perfect for a space landing where the Kapps widget is a picker and a sibling container hosts the kapp's UI.
+>
+> #### Refresh button
+>
+> **`refresh`** — *boolean or Object*
+> Renders a built-in refresh button that calls `bundle.refreshKapps()` (re-runs the bulk space fetch so additions / removals / attribute changes are picked up). Disabled while the fetch is in flight.
+>
+> - `false` *(default)* — no button.
+> - `true` — sensible defaults: top-right corner, ghost variant, small, icon-only with the tabler `refresh` icon.
+> - An object — override any of the defaults:
+>
+> | Field         | Type   | Default        | Notes                                                                                       |
+> | ------------- | ------ | -------------- | ------------------------------------------------------------------------------------------- |
+> | `position`    | string | `'top-right'`  | `'top-right'` / `'top-left'` / `'bottom-right'` / `'bottom-left'` / `'above'` / `'below'`.  |
+> | `label`       | string | (none)         | Visible text. Omit for icon-only.                                                           |
+> | `icon`        | string | `'refresh'`    | [Tabler](https://tabler-icons.io/) icon name.                                                |
+> | `size`        | string | `'sm'`         | `'xs'` / `'sm'` / `'md'` / `'lg'` / `'xl'` — matches `kbtn-*` sizes.                          |
+> | `variant`     | string | `'ghost'`      | `'ghost'` / `'outline'` / `'solid'`.                                                         |
+> | `className`   | string | (none)         | Extra classes on the button. Additive.                                                       |
+>
+> Corner positions render the button absolute-positioned inside the widget root (which gains `position: relative`). `'above'` / `'below'` render the button as a right-aligned block sibling of the grid. While the fetch is in flight, the button disables and its icon swaps to `loader-2`.
+>
 > #### Escape hatch
 >
 > **`className`** — *string*
@@ -135,6 +181,13 @@ Merges `patch` into the widget's config and re-renders. Works for any field.
 
 ```js
 bundle.widgets.Kapps.get('home').update({ filter: 'admin', sort: 'name' });
+```
+
+**`refresh()`** — *Function*
+Programmatic equivalent of clicking the rendered refresh button. Calls `bundle.refreshKapps()` under the hood and returns its promise — the widget re-renders automatically when the cache updates. Useful when you want to refresh from an event handler (e.g. after a known mutation) without relying on the user pressing the button.
+
+```js
+await bundle.widgets.Kapps.get('home').refresh();
 ```
 
 ### Examples
@@ -205,8 +258,90 @@ bundle.widgets.Kapps({
 });
 ```
 
+#### Kapp picker that loads the selection into a BundleContainer
+
+```js
+// A space-landing pattern: left column picks a kapp, right column shows it.
+bundle.widgets.Kapps({
+  container: K('content[KappPicker]').element(),
+  config: {
+    type: 'pill',
+    clickAction: { type: 'internal', path: '/kapps/{{slug}}' },
+    target: { type: 'container', id: 'main' },
+  },
+  id: 'space-landing-picker',
+});
+
+bundle.widgets.BundleContainer({
+  container: K('content[KappHost]').element(),
+  config: { id: 'main', initialPath: '/kapps' },
+});
+```
+
+The outer browser URL never changes; the container navigates inline as kapps are picked.
+
+#### Custom event handler — non-navigation behavior
+
+```js
+bundle.widgets.Kapps({
+  container: K('content[KappPicker]').element(),
+  config: {
+    type: 'tile',
+    clickAction: { type: 'event', name: 'kapp-selected' },
+  },
+  id: 'picker',
+});
+
+window.addEventListener('kapp-selected', e => {
+  const { kapp } = e.detail;
+  // kapp is the full cached record — slug, name, attributesMap, categories…
+  console.log('User picked', kapp.slug, kapp.name);
+  // Open a custom modal, drive a form field, dispatch an analytics event, etc.
+});
+```
+
+#### Tokenized navigation to a custom route
+
+```js
+bundle.widgets.Kapps({
+  container: K('content[Browse]').element(),
+  config: {
+    type: 'card',
+    clickAction: { type: 'internal', path: '/browse/kapp/{{slug}}' },
+  },
+});
+```
+
+#### With a refresh button
+
+```js
+// Icon-only refresh button in the top-right corner — the default.
+bundle.widgets.Kapps({
+  container: K('content[Kapps]').element(),
+  config: {
+    type: 'tile',
+    refresh: true,
+  },
+});
+
+// Labeled refresh button above the grid, outline variant.
+bundle.widgets.Kapps({
+  container: K('content[Kapps]').element(),
+  config: {
+    type: 'card',
+    refresh: {
+      position: 'above',
+      label: 'Refresh',
+      variant: 'outline',
+      size: 'md',
+    },
+  },
+});
+```
+
 ### Notes
 
+- **Event detail shape is Kapps-specific.** The shared chrome `ClickActionWrapper` dispatches `type: 'event'` events with `detail: { widget, id, config }`. Kapps overrides this so the listener gets the clicked kapp on `detail.kapp` instead of having to read it from `detail.config`. Pattern mirrors Chart's per-point click events.
 - **Case-insensitive everywhere.** All enum-style inputs (`type`, `size`, `iconPlacement`, `accentPlacement`, `accordion`, `sort`, `groupBy`) and all `Display - *` attribute values are normalized to lowercase before comparison. So `type: 'Card'`, `Display - Color = 'Primary'`, `Display - Icon = 'Settings'`, and `filter: ['Admin']` all just work. Free-text fields (`emptyText`, `ungroupedLabel`, `Display - Description`) preserve case. Group headings preserve the original case of the first category-value seen in that bucket, so groupings still read naturally.
 - **Theme-aware accents.** `Display - Color` accepts daisy semantic keys (`primary`, `success`, …) which resolve to CSS variables and track the active theme, or hex / `rgb(...)` / `var(...)` strings which pass through unchanged.
 - **Equal heights.** Pills enforce a `min-height` per size so two-line names match single-line ones. Tiles are square (`aspect-ratio: 1`). Cards share row heights via `grid-auto-rows: 1fr` and `h-full`.

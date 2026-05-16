@@ -12,7 +12,7 @@ import { Icon } from '../../atoms/Icon.jsx';
 import { Modal } from '../../atoms/Modal.jsx';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { StatusDot, StatusPill } from '../../components/tickets/StatusPill.jsx';
-import { appActions } from '../../helpers/state.js';
+import { appActions, selectCurrentKapp } from '../../helpers/state.js';
 import { getAttributeValue } from '../../helpers/records.js';
 import { buildStyleObject, useDefaultTheme } from '../../helpers/theme.js';
 import { openConfirm } from '../../helpers/confirm.js';
@@ -257,7 +257,7 @@ export const Theme = ({ target = 'kapp' }) => {
   const profile = useSelector(state => state.app.profile);
   const portalRef = useRef(null);
   const space = useSelector(state => state.app.space);
-  const kapp = useSelector(state => state.app.kapp);
+  const kapp = useSelector(selectCurrentKapp);
 
   // Resolve the record + identifying metadata for the active target. The
   // editor reads/writes whichever record this points to; the cascade itself
@@ -349,16 +349,17 @@ export const Theme = ({ target = 'kapp' }) => {
   );
 
   // Apply the response of a save/reset back into redux. The App.jsx cascade
-  // effect watches state.app.space / state.app.kapp, so updating the target
-  // record's attributesMap reactively rebuilds the theme css too.
+  // effect watches state.app.space and the current-kapp selector, so updating
+  // the target record's attributesMap reactively rebuilds the theme css too.
   const applySaveResponse = useCallback(
     response => {
       if (target === 'space' && response.space) {
         appActions.updateSpaceData({
           attributesMap: response.space.attributesMap,
         });
-      } else if (response.kapp) {
+      } else if (response.kapp?.slug) {
         appActions.updateKappData({
+          slug: response.kapp.slug,
           attributesMap: response.kapp.attributesMap,
         });
       }

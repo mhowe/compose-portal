@@ -1,37 +1,62 @@
 import { Fragment, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
-import { Provider, useSelector } from 'react-redux';
-import { fetchKapp } from '@kineticdata/react';
-import clsx from 'clsx';
+import { Provider } from 'react-redux';
 import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
 import { useInternalLinkInterceptor } from './chrome-utils.jsx';
+import {
+  CARD_VARIANTS,
+  VARIANTS,
+  SIZES,
+  SIZE_TEXT,
+  SIZE_LAYOUT,
+  CARD_WIDTHS,
+  TEXT_VERTICAL,
+  TEXT_HORIZONTAL,
+  TEXT_VERTICAL_CLASS,
+  TEXT_HORIZONTAL_CLASS,
+  ICON_SIZE_PRESETS,
+  resolveIconSize,
+  makeCn,
+  validateClassNames,
+} from './card-helpers.js';
 import { store } from '../../../redux.js';
 import { readAttribute } from '../../../helpers/setup.js';
-import { useData } from '../../../helpers/hooks/useData.js';
+import { widgetActions } from '../../../helpers/state.js';
+import { useKappContext } from '../../../helpers/widget-context.js';
 import { Icon } from '../../../atoms/Icon.jsx';
 
 /* ------------------------------------------------------------------ */
 /* Enums + truthy table                                               */
 /* ------------------------------------------------------------------ */
 
-const CARD_VARIANTS = ['background', 'side', 'stacked', 'icon-only'];
+// CARD_VARIANTS, TEXT_VERTICAL, TEXT_HORIZONTAL, SIZES, SIZE_TEXT,
+// SIZE_LAYOUT, VARIANTS, ICON_SIZE_PRESETS, resolveIconSize, makeCn, and
+// validateClassNames all live in ./card-helpers.js so the Forms widget (and
+// any future card-style widget) can share the same vocabulary.
+
 const ORDER_BY = ['displayorder', 'name', 'createdat'];
 const ORDER_DIRECTIONS = ['asc', 'desc'];
 const NAVIGATION_MODES = ['widget']; // 'url' and 'page' deferred to v2
+const FORM_COUNT_PLACEMENTS = ['title-right', 'inline', 'corner'];
+// Top-level presentation mode. 'cards' uses the full card vocabulary
+// (cardVariant, size, slot system, etc.). 'list' renders a hierarchical
+// text tree — same data, same click semantics, no visual chrome. 'picker'
+// is intentionally absent in v1 while the unified category+form picker
+// design is being worked out separately.
+const PRESENTATIONS = ['cards', 'list'];
 
-// Preset icon sizes (in pixels) usable via `config.iconSize: 'sm' | 'md' |
-// 'lg' | 'xl'`. Designers can also pass a custom number for anything outside
-// the preset range. When iconSize is omitted entirely, the variant's own
-// default (VARIANTS[variant].iconSize) wins.
-const ICON_SIZE_PRESETS = { sm: 24, md: 36, lg: 48, xl: 64 };
+// Render-time classes layered on top of the `cardFormCount` slot default for
+// each placement. The slot default stays placement-agnostic (text styling
+// only); these handle layout and image-legibility.
+const FORM_COUNT_PLACEMENT_EXTRAS = {
+  'title-right': 'whitespace-nowrap shrink-0',
+  inline: '',
+  corner:
+    'absolute top-2 right-2 z-20 rounded-full bg-base-100/80 backdrop-blur-sm px-2 py-0.5 shadow-sm',
+};
 
-const resolveIconSize = (configValue, variantDefault) => {
-  if (configValue == null) return variantDefault;
-  if (typeof configValue === 'number') return configValue;
-  if (typeof configValue === 'string') {
-    const preset = ICON_SIZE_PRESETS[lc(configValue)];
-    if (preset) return preset;
-  }
-  return variantDefault;
+const formatFormCount = count => {
+  if (count === 1) return '1 form';
+  return `${count || 0} forms`;
 };
 
 // Truthy text values for boolean-shaped attributes. Mirrors the Kapps widget
@@ -68,12 +93,18 @@ const SLOT_DEFAULTS = {
   cardIcon: 'kd-category-icon text-base-content/50',
   // <img> element when imageAttribute resolves a URL.
   cardImage: 'w-full h-full object-cover',
-  // Title + description container.
-  cardBody: 'kd-category-body flex-c-ss gap-2 p-4 w-full',
-  // Category name.
-  cardTitle: 'kd-category-title font-semibold text-base',
-  // Optional description line.
-  cardDescription: 'kd-category-description text-sm text-base-content/70 line-clamp-2',
+  // Title + description container. Padding scales with `size` and is layered
+  // on at render — the slot default stays padding-free so designers can
+  // override without fighting a hard-coded `p-4`.
+  cardBody: 'kd-category-body flex-c-ss gap-2 w-full',
+  // Category name. Font size scales with `size`.
+  cardTitle: 'kd-category-title font-semibold',
+  // Form-count badge rendered between title and description when
+  // `showFormCount: true`. Reads the count from the kapp's `categorizations`
+  // array — direct forms only (forms in descendant categories aren't summed).
+  cardFormCount: 'kd-category-form-count text-xs font-medium text-base-content/60',
+  // Optional description line. Font size scales with `size`.
+  cardDescription: 'kd-category-description text-base-content/70 line-clamp-2',
   // Breadcrumb container on the detail view.
   breadcrumb: 'kd-category-breadcrumb flex-sc flex-wrap gap-1 text-sm text-base-content/70 mb-4',
   // Clickable breadcrumb crumb (the home link + every ancestor).
@@ -84,55 +115,27 @@ const SLOT_DEFAULTS = {
   sectionTitle: 'kd-category-section-title text-sm font-semibold text-base-content/60 uppercase mt-6 mb-3',
   // Shown when the filtered list (or a leaf's sub-category list) is empty.
   emptyState: 'kd-category-empty text-base-content/60 italic py-8 text-center',
+
+  // ---- presentation: 'list' ----
+  // Outer <ul> for the list rendering. Resets default browser list styling.
+  listRoot: 'kd-category-list flex-c-st gap-0 m-0 p-0 list-none w-full',
+  // Each list row's clickable element. Padding is moderate; indent comes from
+  // the listIndent slot's inline padding-left applied at render-time per depth.
+  listItem: 'kd-category-list-item flex-sc gap-2 w-full px-3 py-2 rounded-md cursor-pointer hover:bg-base-200 transition text-left text-base-content',
+  // Layered on top of listItem when the item's slug matches currentSlug —
+  // gives the picked category a visual highlight in the tree.
+  listItemActive: 'bg-base-200 font-semibold',
+  // Icon wrapper inside a list row. Renders unconditionally when
+  // `iconAttribute` is configured (even for categories with no icon value)
+  // so names align across rows. The width matches the rendered icon size.
+  listIcon: 'kd-category-list-icon flex-cc w-4 shrink-0 text-base-content/60',
+  // Indent stripe rendered before the label per nesting level. Default is
+  // empty (depth padding is applied as an inline style); override this slot
+  // to draw tree-lines or any other indent treatment.
+  listIndent: 'kd-category-list-indent',
 };
 
 const SLOT_NAMES = Object.keys(SLOT_DEFAULTS);
-
-/* ------------------------------------------------------------------ */
-/* Per-variant layout config                                          */
-/* ------------------------------------------------------------------ */
-
-// Each variant sets:
-//   - flex direction the card uses (row for `side`, column for the rest)
-//   - extra classes layered on top of the `card` slot
-//   - the grid's min column width (passed inline as gridTemplateColumns)
-//   - extra classes for `cardMedia` (size / placement of image/icon)
-//   - icon size when no image is present
-//   - whether to render an overlay scrim over the media
-const VARIANTS = {
-  background: {
-    cardExtras: 'flex-col min-h-44',
-    minCol: 260,
-    mediaExtras: 'absolute inset-0',
-    bodyExtras: 'relative z-10 mt-auto bg-gradient-to-t from-base-100/95 via-base-100/85 to-transparent pt-12',
-    iconSize: 64,
-    overlay: true,
-  },
-  side: {
-    cardExtras: 'flex-row items-stretch',
-    minCol: 320,
-    mediaExtras: 'flex-cc w-1/3 min-h-32 shrink-0',
-    bodyExtras: 'flex-1',
-    iconSize: 48,
-    overlay: false,
-  },
-  stacked: {
-    cardExtras: 'flex-col',
-    minCol: 240,
-    mediaExtras: 'flex-cc w-full h-32',
-    bodyExtras: '',
-    iconSize: 48,
-    overlay: false,
-  },
-  'icon-only': {
-    cardExtras: 'flex-col items-center text-center',
-    minCol: 180,
-    mediaExtras: 'flex-cc pt-6',
-    bodyExtras: 'items-center',
-    iconSize: 56,
-    overlay: false,
-  },
-};
 
 /* ------------------------------------------------------------------ */
 /* Attribute readers                                                  */
@@ -211,11 +214,68 @@ const sortCategories = (list, orderBy, orderDirection) => {
   });
 };
 
-const filterCategories = (list, { hideHidden, filterAttribute }) => {
+const filterCategories = (
+  list,
+  { hideHidden, filterAttribute, hideEmpty, formCounts, subtreeFormCounts },
+) => {
   let out = list;
   if (hideHidden) out = out.filter(c => !isHidden(c));
   if (filterAttribute) out = out.filter(c => matchesFilter(c, filterAttribute));
+  if (hideEmpty === 'subtree') {
+    out = out.filter(c => (subtreeFormCounts?.get(c.slug) || 0) > 0);
+  } else if (hideEmpty) {
+    // true / 'direct' — only direct categorizations count
+    out = out.filter(c => (formCounts?.get(c.slug) || 0) > 0);
+  }
   return out;
+};
+
+/* ------------------------------------------------------------------ */
+/* Categorization helpers                                             */
+/*                                                                    */
+/* kapp.categorizations is a flat array of join records — each entry  */
+/* is { category: { slug, ... }, form: { slug, name, ... } }. We      */
+/* derive per-category form counts client-side from the array.        */
+/* ------------------------------------------------------------------ */
+
+// Map<categorySlug, count> — count of direct categorizations only.
+const buildFormCounts = categorizations => {
+  const map = new Map();
+  for (const c of categorizations || []) {
+    const slug = c?.category?.slug;
+    if (slug) map.set(slug, (map.get(slug) || 0) + 1);
+  }
+  return map;
+};
+
+// Map<categorySlug, count> — count of this category's direct forms PLUS the
+// form counts of every descendant category (via the Parent attribute chain).
+// Cycle protection: a per-recursion visited set prevents A↔B Parent loops
+// from spinning. Results are memoized within the build so a deeply-shared
+// subtree isn't recomputed.
+const buildSubtreeFormCounts = (categories, formCounts, parentAttribute) => {
+  const childrenBySlug = new Map();
+  for (const cat of categories) {
+    const ps = getParentSlug(cat, parentAttribute);
+    if (ps) {
+      if (!childrenBySlug.has(ps)) childrenBySlug.set(ps, []);
+      childrenBySlug.get(ps).push(cat.slug);
+    }
+  }
+  const result = new Map();
+  const compute = (slug, visited) => {
+    if (result.has(slug)) return result.get(slug);
+    if (visited.has(slug)) return 0; // cycle — bail at this point
+    visited.add(slug);
+    let count = formCounts.get(slug) || 0;
+    const childSlugs = childrenBySlug.get(slug) || [];
+    for (const childSlug of childSlugs) count += compute(childSlug, visited);
+    visited.delete(slug);
+    result.set(slug, count);
+    return count;
+  };
+  for (const cat of categories) compute(cat.slug, new Set());
+  return result;
 };
 
 /* ------------------------------------------------------------------ */
@@ -256,43 +316,24 @@ const getChildren = (categories, parentSlug, parentAttribute) =>
   categories.filter(c => getParentSlug(c, parentAttribute) === parentSlug);
 
 /* ------------------------------------------------------------------ */
-/* Slot-class helper (copied from Profile, profile.jsx:334-345)        */
-/* ------------------------------------------------------------------ */
-
-const makeCn = config => (slot, ...extra) => {
-  const base = clsx(SLOT_DEFAULTS[slot], ...extra);
-  const override = config.classNames?.[slot];
-  if (override == null) return base;
-  if (typeof override === 'string') return clsx(base, override);
-  // { add?, remove? } shape — first strip listed tokens out of the resolved
-  // base, then append `add`. Removal is reliable even when Tailwind's content
-  // scan can't see the override class because it lives in form bundle code.
-  const removeList = Array.isArray(override.remove) ? override.remove : null;
-  const filtered =
-    removeList && removeList.length > 0
-      ? base.split(/\s+/).filter(t => t && !removeList.includes(t)).join(' ')
-      : base;
-  return clsx(filtered, override.add);
-};
-
-/* ------------------------------------------------------------------ */
 /* Components                                                         */
 /* ------------------------------------------------------------------ */
 
-const CategoryMedia = ({ iconName, imageUrl, variant, cn, iconSize, overlayClass }) => {
+const CategoryMedia = ({ iconName, imageUrl, variant, size, cn, iconSize, overlayClass }) => {
   const v = VARIANTS[variant];
+  const layout = SIZE_LAYOUT[variant][size];
   // Render the media slot unconditionally — even when a category has neither
   // an icon nor an image — so the empty placeholder preserves grid alignment
   // across rows. Cards without media still show the slot's background color
   // and reserve the same height as their populated neighbors.
-  const size = resolveIconSize(iconSize, v.iconSize);
+  const iconPx = resolveIconSize(iconSize, layout.iconSize);
   return (
-    <div className={cn('cardMedia', v.mediaExtras)}>
+    <div className={cn('cardMedia', v.mediaExtras, layout.mediaExtra)}>
       {imageUrl ? (
         <img src={imageUrl} alt="" className={cn('cardImage')} />
       ) : iconName ? (
         <span className={cn('cardIcon', 'flex-cc')}>
-          <Icon name={iconName} size={size} />
+          <Icon name={iconName} size={iconPx} />
         </span>
       ) : null}
       {v.overlay && imageUrl && (
@@ -302,8 +343,25 @@ const CategoryMedia = ({ iconName, imageUrl, variant, cn, iconSize, overlayClass
   );
 };
 
-const CategoryCard = ({ category, variant, cn, showDescription, iconAttribute, imageAttribute, iconSize, onClick }) => {
+const CategoryCard = ({
+  category,
+  variant,
+  size,
+  cn,
+  showDescription,
+  showFormCount,
+  formCount,
+  formCountPlacement,
+  textVertical,
+  textHorizontal,
+  iconAttribute,
+  imageAttribute,
+  iconSize,
+  onClick,
+}) => {
   const v = VARIANTS[variant];
+  const sizeText = SIZE_TEXT[size];
+  const sizeLayout = SIZE_LAYOUT[variant][size];
   const iconName = getIconName(category, iconAttribute);
   const imageUrl = getImageUrl(category, imageAttribute);
   const description = getCategoryDescription(category);
@@ -313,24 +371,77 @@ const CategoryCard = ({ category, variant, cn, showDescription, iconAttribute, i
     'absolute inset-0 bg-gradient-to-t from-base-100 via-base-100/40 to-transparent pointer-events-none',
   );
 
+  const showCount = showFormCount;
+  const countText = showCount ? formatFormCount(formCount) : null;
+  const cornerCount = showCount && formCountPlacement === 'corner';
+  const titleRightCount = showCount && formCountPlacement === 'title-right';
+  const inlineCount = showCount && formCountPlacement === 'inline';
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className={cn('card', v.cardExtras)}
+      className={cn('card', v.cardExtras, sizeLayout.cardExtra)}
     >
       <CategoryMedia
         iconName={iconName}
         imageUrl={imageUrl}
         variant={variant}
+        size={size}
         cn={cn}
         iconSize={iconSize}
         overlayClass={overlayClass}
       />
-      <div className={cn('cardBody', v.bodyExtras)}>
-        <span className={cn('cardTitle')}>{category.name}</span>
+      {cornerCount && (
+        <span className={cn('cardFormCount', FORM_COUNT_PLACEMENT_EXTRAS.corner)}>
+          {countText}
+        </span>
+      )}
+      <div
+        className={cn(
+          'cardBody',
+          v.bodyExtras,
+          sizeText.padding,
+          TEXT_VERTICAL_CLASS[textVertical],
+          TEXT_HORIZONTAL_CLASS[textHorizontal],
+        )}
+      >
+        {titleRightCount ? (
+          <div className="flex-sc gap-2 w-full">
+            <span className={cn('cardTitle', sizeText.titleSize, 'flex-1')}>
+              {category.name}
+            </span>
+            <span
+              className={cn(
+                'cardFormCount',
+                FORM_COUNT_PLACEMENT_EXTRAS['title-right'],
+              )}
+            >
+              {countText}
+            </span>
+          </div>
+        ) : (
+          <span className={cn('cardTitle', sizeText.titleSize)}>
+            {category.name}
+            {inlineCount && (
+              <>
+                <span className="opacity-50 mx-1.5" aria-hidden="true">·</span>
+                <span
+                  className={cn(
+                    'cardFormCount',
+                    FORM_COUNT_PLACEMENT_EXTRAS.inline,
+                  )}
+                >
+                  {countText}
+                </span>
+              </>
+            )}
+          </span>
+        )}
         {showDescription && description && (
-          <span className={cn('cardDescription')}>{description}</span>
+          <span className={cn('cardDescription', sizeText.descSize)}>
+            {description}
+          </span>
         )}
       </div>
     </button>
@@ -370,14 +481,39 @@ const Breadcrumb = ({ path, cn, homeLabel, onNavigate }) => (
   </nav>
 );
 
-const CategoryGrid = ({ items, variant, cn, showDescription, iconAttribute, imageAttribute, iconSize, onCardClick }) => {
-  const v = VARIANTS[variant];
+const CategoryGrid = ({
+  items,
+  variant,
+  size,
+  cardWidth,
+  cn,
+  showDescription,
+  showFormCount,
+  formCountPlacement,
+  textVertical,
+  textHorizontal,
+  formCounts,
+  iconAttribute,
+  imageAttribute,
+  iconSize,
+  onCardClick,
+}) => {
+  const sizeLayout = SIZE_LAYOUT[variant][size];
+  // Column count is calculated at `min` in both modes (1fr is non-definite,
+  // so grid auto-(fill|fit) uses the minimum). What changes is how empty
+  // slots behave:
+  //   'fixed'   → `auto-fill` keeps empty tracks; occupied cards stay at
+  //               the same width whether the row is full or sparse.
+  //   'stretch' → `auto-fit` collapses empty tracks; occupied cards
+  //               stretch to fill the row.
+  const repeatMode = cardWidth === 'stretch' ? 'auto-fit' : 'auto-fill';
+  const trackTemplate = `repeat(${repeatMode}, minmax(${sizeLayout.min}px, 1fr))`;
   return (
     <div
       className={cn('grid')}
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(auto-fit, minmax(${v.minCol}px, 1fr))`,
+        gridTemplateColumns: trackTemplate,
         gridAutoRows: '1fr',
         gap: '1rem',
       }}
@@ -387,8 +523,14 @@ const CategoryGrid = ({ items, variant, cn, showDescription, iconAttribute, imag
           key={cat.slug}
           category={cat}
           variant={variant}
+          size={size}
           cn={cn}
           showDescription={showDescription}
+          showFormCount={showFormCount}
+          formCount={formCounts?.get(cat.slug) || 0}
+          formCountPlacement={formCountPlacement}
+          textVertical={textVertical}
+          textHorizontal={textHorizontal}
           iconAttribute={iconAttribute}
           imageAttribute={imageAttribute}
           iconSize={iconSize}
@@ -400,12 +542,111 @@ const CategoryGrid = ({ items, variant, cn, showDescription, iconAttribute, imag
 };
 
 /* ------------------------------------------------------------------ */
+/* List presentation                                                  */
+/*                                                                    */
+/* Recursive tree rendering. Every category is visible at once with   */
+/* nested categories indented one step further. Clicking any name     */
+/* drills (sets currentSlug + fires categoryClickAction) — same as    */
+/* card click. The currently-selected category receives the           */
+/* `listItemActive` slot extras for visual feedback.                  */
+/* ------------------------------------------------------------------ */
+
+const ListItem = ({
+  category,
+  depth,
+  cn,
+  iconAttribute,
+  currentSlug,
+  childrenByParent,
+  onItemClick,
+  visited = new Set(),
+}) => {
+  if (visited.has(category.slug)) return null; // cycle guard
+  const iconName = getIconName(category, iconAttribute);
+  const isActive = currentSlug === category.slug;
+  const kids = childrenByParent.get(category.slug) || [];
+  // Pass a *new* visited set down each branch so siblings can re-visit the
+  // same ancestors independently — only a true loop within one branch trips.
+  const nextVisited = new Set(visited);
+  nextVisited.add(category.slug);
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onItemClick(category)}
+        className={cn('listItem', isActive && cn('listItemActive'))}
+        style={{ paddingLeft: `${0.75 + depth * 1.25}rem` }}
+      >
+        {iconAttribute && (
+          <span className={cn('listIcon')} aria-hidden="true">
+            {iconName ? <Icon name={iconName} size={16} /> : null}
+          </span>
+        )}
+        <span className="truncate">{category.name}</span>
+      </button>
+      {kids.length > 0 && (
+        <ul className="kd-category-list-sublist m-0 p-0 list-none">
+          {kids.map(kid => (
+            <ListItem
+              key={kid.slug}
+              category={kid}
+              depth={depth + 1}
+              cn={cn}
+              iconAttribute={iconAttribute}
+              currentSlug={currentSlug}
+              childrenByParent={childrenByParent}
+              onItemClick={onItemClick}
+              visited={nextVisited}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+};
+
+const CategoryList = ({
+  topLevel,
+  childrenByParent,
+  cn,
+  iconAttribute,
+  currentSlug,
+  onItemClick,
+}) => (
+  <ul className={cn('listRoot')}>
+    {topLevel.map(cat => (
+      <ListItem
+        key={cat.slug}
+        category={cat}
+        depth={0}
+        cn={cn}
+        iconAttribute={iconAttribute}
+        currentSlug={currentSlug}
+        childrenByParent={childrenByParent}
+        onItemClick={onItemClick}
+      />
+    ))}
+  </ul>
+);
+
+/* ------------------------------------------------------------------ */
 /* Config normalization                                               */
 /* ------------------------------------------------------------------ */
 
 const normalizeConfig = (config = {}) => {
   const out = { ...config };
-  for (const key of ['cardVariant', 'orderBy', 'orderDirection', 'navigationMode']) {
+  for (const key of [
+    'presentation',
+    'cardVariant',
+    'size',
+    'cardWidth',
+    'orderBy',
+    'orderDirection',
+    'navigationMode',
+    'formCountPlacement',
+    'textVertical',
+    'textHorizontal',
+  ]) {
     if (typeof out[key] === 'string') out[key] = lc(out[key]);
   }
   return out;
@@ -415,32 +656,42 @@ const normalizeConfig = (config = {}) => {
 /* Main app component                                                 */
 /* ------------------------------------------------------------------ */
 
-const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
+const CategoriesContent = ({ config: rawConfig, onCategoryClick, onSelectionChange }) => {
   const config = useMemo(() => normalizeConfig(rawConfig), [rawConfig]);
   const {
     kappSlug: explicitKappSlug = null,
     parentAttribute = 'Parent',
     hideHidden = true,
+    hideEmpty = false,
     filterAttribute = null,
     limit = null,
     orderBy: rawOrderBy = 'displayorder',
     orderDirection: rawOrderDirection = 'asc',
+    presentation: rawPresentation = 'cards',
     cardVariant: rawCardVariant = 'stacked',
+    size: rawSize = 'md',
+    cardWidth: rawCardWidth = 'fixed',
     iconAttribute = 'Icon',
     imageAttribute = 'Background Image',
     iconSize = null,
     showDescription = true,
+    showFormCount = false,
+    formCountPlacement: rawFormCountPlacement = 'title-right',
+    textVertical: rawTextVertical = 'top',
+    textHorizontal: rawTextHorizontal = 'left',
     showBreadcrumb = true,
     breadcrumbHomeLabel = 'All',
     subCategoriesTitle = 'Categories',
     emptyText = 'No categories to display',
-    loadingText = 'Loading categories…',
     categoryClickAction,
     className,
     debug = false,
   } = config;
 
   // Resolve enums with safe fallbacks.
+  const presentation = PRESENTATIONS.includes(rawPresentation)
+    ? rawPresentation
+    : 'cards';
   const orderBy = ORDER_BY.includes(rawOrderBy) ? rawOrderBy : 'displayorder';
   const orderDirection = ORDER_DIRECTIONS.includes(rawOrderDirection)
     ? rawOrderDirection
@@ -448,54 +699,74 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
   const cardVariant = CARD_VARIANTS.includes(rawCardVariant)
     ? rawCardVariant
     : 'stacked';
+  const size = SIZES.includes(rawSize) ? rawSize : 'md';
+  const cardWidth = CARD_WIDTHS.includes(rawCardWidth) ? rawCardWidth : 'fixed';
+  const formCountPlacement = FORM_COUNT_PLACEMENTS.includes(
+    rawFormCountPlacement,
+  )
+    ? rawFormCountPlacement
+    : 'title-right';
+  const textVertical = TEXT_VERTICAL.includes(rawTextVertical)
+    ? rawTextVertical
+    : 'top';
+  const textHorizontal = TEXT_HORIZONTAL.includes(rawTextHorizontal)
+    ? rawTextHorizontal
+    : 'left';
 
-  const reduxKapp = useSelector(s => s.app.kapp);
-  const [currentSlug, setCurrentSlug] = useState(null);
+  // Resolve which kapp's categories we're showing via the shared
+  // useKappContext hook:
+  //   - explicit config.kappSlug → pin to that slug
+  //   - else 'auto' (default) → use the nearest BundleContainer's published
+  //     kapp slug if this widget is rendered inside one; otherwise fall
+  //     through to the global URL-driven kapp.
+  // Either way the kapp record comes out of the shared cache (populated by
+  // App.jsx's bulk space fetch) — no extra network call.
+  const { kapp: targetKapp, slug: targetKappSlug } = useKappContext({
+    kappSlug: explicitKappSlug || 'auto',
+  });
+  // Stable empty-array fallback so downstream useMemo / useEffect deps don't
+  // see a new reference on every render when the target kapp has no
+  // categories (or hasn't landed in the cache yet).
+  const categories = useMemo(
+    () => targetKapp?.categories || [],
+    [targetKapp],
+  );
+  const categorizations = useMemo(
+    () => targetKapp?.categorizations || [],
+    [targetKapp],
+  );
 
-  // Resolve which kapp's categories we're showing:
-  //   - explicit config.kappSlug (escape hatch — render any kapp's categories
-  //     regardless of where the user has navigated)
-  //   - else whichever kapp Redux currently holds (which now follows the URL
-  //     via the App.jsx URL → kappSlug effect)
-  const targetKappSlug = explicitKappSlug || reduxKapp?.slug || null;
-  // When the target matches Redux, use Redux. When it differs (explicit slug
-  // pointing at a kapp other than the current one), fetch that kapp ourselves
-  // so the widget can render cross-kapp without disturbing global state.
-  const useRedux = targetKappSlug && reduxKapp?.slug === targetKappSlug;
-
-  const fetchParams = useMemo(
+  // Per-category form counts derived from the cached `categorizations` array.
+  // Always computed (cheap — one pass over the join array) so the badge can
+  // read it without a separate code path; `subtreeFormCounts` is only built
+  // when `hideEmpty === 'subtree'` because the recursive walk is wasted work
+  // otherwise.
+  const formCounts = useMemo(
+    () => buildFormCounts(categorizations),
+    [categorizations],
+  );
+  const subtreeFormCounts = useMemo(
     () =>
-      useRedux || !targetKappSlug
-        ? null
-        : {
-            kappSlug: targetKappSlug,
-            include: 'categories,categories.attributesMap',
-          },
-    [useRedux, targetKappSlug],
-  );
-  const { loading: fetchLoading, response: fetched } = useData(
-    fetchKapp,
-    fetchParams,
+      hideEmpty === 'subtree'
+        ? buildSubtreeFormCounts(categories, formCounts, parentAttribute)
+        : null,
+    [hideEmpty, categories, formCounts, parentAttribute],
   );
 
-  const categories = useMemo(() => {
-    if (useRedux) return reduxKapp?.categories || [];
-    return fetched?.kapp?.categories || [];
-  }, [useRedux, reduxKapp, fetched]);
+  const [currentSlug, setCurrentSlug] = useState(null);
 
   // Optional diagnostic: when `debug: true` is set in config, log what the
   // widget is reading every time it computes a new result. Helpful when the
   // widget renders empty and you want to know whether it's a state problem
-  // (no kapp / no categories loaded) or a filtering problem (kapp +
-  // categories present but every one is hidden or nested).
+  // (target kapp not in cache) or a filtering problem (categories present
+  // but every one is hidden or nested).
   useEffect(() => {
     if (!debug) return;
-    /* eslint-disable no-console */
     console.groupCollapsed('[Categories widget] data snapshot');
-    console.log('source:', useRedux ? 'redux' : explicitKappSlug ? 'fetch' : '(none)');
     console.log('targetKappSlug:', targetKappSlug ?? '(none)');
-    console.log('reduxKapp?.slug:', reduxKapp?.slug ?? '(no kapp in redux)');
+    console.log('targetKapp in cache:', !!targetKapp);
     console.log('categories.length:', categories.length);
+    console.log('categorizations.length:', categorizations.length);
     if (categories.length > 0) {
       console.table(
         categories.map(c => ({
@@ -507,21 +778,23 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
           icon: (iconAttribute && readAttribute(c, iconAttribute)) ?? '',
           image: (imageAttribute && readAttribute(c, imageAttribute)) ?? '',
           description: readAttribute(c, 'Description') ?? c.description ?? '',
+          formCount: formCounts.get(c.slug) || 0,
+          subtreeFormCount: subtreeFormCounts?.get(c.slug) ?? '(not computed)',
         })),
       );
     }
     console.groupEnd();
-    /* eslint-enable no-console */
   }, [
     debug,
-    useRedux,
-    explicitKappSlug,
     targetKappSlug,
-    reduxKapp,
+    targetKapp,
     categories,
+    categorizations,
     parentAttribute,
     iconAttribute,
     imageAttribute,
+    formCounts,
+    subtreeFormCounts,
   ]);
 
   // If the categories list changes (kapp reloaded), drop the current selection
@@ -531,18 +804,58 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
     if (!categories.some(c => c.slug === currentSlug)) setCurrentSlug(null);
   }, [categories, currentSlug]);
 
-  const cn = useMemo(() => makeCn(config), [config]);
+  // Publish the current selection to the shared widgets slice so a sibling
+  // Forms widget (auto-bind mode) can observe it without explicit wiring.
+  // Keyed by the resolved kapp slug so two unrelated kapps on one page each
+  // track their own selection. On unmount the entry is cleared, so a Forms
+  // widget that outlives this Categories widget falls back to its default
+  // "all forms in kapp" view.
+  //
+  // Also forwards the change up to the forwardRef wrapper so the widget's
+  // imperative `getSelection()` API can return the current slug without
+  // reaching into Redux.
+  useEffect(() => {
+    if (typeof onSelectionChange === 'function') onSelectionChange(currentSlug);
+    if (!targetKappSlug) return;
+    widgetActions.setCategorySelection({
+      kappSlug: targetKappSlug,
+      categorySlug: currentSlug,
+    });
+    return () => {
+      widgetActions.setCategorySelection({
+        kappSlug: targetKappSlug,
+        categorySlug: null,
+      });
+    };
+  }, [targetKappSlug, currentSlug, onSelectionChange]);
+
+  const cn = useMemo(() => makeCn(SLOT_DEFAULTS, config), [config]);
 
   const slugMap = useMemo(() => buildSlugMap(categories), [categories]);
 
   const visible = useMemo(
     () =>
       sortCategories(
-        filterCategories(categories, { hideHidden, filterAttribute }),
+        filterCategories(categories, {
+          hideHidden,
+          filterAttribute,
+          hideEmpty,
+          formCounts,
+          subtreeFormCounts,
+        }),
         orderBy,
         orderDirection,
       ),
-    [categories, hideHidden, filterAttribute, orderBy, orderDirection],
+    [
+      categories,
+      hideHidden,
+      filterAttribute,
+      hideEmpty,
+      formCounts,
+      subtreeFormCounts,
+      orderBy,
+      orderDirection,
+    ],
   );
 
   const children = useMemo(
@@ -554,6 +867,34 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
     () => (limit && limit > 0 ? children.slice(0, limit) : children),
     [children, limit],
   );
+
+  // List presentation builds its own top-level + children-by-parent maps so
+  // the recursive tree shows every visible category at once (vs. the cards
+  // presentation, which only renders direct children of currentSlug).
+  const visibleSlugs = useMemo(
+    () => new Set(visible.map(c => c.slug)),
+    [visible],
+  );
+  const listTopLevel = useMemo(() => {
+    if (presentation !== 'list') return [];
+    const tops = visible.filter(c => {
+      const ps = getParentSlug(c, parentAttribute);
+      return !ps || !visibleSlugs.has(ps);
+    });
+    return limit && limit > 0 ? tops.slice(0, limit) : tops;
+  }, [presentation, visible, visibleSlugs, parentAttribute, limit]);
+  const childrenByParent = useMemo(() => {
+    if (presentation !== 'list') return new Map();
+    const map = new Map();
+    for (const cat of visible) {
+      const ps = getParentSlug(cat, parentAttribute);
+      if (ps) {
+        if (!map.has(ps)) map.set(ps, []);
+        map.get(ps).push(cat);
+      }
+    }
+    return map;
+  }, [presentation, visible, parentAttribute]);
 
   const breadcrumbPath = useMemo(
     () =>
@@ -577,6 +918,28 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
 
   const isDetailView = currentSlug != null;
 
+  // List presentation: render the whole tree at once. Breadcrumb and the
+  // "Categories" section title don't apply (the full hierarchy is already
+  // visible in-place). Empty top-level → emptyText.
+  if (presentation === 'list') {
+    return (
+      <div className={cn('root', className)}>
+        {listTopLevel.length > 0 ? (
+          <CategoryList
+            topLevel={listTopLevel}
+            childrenByParent={childrenByParent}
+            cn={cn}
+            iconAttribute={iconAttribute}
+            currentSlug={currentSlug}
+            onItemClick={handleCardClick}
+          />
+        ) : (
+          <div className={cn('emptyState')}>{emptyText}</div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={cn('root', className)}>
       {isDetailView && showBreadcrumb && (
@@ -596,16 +959,21 @@ const CategoriesContent = ({ config: rawConfig, onCategoryClick }) => {
         <CategoryGrid
           items={limited}
           variant={cardVariant}
+          size={size}
+          cardWidth={cardWidth}
           cn={cn}
           showDescription={showDescription}
+          showFormCount={showFormCount}
+          formCountPlacement={formCountPlacement}
+          textVertical={textVertical}
+          textHorizontal={textHorizontal}
+          formCounts={formCounts}
           iconAttribute={iconAttribute}
           imageAttribute={imageAttribute}
           iconSize={iconSize}
           onCardClick={handleCardClick}
         />
-      ) : fetchLoading ? (
-        <div className={cn('emptyState')}>{loadingText}</div>
-      ) : (
+      ) : isDetailView ? null : (
         <div className={cn('emptyState')}>{emptyText}</div>
       )}
     </div>
@@ -620,6 +988,10 @@ const CategoriesComponent = forwardRef(({ config }, ref) => {
   const api = useRef({});
   const onClickCapture = useInternalLinkInterceptor();
   const [currentConfig, setCurrentConfig] = useState(config);
+  // Mirror of the inner widget's currentSlug — published by CategoriesContent
+  // via the onSelectionChange callback. Used by the imperative getSelection()
+  // API so callers can read the selection without reaching into Redux.
+  const selectionRef = useRef(null);
 
   useEffect(() => {
     setCurrentConfig(config);
@@ -627,12 +999,20 @@ const CategoriesComponent = forwardRef(({ config }, ref) => {
 
   api.current.update = patch =>
     setCurrentConfig(prev => ({ ...prev, ...(patch || {}) }));
+  api.current.getSelection = () => selectionRef.current;
+
+  const handleSelectionChange = slug => {
+    selectionRef.current = slug || null;
+  };
 
   return (
     <Provider store={store}>
       <WidgetAPI ref={ref} api={api.current}>
         <div onClickCapture={onClickCapture}>
-          <CategoriesContent config={currentConfig} />
+          <CategoriesContent
+            config={currentConfig}
+            onSelectionChange={handleSelectionChange}
+          />
         </div>
       </WidgetAPI>
     </Provider>
@@ -642,51 +1022,6 @@ const CategoriesComponent = forwardRef(({ config }, ref) => {
 /* ------------------------------------------------------------------ */
 /* Config validation                                                  */
 /* ------------------------------------------------------------------ */
-
-const validateClassNames = (classNames, widgetName) => {
-  if (classNames == null) return true;
-  if (typeof classNames !== 'object' || Array.isArray(classNames)) {
-    console.error(
-      `${widgetName} Widget Error: config.classNames must be an object keyed by slot name.`,
-    );
-    return false;
-  }
-  for (const [slot, value] of Object.entries(classNames)) {
-    if (!SLOT_NAMES.includes(slot)) {
-      console.warn(
-        `${widgetName} Widget Warning: config.classNames.${slot} is not a recognized slot (expected one of ${SLOT_NAMES.join(', ')}). The entry is ignored.`,
-      );
-      continue;
-    }
-    if (value == null) continue;
-    if (typeof value === 'string') continue;
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      if (value.add != null && typeof value.add !== 'string') {
-        console.error(
-          `${widgetName} Widget Error: config.classNames.${slot}.add must be a string when provided.`,
-        );
-        return false;
-      }
-      if (value.remove != null) {
-        if (
-          !Array.isArray(value.remove) ||
-          !value.remove.every(s => typeof s === 'string')
-        ) {
-          console.error(
-            `${widgetName} Widget Error: config.classNames.${slot}.remove must be an array of strings.`,
-          );
-          return false;
-        }
-      }
-      continue;
-    }
-    console.error(
-      `${widgetName} Widget Error: config.classNames.${slot} must be a string or { add?, remove? } object.`,
-    );
-    return false;
-  }
-  return true;
-};
 
 const checkEnum = (value, allowed, fieldName) => {
   if (value == null) return true;
@@ -700,15 +1035,49 @@ const checkEnum = (value, allowed, fieldName) => {
 };
 
 const validateConfig = (config = {}) => {
+  if (!checkEnum(config.presentation, PRESENTATIONS, 'presentation'))
+    return false;
   if (!checkEnum(config.cardVariant, CARD_VARIANTS, 'cardVariant')) return false;
+  if (!checkEnum(config.size, SIZES, 'size')) return false;
+  if (!checkEnum(config.cardWidth, CARD_WIDTHS, 'cardWidth')) return false;
   if (!checkEnum(config.orderBy, ORDER_BY, 'orderBy')) return false;
   if (!checkEnum(config.orderDirection, ORDER_DIRECTIONS, 'orderDirection'))
     return false;
   if (!checkEnum(config.navigationMode, NAVIGATION_MODES, 'navigationMode'))
     return false;
-  for (const k of ['hideHidden', 'showDescription', 'showBreadcrumb']) {
+  if (
+    !checkEnum(
+      config.formCountPlacement,
+      FORM_COUNT_PLACEMENTS,
+      'formCountPlacement',
+    )
+  )
+    return false;
+  if (!checkEnum(config.textVertical, TEXT_VERTICAL, 'textVertical'))
+    return false;
+  if (!checkEnum(config.textHorizontal, TEXT_HORIZONTAL, 'textHorizontal'))
+    return false;
+  for (const k of [
+    'hideHidden',
+    'showDescription',
+    'showFormCount',
+    'showBreadcrumb',
+  ]) {
     if (config[k] != null && typeof config[k] !== 'boolean') {
       console.error(`Categories Widget Error: ${k} must be a boolean.`);
+      return false;
+    }
+  }
+  if (config.hideEmpty != null) {
+    const ok =
+      config.hideEmpty === false ||
+      config.hideEmpty === true ||
+      config.hideEmpty === 'direct' ||
+      config.hideEmpty === 'subtree';
+    if (!ok) {
+      console.error(
+        "Categories Widget Error: hideEmpty must be false, true, 'direct', or 'subtree'.",
+      );
       return false;
     }
   }
@@ -721,7 +1090,6 @@ const validateConfig = (config = {}) => {
     'breadcrumbHomeLabel',
     'subCategoriesTitle',
     'emptyText',
-    'loadingText',
     'className',
   ]) {
     if (config[k] != null && typeof config[k] !== 'string') {
@@ -767,7 +1135,8 @@ const validateConfig = (config = {}) => {
     console.error('Categories Widget Error: debug must be a boolean.');
     return false;
   }
-  if (!validateClassNames(config.classNames, 'Categories')) return false;
+  if (!validateClassNames(config.classNames, 'Categories', SLOT_NAMES))
+    return false;
   return true;
 };
 

@@ -9,6 +9,11 @@ import jquery from 'jquery';
 import moment from 'moment';
 import { format } from 'date-fns';
 import { utc } from '@date-fns/utc';
+import {
+  refreshKapp,
+  refreshKappForms,
+  refreshKapps,
+} from '../../helpers/state.js';
 
 jquery.ajaxSetup({
   xhrFields: {
@@ -30,6 +35,15 @@ window.bundle.config.fields = {
   datetime: { render: renderDateTimePickers },
   time: { render: renderDateTimePickers },
 };
+
+// Kapp-cache refresh API. Most widgets read kapp data from the cache (which
+// is populated up-front by the bulk space fetch in App.jsx). These helpers
+// let forms and widgets request a re-fetch when they know the server-side
+// data has changed — e.g. after an integration writes a kapp attribute.
+// See KAPP_CACHE.md for the full contract.
+window.bundle.refreshKapp = refreshKapp;
+window.bundle.refreshKapps = refreshKapps;
+window.bundle.refreshKappForms = refreshKappForms;
 
 // Widget reference docs — sourced from the .md files in
 // src/components/kinetic-form/widgets and exposed by widgetDocsPlugin in
