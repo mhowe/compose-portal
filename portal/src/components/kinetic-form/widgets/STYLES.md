@@ -14,6 +14,21 @@ When styling a form field, section, or element, prefer classes in this order:
 
 If you find yourself writing the same Tailwind utility chain on multiple forms, file it as a candidate for a new `kd-*` class.
 
+### Rendering defaults and the `plain` class
+
+The bundle applies a rule to all embedded forms that forces every `content` element to `display: block; width: 100%` unless either:
+- the **content element itself** has `plain`, or
+- an **ancestor section** has `plain`
+
+The exact rule is in `.embedded-core-form form` — it targets `[data-element-type="section"]:not(.plain)` containing `[data-element-type='content']:not(.plain)` and applies `display: block; width: 100%`. Because both the section and the content must lack `plain` for the rule to fire, opt-out is flexible:
+- Add `plain` to a **section** to free all its content children at once
+- Add `plain` to an individual **content element** to free it selectively
+
+#### Why this matters for flex/grid layouts
+
+`display: block; width: 100%` overrides flex child behavior entirely. Even if you set `flex` on a container section, its content children will still be forced to block-display and full-width — they won't participate in the flex layout. Adding `plain` to the container section breaks the CSS selector chain and lets the children behave as flex items.
+
+
 ### Custom Components
 
 Bundle-specific component classes. Defined in [`portal/src/assets/styles/kd-components.css`](../../../assets/styles/kd-components.css).

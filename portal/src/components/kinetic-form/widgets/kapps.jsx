@@ -24,6 +24,12 @@ const ICON_PLACEMENTS = {
 };
 const SORT_MODES = ['order', 'name'];
 const GROUP_BY = [null, 'category'];
+const NAME_ALIGNMENTS = ['left', 'center', 'right'];
+const NAME_ALIGN_CLASS = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+};
 
 // Rendered refresh-button config. Corner positions float over the widget root
 // (which carries `position: relative`); above/below render as block siblings
@@ -121,6 +127,7 @@ const normalizeConfig = (config = {}) => {
     'size',
     'iconPlacement',
     'accentPlacement',
+    'nameAlignment',
     'accordion',
     'sort',
     'groupBy',
@@ -474,6 +481,8 @@ const KappCard = ({
   showName,
   showDescription,
   iconPlacement,
+  nameAlignment,
+  reserveIconSpace,
   accentStyle,
   clickAction,
   target,
@@ -484,6 +493,85 @@ const KappCard = ({
     readAttribute(kapp, 'Display - Description') || kapp.description;
   const hasIcon = showIcon && iconName && iconPlacement !== 'none';
   const heroIconSize = Math.round(sizeConfig.iconSize * 1.5);
+  const reserve = reserveIconSpace && showIcon && iconPlacement !== 'none';
+  const nameAlignClass = NAME_ALIGN_CLASS[nameAlignment] || NAME_ALIGN_CLASS.left;
+
+  // Renders the top-banner slot. Banner shows when the kapp has an icon, OR
+  // when reservation is on (so cards without icons keep a matching colored band
+  // and titles align across rows).
+  const renderBanner = () => {
+    if (iconPlacement !== 'top-banner') return null;
+    if (!hasIcon && !reserve) return null;
+    return (
+      <div className="kd-kapp-card-banner flex-cc bg-base-200 py-6 w-full">
+        {hasIcon ? (
+          <KappIconNode name={iconName} size={heroIconSize} />
+        ) : (
+          <div style={{ width: heroIconSize, height: heroIconSize }} aria-hidden />
+        )}
+      </div>
+    );
+  };
+
+  // Renders the hero icon slot above the title. Same rule as banner — a sized
+  // placeholder keeps title positions aligned when reservation is on.
+  const renderHero = () => {
+    if (iconPlacement !== 'hero') return null;
+    if (!hasIcon && !reserve) return null;
+    return (
+      <div className="kd-kapp-card-hero self-center mb-2">
+        {hasIcon ? (
+          <KappIconNode name={iconName} size={heroIconSize} />
+        ) : (
+          <div style={{ width: heroIconSize, height: heroIconSize }} aria-hidden />
+        )}
+      </div>
+    );
+  };
+
+  // Renders the title (icon + name row for `inline-left`, plain span for the
+  // other placements). For `inline-left`, the row wrapper is rendered whenever
+  // the kapp has an icon OR reservation is on — that keeps the name's
+  // horizontal position consistent across icon/no-icon kapps.
+  const renderTitle = () => {
+    if (iconPlacement === 'inline-left' && (hasIcon || reserve)) {
+      return (
+        <div className="kd-kapp-card-title flex-sc gap-3 w-full">
+          {hasIcon ? (
+            <KappIconNode name={iconName} size={sizeConfig.iconSize} />
+          ) : (
+            <div
+              style={{ width: sizeConfig.iconSize, height: sizeConfig.iconSize }}
+              aria-hidden
+            />
+          )}
+          {showName && (
+            <span
+              className={clsx(
+                'font-semibold flex-1',
+                nameAlignClass,
+                sizeConfig.text,
+              )}
+            >
+              {kapp.name}
+            </span>
+          )}
+        </div>
+      );
+    }
+    if (!showName) return null;
+    return (
+      <span
+        className={clsx(
+          'kd-kapp-card-title font-semibold block w-full',
+          nameAlignClass,
+          sizeConfig.text,
+        )}
+      >
+        {kapp.name}
+      </span>
+    );
+  };
 
   return (
     <KappClickWrapper
@@ -497,38 +585,10 @@ const KappCard = ({
         'hover:border-primary hover:shadow-md transition h-full no-underline text-base-content',
       )}
     >
-      {hasIcon && iconPlacement === 'top-banner' && (
-        <div className="kd-kapp-card-banner flex-cc bg-base-200 py-6 w-full">
-          <KappIconNode name={iconName} size={heroIconSize} />
-        </div>
-      )}
+      {renderBanner()}
       <div className={clsx('kd-kapp-card-body flex-c-ss gap-2 w-full', sizeConfig.padding)}>
-        {hasIcon && iconPlacement === 'hero' && (
-          <div className="kd-kapp-card-hero self-center mb-2">
-            <KappIconNode name={iconName} size={heroIconSize} />
-          </div>
-        )}
-        {hasIcon && iconPlacement === 'inline-left' ? (
-          <div className="kd-kapp-card-title flex-sc gap-3 w-full">
-            <KappIconNode name={iconName} size={sizeConfig.iconSize} />
-            {showName && (
-              <span className={clsx('font-semibold flex-1', sizeConfig.text)}>
-                {kapp.name}
-              </span>
-            )}
-          </div>
-        ) : (
-          showName && (
-            <span
-              className={clsx(
-                'kd-kapp-card-title font-semibold',
-                sizeConfig.text,
-              )}
-            >
-              {kapp.name}
-            </span>
-          )
-        )}
+        {renderHero()}
+        {renderTitle()}
         {showDescription && description && (
           <span
             className={clsx(
@@ -634,6 +694,8 @@ const KappsContent = ({ id: instanceId, config: rawConfig }) => {
     showDescription = true,
     iconPlacement: rawIconPlacement = 'auto',
     accentPlacement: rawAccentPlacement = 'auto',
+    nameAlignment = 'left',
+    reserveIconSpace = false,
     filter = null,
     include = null,
     exclude = null,
@@ -739,6 +801,8 @@ const KappsContent = ({ id: instanceId, config: rawConfig }) => {
         {...shared}
         showName={showName}
         showDescription={showDescription}
+        nameAlignment={nameAlignment}
+        reserveIconSpace={reserveIconSpace}
       />
     );
   };
@@ -867,7 +931,13 @@ const validateConfig = (rawConfig = {}) => {
   const config = normalizeConfig(rawConfig);
   if (!checkEnum(config.type, TYPES, 'type')) return false;
   if (!checkEnum(config.size, SIZES, 'size')) return false;
-  for (const k of ['showIcon', 'showName', 'showDescription', 'includeHidden']) {
+  for (const k of [
+    'showIcon',
+    'showName',
+    'showDescription',
+    'includeHidden',
+    'reserveIconSpace',
+  ]) {
     if (config[k] != null && typeof config[k] !== 'boolean') {
       console.error(`Kapps Widget Error: ${k} must be a boolean.`);
       return false;
@@ -878,6 +948,8 @@ const validateConfig = (rawConfig = {}) => {
     return false;
   }
   if (!checkEnum(config.accentPlacement, ACCENT_PLACEMENTS, 'accentPlacement'))
+    return false;
+  if (!checkEnum(config.nameAlignment, NAME_ALIGNMENTS, 'nameAlignment'))
     return false;
   if (
     config.filter != null &&
@@ -1013,6 +1085,12 @@ const validateRefresh = refresh => {
  * @param {string} [config.accentPlacement] Where the `Display - Color`
  *   accent border renders. 'auto' resolves per type: pill → 'none'; tile →
  *   'top'; card → 'left'. Other values: 'left'|'top'|'right'|'bottom'|'none'.
+ * @param {string} [config.nameAlignment] Card type only. Horizontal alignment
+ *   of the kapp name: 'left' (default) | 'center' | 'right'.
+ * @param {boolean} [config.reserveIconSpace] Card type only. When true,
+ *   reserves icon-sized space even for kapps with no `Display - Icon`, so
+ *   titles align across a row of icon/no-icon kapps. Applies to the
+ *   `inline-left`, `hero`, and `top-banner` icon placements. Default false.
  * @param {string|Array<string>} [config.filter] Restrict to kapps whose
  *   `Display - Category` matches (any of these values, if multiple).
  * @param {Array<string>} [config.include] Allowlist of kapp slugs.

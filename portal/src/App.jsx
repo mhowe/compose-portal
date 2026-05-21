@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import t from 'prop-types';
@@ -23,6 +23,7 @@ import { ConfirmationModal } from './components/confirm/ConfirmationModal.jsx';
 import { ModalSlot } from './components/modal/ModalSlot.jsx';
 import { NavBridge } from './components/NavBridge.jsx';
 import { useData } from './helpers/hooks/useData.js';
+import { loadBundleFunctions } from './helpers/bundle-functions.js';
 
 export const App = ({
   initialized,
@@ -124,6 +125,18 @@ export const App = ({
     }
   }, [profileInit, profileLoading, profileData]);
 
+  // Compile the customer-defined bundle.functions registry once the user is
+  // authenticated and the space record has loaded. Blocks PrivateRoutes mount
+  // (and therefore any CoreForm rendering) so form bundle code can assume
+  // `bundle.functions.X` is defined when it runs. Silent no-op when the
+  // backing form isn't installed. See helpers/bundle-functions.js.
+  const [functionsReady, setFunctionsReady] = useState(false);
+  useEffect(() => {
+    if (loggedIn && space && !functionsReady) {
+      loadBundleFunctions().finally(() => setFunctionsReady(true));
+    }
+  }, [loggedIn, space, functionsReady]);
+
   // Recompute the cascade-merged theme any time space or kapp data changes.
   // Both records contribute a layer; kapp overrides space. The current kapp
   // record comes from the cache (populated by the space fetch), so no
@@ -164,7 +177,7 @@ export const App = ({
             // If the user is not logged in, render the public routes, which
             // will default to rendering the login page for all unmatched routes
             <PublicRoutes loginProps={loginProps} />
-          ) : kapp && profile ? (
+          ) : kapp && profile && functionsReady ? (
             // If the user is logged in and kapp and profile data has been
             // fetched, render the private routes, and render the Login
             // component in a modal if auth times out

@@ -121,17 +121,6 @@ const BundleContainerInner = forwardRef(
       pathRef.current = isBlank ? '' : location.pathname;
     }, [location.pathname, isBlank]);
 
-    // Live ref for `isBlank` so the imperative API and event-handler
-    // closures (created once) can read the current value without re-binding.
-    // We use this to force `replace: true` on the first navigation out of a
-    // blank container — the placeholder '/' MemoryRouter entry isn't a real
-    // page and shouldn't occupy a history slot, otherwise navigate(-1) from
-    // the first navigated page would land on the resolver.
-    const isBlankRef = useRef(!!initiallyBlank);
-    useEffect(() => {
-      isBlankRef.current = isBlank;
-    }, [isBlank]);
-
     // History "floor" — the location.key of the first real (non-blank) entry
     // in this container's MemoryRouter. We can't rely on the literal key
     // 'default' to detect "nothing to go back to": a blank-container start
@@ -149,26 +138,37 @@ const BundleContainerInner = forwardRef(
     const [historyFloorKey, setHistoryFloorKey] = useState(
       initiallyBlank ? null : 'default',
     );
+    // Tracks whether the MemoryRouter's initial '/' placeholder is still the
+    // current router entry. True only when the container mounted blank AND
+    // has not yet been navigated to a real path. The first real navigation
+    // replaces (overwrites) the placeholder rather than pushing, then this
+    // flips to false for the rest of the container's life. A programmatic
+    // clear (`api.navigate('')` / `null`) does NOT restore the placeholder
+    // — it leaves inner router history untouched and only flips isBlank —
+    // so re-navigation after a clear pushes normally.
+    const hasPlaceholderRef = useRef(!!initiallyBlank);
     useEffect(() => {
       if (!isBlank && historyFloorKey === null) {
         setHistoryFloorKey(location.key);
+        hasPlaceholderRef.current = false;
       }
     }, [isBlank, location.key, historyFloorKey]);
     const canGoBack =
       historyFloorKey !== null && location.key !== historyFloorKey;
 
     // Outbound navigation event. Fires whenever the container's effective
-    // path changes — including blank→path, path→path, and path→blank — so
-    // other widgets can subscribe to "this container moved." Skips the
-    // initial mount so subscribers don't see a fake navigation when the
-    // container first comes up. Uses a sentinel (undefined) to distinguish
-    // "first run" from "no path yet" (which is '').
+    // path changes — including the initial arrival on mount, blank→path,
+    // path→path, and path→blank — so other widgets can subscribe to
+    // "what path is this container on?" and treat the first event as the
+    // source of truth for initial state. On the mount event, `previousPath`
+    // is `undefined`; on every subsequent event, it's the prior `path`.
+    // The sentinel ref also suppresses redundant dispatches when nothing
+    // actually changed between renders.
     const lastDispatchedPathRef = useRef(undefined);
     useEffect(() => {
       const currentPath = isBlank ? '' : location.pathname;
       const previousPath = lastDispatchedPathRef.current;
       lastDispatchedPathRef.current = currentPath;
-      if (previousPath === undefined) return; // initial mount
       if (previousPath === currentPath) return;
       window.dispatchEvent(
         new CustomEvent('bundle:container:navigated', {
@@ -242,21 +242,31 @@ const BundleContainerInner = forwardRef(
     //     detail: { id, path, replace }
     //   }))
     // When `detail.id` matches this container's id, navigate. When `detail.id`
-    // is omitted, every container responds (broadcast). Path is required and
-    // must start with "/". `replace` is optional — when true, the inner
-    // history entry is replaced rather than pushed (back button skips it).
+    // is omitted, every container responds (broadcast). Path must start with
+    // "/" to navigate, OR be the explicit value '' or null to clear (blank)
+    // the container without touching inner router history. `replace` is
+    // optional — when true, the inner history entry is replaced rather than
+    // pushed (back button skips it). Ignored on clear.
     useEffect(() => {
       const handler = event => {
         const detail = event?.detail || {};
         if (detail.id != null && detail.id !== id) return;
+        // Clear signal — explicit '' or null only. Undefined (missing key)
+        // falls through to the typeof check below so a malformed event still
+        // gets rejected rather than silently clearing every container.
+        if (detail.path === '' || detail.path === null) {
+          setIsBlank(true);
+          return;
+        }
         if (typeof detail.path !== 'string' || !detail.path.startsWith('/')) {
           return;
         }
-        const wasBlank = isBlankRef.current;
+        const replacePlaceholder = hasPlaceholderRef.current;
+        hasPlaceholderRef.current = false;
         setIsBlank(false);
         navigate(
           detail.path,
-          detail.replace || wasBlank ? { replace: true } : undefined,
+          detail.replace || replacePlaceholder ? { replace: true } : undefined,
         );
       };
       window.addEventListener('bundle:container:navigate', handler);
@@ -267,17 +277,25 @@ const BundleContainerInner = forwardRef(
     // Imperative API — picked up by registerWidget via the ref'd WidgetAPI
     // wrapper, then exposed at bundle.widgets.BundleContainer.instances[id].api.
     // Calling `navigate` with a valid path also un-blanks the container.
+    // Calling it with the explicit value '' or null clears the container —
+    // flips it back to blank without touching inner router history, so a
+    // later navigate pushes onto the existing history rather than over it.
     const api = useRef({
       navigate: (path, { replace } = {}) => {
+        if (path === '' || path === null) {
+          setIsBlank(true);
+          return;
+        }
         if (typeof path !== 'string' || !path.startsWith('/')) {
           console.error(
-            'BundleContainer Widget Error: navigate(path) requires a string starting with "/".',
+            'BundleContainer Widget Error: navigate(path) requires a string starting with "/", or the explicit value "" / null to clear the container.',
           );
           return;
         }
-        const wasBlank = isBlankRef.current;
+        const replacePlaceholder = hasPlaceholderRef.current;
+        hasPlaceholderRef.current = false;
         setIsBlank(false);
-        navigate(path, replace || wasBlank ? { replace: true } : undefined);
+        navigate(path, replace || replacePlaceholder ? { replace: true } : undefined);
       },
       getCurrent: () => pathRef.current,
     });

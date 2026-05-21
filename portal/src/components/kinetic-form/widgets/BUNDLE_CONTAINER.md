@@ -69,7 +69,9 @@ A unique id used by the widget machinery for instance tracking. When omitted, fa
 **`navigate(path, options)`** — *Function*  
 Navigates the container to the given path. `path` must be a string starting with `/`. Calling this also un-blanks the container if it was previously blank.
 
-The optional second argument is `{ replace: boolean }`. When `replace: true`, the new path replaces the current entry in the container's history rather than pushing a new one — the browser back button skips it. Useful for things like a redirect-after-submit that shouldn't leave a "back to the form you just submitted" entry behind.
+Pass the explicit value `''` or `null` as `path` to **clear** the container — it flips back to blank with no inner content rendered. Clear does not touch the container's history, so a later `navigate('/...')` pushes onto whatever was there before. Call `navigate()` with no arg is treated as a missing arg, not a clear, and logs an error.
+
+The optional second argument is `{ replace: boolean }`. When `replace: true`, the new path replaces the current entry in the container's history rather than pushing a new one — the browser back button skips it. Useful for things like a redirect-after-submit that shouldn't leave a "back to the form you just submitted" entry behind. Ignored when clearing.
 
 **`getCurrent()`** — *Function*  
 Returns the container's current path string. Returns `''` while the container is blank.
@@ -90,31 +92,41 @@ window.dispatchEvent(
 );
 ```
 
-`detail.id` matches the container's `config.id`. Omit `detail.id` to broadcast to **every** mounted container (every container responds and navigates to the same path). `detail.path` is required and must start with `/`. `detail.replace` is optional — when true, the inner history entry is replaced rather than pushed.
+`detail.id` matches the container's `config.id`. Omit `detail.id` to broadcast to **every** mounted container (every container responds and navigates to the same path). `detail.path` must start with `/` to navigate, OR be the explicit value `''` or `null` to **clear** (blank) the addressed container without touching its inner history. `detail.replace` is optional — when true, the inner history entry is replaced rather than pushed. Ignored on clear.
+
+```js
+// Clear a specific container
+window.dispatchEvent(
+  new CustomEvent('bundle:container:navigate', {
+    detail: { id: 'main', path: '' },
+  }),
+);
+```
 
 For chrome widgets (`BundleLink`, `BundleAvatar`, `BundleLogo`, `BundleMenu`), prefer the declarative form: pair `clickAction: { type: 'internal', path: '/...' }` with `target: { type: 'container', id: 'main' }` and the widget dispatches this event for you. See [Chrome Widget Actions → target](CHROME_ACTIONS.md#target).
 
 #### Listen for navigation — `bundle:container:navigated` (outbound)
 
-The container fires `bundle:container:navigated` on `window` whenever its inner page changes — whether the change came from your form code, a chrome widget click, the browser back button, or URL sync. The event payload is:
+The container fires `bundle:container:navigated` on `window` whenever its effective path changes — including the initial mount, so you can use this single event as the source of truth for "what is this container currently showing?" without having to query separately at startup. The change can come from your form code, a chrome widget click, the browser back button, URL sync, deep link, refresh, or bookmark.
 
 ```js
 {
   detail: {
     id: 'main',                  // the container's config.id
-    path: '/kapps/services',     // where it just went ('' when blank)
-    previousPath: '/kapps',      // where it was just before
+    path: '/kapps/services',     // where it currently is ('' when blank)
+    previousPath: '/kapps',      // where it was just before ('undefined' on the initial-mount event)
   }
 }
 ```
 
-The event does **not** fire on the initial mount — only on subsequent navigations. So if a container starts at `/kapps`, you don't get a fake "navigated to /kapps" event when the page first loads. You only hear about real moves.
+The initial-mount event fires once per container with `previousPath: undefined`. After that, every event has a concrete `previousPath` (which may be `''` for a transition out of blank). If you specifically want to distinguish "this is the mount event" from a real transition, check `detail.previousPath === undefined`.
 
 **What this is useful for:**
 
+- **Mirror container state into sibling UI.** Hide a kapp listing while the container is showing a kapp, show it back when the container is blank. Because the initial-mount event fires too, refreshing the page (or opening a deep link / bookmark) with a populated container slot will hide the listing on first paint — no flicker if the sibling UI starts hidden and the listener shows it on blank.
 - **Refresh a counter when the user moves on.** A counter showing "5 unread messages" is sitting on the page next to a container that holds the inbox. The user clicks a message, reads it (the inbox marks it read in the background), and clicks back to the inbox list. The counter should update. Listen for the navigation, refresh the counter.
 - **Update a "you are here" breadcrumb.** A breadcrumb element next to the container needs to track where the user is inside it. Subscribe to navigations and update the breadcrumb's text.
-- **Track inner-page views for analytics.** When the container is acting as a sub-app, each inner navigation is essentially a page view. Send it to your analytics tool from the listener.
+- **Track inner-page views for analytics.** When the container is acting as a sub-app, each inner navigation is essentially a page view. Send it to your analytics tool from the listener. If you don't want the mount event counted as a view, filter on `previousPath !== undefined`.
 
 **Example — refresh a counter when the user navigates away from a list page:**
 

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { produce } from 'immer';
 import { debounce, isEqualWith } from 'lodash-es';
@@ -12,7 +12,11 @@ import { Icon } from '../../atoms/Icon.jsx';
 import { Modal } from '../../atoms/Modal.jsx';
 import { PageHeading } from '../../components/PageHeading.jsx';
 import { StatusDot, StatusPill } from '../../components/tickets/StatusPill.jsx';
-import { appActions, selectCurrentKapp } from '../../helpers/state.js';
+import {
+  appActions,
+  selectCurrentKapp,
+  selectKappBySlug,
+} from '../../helpers/state.js';
 import { getAttributeValue } from '../../helpers/records.js';
 import { buildStyleObject, useDefaultTheme } from '../../helpers/theme.js';
 import { openConfirm } from '../../helpers/confirm.js';
@@ -250,14 +254,23 @@ const ColorWrapper = ({ name, children }) => (
   </div>
 );
 
-export const Theme = ({ target = 'kapp' }) => {
+export const Theme = ({ target = 'kapp', kappSlug: propKappSlug }) => {
   const location = useLocation();
+  const params = useParams();
   const backPath = location.state?.backPath || './..';
   const desktop = useSelector(state => state.view.desktop);
   const profile = useSelector(state => state.app.profile);
   const portalRef = useRef(null);
   const space = useSelector(state => state.app.space);
-  const kapp = useSelector(selectCurrentKapp);
+  // Resolve which kapp this editor targets. Explicit prop wins, then a
+  // :kappSlug URL param (e.g. /kapps/:kappSlug/settings/theme), then the
+  // global current kapp (legacy /theme route). Space-target ignores all
+  // of these.
+  const resolvedKappSlug =
+    target === 'space' ? null : (propKappSlug ?? params.kappSlug ?? null);
+  const currentKapp = useSelector(selectCurrentKapp);
+  const cachedKapp = useSelector(selectKappBySlug(resolvedKappSlug));
+  const kapp = resolvedKappSlug ? cachedKapp : currentKapp;
 
   // Resolve the record + identifying metadata for the active target. The
   // editor reads/writes whichever record this points to; the cascade itself

@@ -160,7 +160,7 @@ When a chrome widget has `clickAction: { type: 'event', name: 'foo' }`, clicking
 ```js
 bundle.utils.onWidgetEvent('logo-clicked', e => {
   console.log('Logo clicked:', e.detail);
-  // e.detail = { widget: 'BundleLogo', id: '<widget instance id>', config: <clickAction> }
+  // e.detail = { widget: 'BundleLogo', id: '<widget instance id>', config: <clickAction>, data: <data payload> }
 });
 ```
 
@@ -171,6 +171,24 @@ The `event.detail` payload always contains:
 | `widget` | `string` | The widget's name, e.g. `'BundleLogo'`. Useful when the same event name is dispatched by multiple widgets. |
 | `id`     | `string` | The widget instance's id (whatever you passed to `id` when initializing). Useful to disambiguate instances. |
 | `config` | `object` | The exact `clickAction` config that fired the event.                                                       |
+| `data`   | `object` | Lifted from `clickAction.data` (empty `{}` when unset). The standard place for the consuming widget to attach event-specific payload — e.g., per-row identifiers from a list widget. Designers can also write a `data` block directly into a clickAction config; consuming widgets template-interpolate it like the rest of the clickAction.                                |
+
+#### Attaching `data` to an event
+
+`clickAction.data` is a plain object of fields that will appear on the dispatched event's `detail.data`. Widgets that template-interpolate clickAction values (like `Activity`) interpolate the `data` block too, so `{{row.id}}` and friends work per-instance:
+
+```js
+clickAction: {
+  type: 'event',
+  name: 'row-clicked',
+  data: {
+    requestId: '{{row.id}}',
+    formSlug: '{{form.slug}}',
+  },
+}
+```
+
+Some widgets pre-populate sensible defaults — e.g., the `Activity` widget auto-injects `{ datasource, id }` for row clicks so handlers can always route off those. See each widget's docs for what it adds.
 
 **Why `bundle.utils.onWidgetEvent` instead of `window.addEventListener`?** Your form's bundle script re-runs on every form mount. `window.addEventListener` adds a *new* listener each time, so after N mounts your handler fires N times per click. `bundle.utils.onWidgetEvent` maintains one handler per event name — calling it again replaces the prior handler. Safe to call on every form load.
 

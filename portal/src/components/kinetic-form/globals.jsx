@@ -29,6 +29,11 @@ window.moment = moment;
 import './widgets/widgets.js';
 
 window.bundle = window.bundle || {};
+// Seed the bundle-functions registry as an empty object so anything reading
+// `bundle.functions.X` before the post-login bootstrap completes (or in a
+// space that doesn't install the Global Functions capability) sees an empty
+// registry instead of a missing namespace. See helpers/bundle-functions.js.
+window.bundle.functions = window.bundle.functions || {};
 window.bundle.config = window.bundle.config || {};
 window.bundle.config.fields = {
   date: { render: renderDateTimePickers },

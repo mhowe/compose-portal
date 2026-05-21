@@ -5,6 +5,7 @@ import { Requests } from './tickets/requests/Requests.jsx';
 import { Form } from './forms/Form.jsx';
 import { ProfileResolver } from './profile/ProfileResolver.jsx';
 import { SettingsRouting } from './settings/index.jsx';
+import { KappSettings } from './settings/KappSettings.jsx';
 import { LandingResolver } from './landing/LandingResolver.jsx';
 import { EmbeddedLanding } from './landing/EmbeddedLanding.jsx';
 import { KappDefaultPage } from './kapp/KappDefaultPage.jsx';
@@ -52,6 +53,10 @@ export const BundleRoutes = () => {
       {/* Space landing page — kapp cards + admin settings link.
           Always reachable via /kapps regardless of resolver defaults. */}
       <Route path="/kapps" element={<EmbeddedLanding />} />
+      {/* Bundle-standard kapp settings page (admin-only — KappSettings
+          guards itself with a Navigate to "/"). Customer-specific settings
+          UIs live as forms under /kapps/:kappSlug/forms/<slug>. */}
+      <Route path="/kapps/:kappSlug/settings" element={<KappSettings />} />
       {/* Bundle-default kapp page (forms table). Admins can override by
           setting the kapp's 'Default Form Slug' attribute, which the
           landing resolver picks up. */}

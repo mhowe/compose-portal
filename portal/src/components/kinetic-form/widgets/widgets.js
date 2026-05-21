@@ -1,3 +1,4 @@
+import { Activity } from './activity.jsx';
 import { AIBuilderChat } from './ai-builder-chat.jsx';
 import { AIBuilderSettings } from './ai-builder-settings.js';
 import { AIBuilderWorkspace } from './ai-builder-workspace.jsx';
@@ -21,12 +22,15 @@ import { Profile } from './profile.jsx';
 import { Search } from './search.js';
 import { Signature } from './signature.js';
 import { Subform } from './subform.js';
+import { SubmissionDetails } from './submission-details.jsx';
 import { Table } from './table.js';
+import { Theme } from './theme.jsx';
 
 import utils from './utils.js';
 
 // Defines a map of available widgets
 const AVAILABLE_WIDGETS = {
+  Activity,
   AIBuilderChat,
   AIBuilderSettings,
   AIBuilderWorkspace,
@@ -50,7 +54,9 @@ const AVAILABLE_WIDGETS = {
   Search,
   Signature,
   Subform,
+  SubmissionDetails,
   Table,
+  Theme,
 };
 
 // Ensure the bundle global object exists

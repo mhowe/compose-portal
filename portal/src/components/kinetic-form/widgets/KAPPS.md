@@ -74,6 +74,12 @@ An object of configurations for the widget. All fields optional.
 > **`accentPlacement`** — *string*
 > Where the `Display - Color` accent border renders. `'auto'` (default) resolves per type — pill → `'none'`; tile → `'top'`; card → `'left'`. Other values: `'left'`, `'top'`, `'right'`, `'bottom'`, `'none'`. Semantic color keys resolve to daisyUI CSS variables so the accent tracks the active theme.
 >
+> **`nameAlignment`** — *string* — _card type only_
+> Horizontal alignment of the kapp name within its card: `'left'` (default) | `'center'` | `'right'`. Applies to every card icon placement.
+>
+> **`reserveIconSpace`** — *boolean* — _card type only_
+> When `true`, kapps with no `Display - Icon` still reserve the icon's footprint so titles line up across rows that mix icon and no-icon kapps. Applies to `inline-left` (a sized blank gutter), `hero` (a sized blank slot above the title), and `top-banner` (an empty colored banner). Default `false`.
+>
 > #### Filtering
 >
 > **`filter`** — *string or Array of strings*

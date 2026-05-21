@@ -20,6 +20,12 @@ export const PrivateRoutes = () => {
           element={<Theme target="space" />}
         />
       )}
+      {spaceAdmin && (
+        <Route
+          path="/kapps/:kappSlug/settings/theme"
+          element={<Theme />}
+        />
+      )}
       {spaceAdmin && <Route path="/theme" element={<Theme />} />}
 
       {/* Other Routes*/}

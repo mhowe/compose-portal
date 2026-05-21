@@ -194,6 +194,21 @@ export const validateClickAction = (clickAction, widgetName = 'Widget') => {
       return false;
     }
   }
+  // `data` is the convention for attaching extra info to a clickAction's
+  // dispatched event. Lifted to `event.detail.data` by the wrapper so
+  // form-side handlers can read it directly (instead of digging into
+  // `event.detail.config.data`). Useful in widgets that emit per-row /
+  // per-instance events — the consuming widget interpolates `data` with
+  // its own context before handing the clickAction to the wrapper.
+  if (
+    clickAction.data != null &&
+    (typeof clickAction.data !== 'object' || Array.isArray(clickAction.data))
+  ) {
+    console.error(
+      `${widgetName} Widget Error: clickAction.data must be a plain object when provided.`,
+    );
+    return false;
+  }
   return true;
 };
 
@@ -376,6 +391,12 @@ export const ClickActionWrapper = ({
             widget: widgetName,
             id: instanceId,
             config: clickAction,
+            // `data` is lifted from `clickAction.data` so handlers can
+            // read `event.detail.data.<field>` directly. Consuming
+            // widgets that emit per-row events (e.g., Activity) populate
+            // this with the row's distinguishing fields before passing
+            // the clickAction to the wrapper.
+            data: clickAction.data || {},
           },
         }),
       );

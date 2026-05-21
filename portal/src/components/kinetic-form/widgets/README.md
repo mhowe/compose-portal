@@ -18,11 +18,14 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleMenu](BUNDLE_MENU.md)
     - [BundleBanner](BUNDLE_BANNER.md)
     - [BundleCounter](BUNDLE_COUNTER.md)
+    - [Activity](ACTIVITY.md)
     - [Categories](CATEGORIES.md)
     - [Chart](CHART.md)
     - [Forms](FORMS.md)
     - [Kapps](KAPPS.md)
     - [Profile](PROFILE.md)
+    - [SubmissionDetails](SUBMISSION_DETAILS.md)
+    - [Theme](THEME.md)
   - **Form-Field Widgets**
     - [Markdown](MARKDOWN.md)
     - [Search](SEARCH.md)
@@ -36,6 +39,7 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
   - [Utils](UTILS.md)
   - [Styles](STYLES.md)
   - [Kapp Cache](KAPP_CACHE.md)
+  - [Global Functions](GLOBAL_FUNCTIONS.md)
 - [How to Build Widgets](#how-to-build-widgets)
 
 ---
@@ -205,6 +209,18 @@ Renders the kapps a user can see as pills, square tiles, or rich cards — ideal
 
 [Kapps Documentation &#x2B9E;](KAPPS.md)
 
+#### SubmissionDetails
+
+Renders a single Kinetic submission — metadata header, milestones, an activities feed, and an actions row — for a submissionId resolved from config, a URL parameter, or set later through the widget's API. Section grammar mirrors the Activity widget's `render` arrays so designers can move between the two.
+
+[SubmissionDetails Documentation &#x2B9E;](SUBMISSION_DETAILS.md)
+
+#### Theme
+
+Embeds the bundle's theme editor — colors, radius, and logo, with a live preview — inside a form. Scope is configurable: a specific kapp via `config.kappSlug`, the space via `config.target: 'space'`, or the current kapp by default. Lets a custom kapp-settings form expose theming without rebuilding the editor from scratch.
+
+[Theme Documentation &#x2B9E;](THEME.md)
+
 ---
 
 ### Form-Field Widgets
@@ -264,6 +280,14 @@ This portal uses Tailwind CSS and DaisyUI for styling, which is compiled to only
 Kapp data (attributes, categories, categorizations) is loaded once at app start and held in a Redux cache keyed by slug, so widgets read kapp data from local state instead of issuing fetches. `bundle.refreshKapp(slug)` and `bundle.refreshKapps()` let forms request a re-fetch when the cache is known to be stale.
 
 [Kapp Cache Documentation &#x2B9E;](KAPP_CACHE.md)
+
+---
+
+### Global Functions
+
+Customer-defined JS functions stored as submissions on `admin/global-functions` and exposed at bootstrap on the `bundle.functions` namespace. Lets a space ship and edit shared helpers without a bundle rebuild — form bundle code, widgets, and the console all call them as `bundle.functions.<name>(...)`.
+
+[Global Functions Documentation &#x2B9E;](GLOBAL_FUNCTIONS.md)
 
 ---
 
