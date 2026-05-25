@@ -168,6 +168,7 @@ const TableRenderer = ({
               />
               {query && (
                 <button
+                  type="button"
                   className="kbtn kbtn-sm kbtn-circle kbtn-ghost absolute right-0 top-0 m-2 z-1"
                   aria-label="Clear Filter"
                   onClick={() => {
@@ -197,7 +198,10 @@ const TableRenderer = ({
                   <div className="flex-bc gap-3">
                     <span className="h4 text-balance">Columns</span>
                     <Popover.CloseTrigger asChild>
-                      <button className="kbtn kbtn-sm kbtn-circle kbtn-ghost absolute right-2 top-2">
+                      <button
+                        type="button"
+                        className="kbtn kbtn-sm kbtn-circle kbtn-ghost absolute right-2 top-2"
+                      >
                         <Icon name="x" size={20} />
                       </button>
                     </Popover.CloseTrigger>
