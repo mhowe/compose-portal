@@ -1,10 +1,13 @@
-import { forwardRef, useEffect, useRef, useState } from 'react';
-import { Provider } from 'react-redux';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { Provider, useSelector } from 'react-redux';
 import { MemoryRouter, useNavigate, useLocation } from 'react-router-dom';
 import { KineticLib } from '@kineticdata/react';
 import { registerWidget, resolveContainer, WidgetAPI } from './index.js';
 import { store } from '../../../redux.js';
-import { containerActions } from '../../../helpers/state.js';
+import {
+  containerActions,
+  selectContainerKappSlug,
+} from '../../../helpers/state.js';
 import {
   ContainerHistoryContext,
   FormChromeContext,
@@ -14,6 +17,12 @@ import {
   RENDER_MODE_CONTAINER,
   RENDER_MODE_MODAL,
 } from '../../../helpers/container-scope.js';
+import { getAttributeValue } from '../../../helpers/records.js';
+import {
+  buildStyleObject,
+  mergeThemes,
+  parseThemeConfig,
+} from '../../../helpers/theme.js';
 import { BundleRoutes } from '../../../pages/BundleRoutes.jsx';
 
 // Parses a kapp slug out of a container's inner path. Same shape as the
@@ -300,10 +309,48 @@ const BundleContainerInner = forwardRef(
       getCurrent: () => pathRef.current,
     });
 
+    // Resolve a theme overlay for whichever kapp this container is currently
+    // hosting. Container scope is published to state.containers[slotPath] by
+    // the inner-location effect above; we read it back here, look up the kapp
+    // record, and merge its Theme over the space Theme. The merged result is
+    // applied as inline CSS variables on a contents-display wrapper around
+    // the inner route output — vars cascade through the DOM, so every
+    // descendant restyles automatically without any per-component change.
+    //
+    // The wrapper only emits style overrides when the container is on a kapp
+    // path (containerKappSlug != null). On non-kapp inner paths the global
+    // stylesheet (already kapp-stripped by App.jsx's URL-driven cascade) is
+    // the correct answer, so we leave style undefined.
+    //
+    // Known limitation: things rendered into top-level React portals (modals
+    // via ModalSlot, toasts via Toaster, panels into #app-panels, ark-ui
+    // Portal-based dropdowns/popovers) are not descendants of this wrapper
+    // and therefore inherit the global theme, not the container's overlay.
+    // See project_theme_portal_leak.md for the planned fix.
+    const containerKappSlug = useSelector(selectContainerKappSlug(slotPath));
+    const space = useSelector(s => s.app.space);
+    const containerKapp = useSelector(s =>
+      containerKappSlug ? s.app.kappCache?.[containerKappSlug] || null : null,
+    );
+    const overrideStyles = useMemo(() => {
+      if (!containerKappSlug) return undefined;
+      const merged = mergeThemes(
+        parseThemeConfig(getAttributeValue(space, 'Theme')),
+        parseThemeConfig(getAttributeValue(containerKapp, 'Theme')),
+      );
+      return Object.keys(merged).length === 0
+        ? undefined
+        : buildStyleObject(merged);
+    }, [containerKappSlug, space, containerKapp]);
+
     return (
       <WidgetAPI ref={ref} api={api.current}>
         <ContainerHistoryContext.Provider value={{ canGoBack }}>
-          {!isBlank && <BundleRoutes />}
+          {!isBlank && (
+            <div className="contents" style={overrideStyles}>
+              <BundleRoutes />
+            </div>
+          )}
         </ContainerHistoryContext.Provider>
       </WidgetAPI>
     );
@@ -359,8 +406,17 @@ const BundleContainerComponent = forwardRef(
         // widgets that may briefly outlive the container don't observe a
         // stale slug from a re-mounted same-slot container.
         containerActions.removeContainer(slotPath);
+        // Drop this container's URL slot. Without this, when a parent
+        // container clears or navigates away — unmounting nested children —
+        // the children's slots would linger as orphans (e.g. parent slot
+        // gone but `ctr.parent.child=...` still in the URL). Use replace so
+        // the cleanup doesn't add a browser history entry of its own; it
+        // happens during the same commit as the parent's history push.
+        if (urlSync) {
+          writeContainerPath(slotPath, '', { replace: true });
+        }
       };
-    }, [containerEl, slotPath]);
+    }, [containerEl, slotPath, urlSync]);
 
     // URL slot wins over configured initialPath when urlSync is on. Read
     // once on mount; subsequent URL changes are handled inside the inner

@@ -19,6 +19,25 @@
   }
 }
 
+/*
+ * Disable DaisyUI's `:active` translate (0 .5px) on kbtn elements rendered
+ * inside widget containers. The translate is a press-feedback effect that
+ * works fine in the main app and in Kinetic-form-native buttons, but inside
+ * a widget container the half-pixel shift between pointerdown and pointerup
+ * drifts the cursor off the button — so the browser never fires `click`.
+ * Symptoms range from "needs multiple clicks" (default-size kbtn) to "never
+ * fires" (kbtn-circle / -xs / -sm with their smaller hit boxes). Keyboard
+ * Tab+Enter still works because the browser dispatches `click` programmatically
+ * without needing pointer target matching.
+ *
+ * Scoping to `[data-widget-key]` (set by registerWidget on every widget root)
+ * preserves the press effect outside widgets while making every kbtn variant
+ * reliably clickable inside them. See `feedback_kbtn_active_translate` memory.
+ */
+[data-widget-key] .kbtn:active:not(.kbtn-active) {
+  translate: none;
+}
+
 @layer base {
   .embedded-core-form form {
     [data-element-type='button'] {

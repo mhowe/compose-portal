@@ -2,6 +2,7 @@ import { Activity } from './activity.jsx';
 import { AIBuilderChat } from './ai-builder-chat.jsx';
 import { AIBuilderSettings } from './ai-builder-settings.js';
 import { AIBuilderWorkspace } from './ai-builder-workspace.jsx';
+import { Attributes } from './attributes.jsx';
 import { BundleAvatar } from './bundle-avatar.jsx';
 import { BundleBanner } from './bundle-banner.jsx';
 import { BundleChrome } from './bundle-chrome.jsx';
@@ -24,6 +25,8 @@ import { Signature } from './signature.js';
 import { Subform } from './subform.js';
 import { SubmissionDetails } from './submission-details.jsx';
 import { Table } from './table.js';
+import { TeamMembers } from './team-members.jsx';
+import { Teams } from './teams.jsx';
 import { Theme } from './theme.jsx';
 
 import utils from './utils.js';
@@ -34,6 +37,7 @@ const AVAILABLE_WIDGETS = {
   AIBuilderChat,
   AIBuilderSettings,
   AIBuilderWorkspace,
+  Attributes,
   BundleAvatar,
   BundleBanner,
   BundleChrome,
@@ -56,6 +60,8 @@ const AVAILABLE_WIDGETS = {
   Subform,
   SubmissionDetails,
   Table,
+  TeamMembers,
+  Teams,
   Theme,
 };
 

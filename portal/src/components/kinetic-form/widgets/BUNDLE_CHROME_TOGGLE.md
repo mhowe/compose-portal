@@ -16,6 +16,17 @@ bundle.widgets.BundleChromeToggle.get(id);
 
 `BundleChromeToggle` subscribes to the `BundleChrome` registry at mount time. Subscriptions are queued — if the toggle mounts before its target chrome registers, the subscription is held and applied as soon as the chrome appears. This is what lets you place a header-mounted hamburger that drives the in-kapp nav: the header mounts at app load, and a per-kapp vertical chrome registers later as kapps load.
 
+## Multiple chromes under the same id
+
+The registry assumes one `BundleChrome` per id at a time. If two chromes register under the same id simultaneously (e.g., two kapps loaded into separate `BundleContainer`s both mounting an `id: 'kapp'` chrome), the behavior is:
+
+- **Action targets the last-registered chrome.** The controller slot is a plain assignment — last writer wins. The toggle drives whichever chrome registered most recently; the other one stays in whatever state it was in.
+- **Both chromes remain functional individually.** Each chrome holds its own controller object, so direct programmatic calls on captured references still work. The collision is purely at the registry lookup.
+- **`change` events are broadcast across both chromes.** Emitters are keyed by id in a shared subscriber set, so any listener (including a state-aware `iconByState` toggle) receives events from both chromes with no way to distinguish the source. The icon may flicker as either chrome's mode changes.
+- **Unmount clears the slot outright.** When a chrome unmounts, its id is deleted from `controllers` unconditionally. If the most-recently-registered chrome unmounts, the still-mounted older chrome is no longer reachable through the registry; the toggle becomes a no-op until something re-registers under that id.
+
+Today this is a latent concern rather than an observed bug — production layouts mount one kapp chrome at a time. It's worth understanding before any change to the registry or to `BundleContainer`'s id handling.
+
 ## Config
 
 ```js

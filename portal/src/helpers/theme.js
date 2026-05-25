@@ -46,7 +46,7 @@ export const themeState = {
  * Parses a JSON theme configuration string into an object. Returns an empty
  * object on missing input or parse error, after logging.
  */
-const parseThemeConfig = themeConfig => {
+export const parseThemeConfig = themeConfig => {
   if (!themeConfig) return {};
   try {
     return JSON.parse(themeConfig);
@@ -61,7 +61,7 @@ const parseThemeConfig = themeConfig => {
  * 'radius', 'logo'). Values from `top` win over `bottom` when both are set
  * for a key. Sections absent from both stay absent.
  */
-const mergeThemes = (bottom, top) => {
+export const mergeThemes = (bottom, top) => {
   const merged = {};
   for (const section of ['colors', 'radius', 'logo']) {
     const a = bottom?.[section];

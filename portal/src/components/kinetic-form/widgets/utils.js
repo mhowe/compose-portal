@@ -9,6 +9,35 @@ import {
 } from '../../../helpers/toasts.js';
 
 /**
+ * Extracts the platform's policy-denial message from a `@kineticdata/react`
+ * error object. When the user lacks permission to perform a team / membership
+ * / kapp-level action, Kinetic returns a 403 whose `message` carries the
+ * security-policy reason (or a generic "you don't have permission" string).
+ * Surfacing that text in a toast is far more useful than a generic "save
+ * failed" — the user learns *why* it failed and which policy to look at.
+ *
+ * Pass `result.error` (the inner object). Returns the message string when
+ * the error is a 403 carrying one; returns null otherwise so callers can
+ * fall back to their own default text. Use like:
+ *
+ *   const { error } = await updateTeam({ ... });
+ *   if (error) {
+ *     toastError({
+ *       title: 'Could not save team.',
+ *       description: extractPolicyMessage(error) || error.message || 'Please try again.',
+ *     });
+ *   }
+ */
+export const extractPolicyMessage = error => {
+  if (!error || typeof error !== 'object') return null;
+  const status = error.status ?? error.statusCode;
+  if (status !== 403) return null;
+  return typeof error.message === 'string' && error.message.length > 0
+    ? error.message
+    : null;
+};
+
+/**
  * Singleton-per-name registry of handlers attached via `onWidgetEvent`.
  * Each event name has at most one entry — re-registering with the same name
  * replaces the prior handler. Form bundle scripts run on every form mount,
@@ -67,6 +96,94 @@ export const offWidgetEvent = name => {
   if (existing) {
     window.removeEventListener(name, existing);
     widgetEventHandlers.delete(name);
+  }
+};
+
+/**
+ * Registry of handlers attached via `subscribeWidgetEvent`. Unlike
+ * `widgetEventHandlers` (which dedupes by event name alone — one listener
+ * per event), this one dedupes by `(eventName, label)` so many forms can
+ * subscribe to the same broadcast event by using distinct labels.
+ *
+ * Keys are stringified `<eventName>::<label>` pairs.
+ */
+const subscribedWidgetHandlers = new Map();
+
+/**
+ * Subscribes a handler to a window-dispatched event with a per-listener
+ * label, so several forms can subscribe to the SAME event name without
+ * clobbering each other. Re-registering with the same `(name, label)` pair
+ * replaces the prior handler — safe to call on every form re-mount without
+ * piling up listeners.
+ *
+ * Use this for broadcast events that the bundle itself dispatches and that
+ * multiple forms may legitimately want to react to — chiefly
+ * `bundle:container:navigated`. For events your own form OWNS (a
+ * `clickAction: { type: 'event', name }` you defined yourself), prefer
+ * `onWidgetEvent` — its name-only dedup is what you want there.
+ *
+ * **Pick a label that's unique to this specific listener.** A good label is
+ * descriptive enough that you'd never accidentally use the same one in a
+ * different form for a different purpose — e.g.
+ * `'kapps-landing-section-toggle'`, not `'main'` or `'handler'`. Two forms
+ * using the same `(eventName, label)` pair will clobber each other (the
+ * later registration wins), which is exactly the trap this helper exists
+ * to avoid.
+ *
+ * @param {string} name CustomEvent name to listen for (e.g.
+ *   `'bundle:container:navigated'`).
+ * @param {string} label A label unique to this specific listener within
+ *   this event name. Re-registering with the same `(name, label)` replaces
+ *   the prior handler.
+ * @param {Function} handler Receives the CustomEvent.
+ * @returns {Function} Cleanup function. Calling it removes this handler if
+ *   it's still the registered one (a later `subscribeWidgetEvent` with the
+ *   same `(name, label)` will have replaced it, in which case cleanup is a
+ *   no-op).
+ */
+export const subscribeWidgetEvent = (name, label, handler) => {
+  if (typeof name !== 'string' || name.length === 0) {
+    console.error(
+      'subscribeWidgetEvent: `name` must be a non-empty string event name.',
+    );
+    return () => {};
+  }
+  if (typeof label !== 'string' || label.length === 0) {
+    console.error(
+      'subscribeWidgetEvent: `label` must be a non-empty string. Pick one ' +
+        'that\'s descriptive to this specific listener (e.g. ' +
+        '"kapps-landing-section-toggle"), so different forms\' subscriptions ' +
+        'do not collide.',
+    );
+    return () => {};
+  }
+  if (typeof handler !== 'function') {
+    console.error('subscribeWidgetEvent: `handler` must be a function.');
+    return () => {};
+  }
+  const key = `${name}::${label}`;
+  const existing = subscribedWidgetHandlers.get(key);
+  if (existing) window.removeEventListener(name, existing);
+  window.addEventListener(name, handler);
+  subscribedWidgetHandlers.set(key, handler);
+  return () => {
+    if (subscribedWidgetHandlers.get(key) === handler) {
+      window.removeEventListener(name, handler);
+      subscribedWidgetHandlers.delete(key);
+    }
+  };
+};
+
+/**
+ * Removes a handler registered for `(name, label)` via
+ * `subscribeWidgetEvent`. No-op when nothing is registered.
+ */
+export const unsubscribeWidgetEvent = (name, label) => {
+  const key = `${name}::${label}`;
+  const existing = subscribedWidgetHandlers.get(key);
+  if (existing) {
+    window.removeEventListener(name, existing);
+    subscribedWidgetHandlers.delete(key);
   }
 };
 
@@ -217,6 +334,9 @@ export default {
   // Widget events — see onWidgetEvent docstring for usage.
   onWidgetEvent,
   offWidgetEvent,
+  // Broadcast subscriptions — see subscribeWidgetEvent docstring for usage.
+  subscribeWidgetEvent,
+  unsubscribeWidgetEvent,
   // Programmatic modals — see openModal docstring for usage.
   openModal,
   closeModal,

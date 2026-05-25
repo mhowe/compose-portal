@@ -58,6 +58,7 @@ export const KappDefaultPage = () => {
     };
   }, [kappSlug, defaultFormSlugs]);
   const defaultFormCheck = useData(fetchForms, defaultFormCheckParams);
+  const defaultFormCheckError = defaultFormCheck.response?.error;
   const returnedForms = defaultFormCheck.response?.forms || [];
   const defaultForm = defaultFormSlugs
     .map(slug => returnedForms.find(f => f.slug === slug))
@@ -66,7 +67,9 @@ export const KappDefaultPage = () => {
   const defaultFormExists = !!defaultForm;
 
   // Forms table is only needed when we're rendering the fallback. Skip the
-  // fetch entirely when a valid default form will render instead.
+  // fetch entirely when a valid default form will render instead, or when the
+  // default-form check already failed (the table call would hit the same
+  // policy and return the same error — no point issuing two 403s).
   const willRenderDefaultForm =
     defaultFormSlug &&
     defaultFormCheck.initialized &&
@@ -88,17 +91,18 @@ export const KappDefaultPage = () => {
   }, [isFullscreen, insideContainer]);
   const formsTableParams = useMemo(
     () =>
-      willRenderDefaultForm
+      willRenderDefaultForm || defaultFormCheckError
         ? null
         : {
             kappSlug,
             include: 'attributesMap',
             q: '(status = "Active" OR status = "New")',
           },
-    [kappSlug, willRenderDefaultForm],
+    [kappSlug, willRenderDefaultForm, defaultFormCheckError],
   );
   const formsTable = useData(fetchForms, formsTableParams);
   const forms = formsTable.response?.forms || [];
+  const loadError = defaultFormCheckError || formsTable.response?.error;
 
   if (
     defaultFormCheckParams &&
@@ -122,7 +126,17 @@ export const KappDefaultPage = () => {
     <div className="gutter">
       <PageHeading title={kapp?.name || kappSlug} backTo="/kapps" />
 
-      {!formsTable.initialized || formsTable.loading ? (
+      {loadError ? (
+        loadError.statusCode === 403 ? (
+          <div className="kalert kalert-error">
+            You don't have permission to access this kapp.
+          </div>
+        ) : (
+          <div className="kalert kalert-error">
+            {loadError.message || 'Unable to load forms for this kapp.'}
+          </div>
+        )
+      ) : !formsTable.initialized || formsTable.loading ? (
         <Loading />
       ) : forms.length === 0 ? (
         <div className="kd-callout">No forms are available in this kapp.</div>

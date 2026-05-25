@@ -20,6 +20,16 @@ const ORIENTATIONS = ['vertical', 'horizontal'];
 const SIDES = ['left', 'right'];
 const LAYOUTS = ['push', 'overlay'];
 const TOGGLE_POSITIONS = ['top', 'bottom', 'edge-mid'];
+const ITEMS_ALIGNS = ['start', 'center', 'end'];
+
+// `-safe` modifiers fall back to flex-start when the items slot overflows,
+// keeping the top/leftmost entries reachable in the scroll track instead of
+// being clipped past the start edge.
+const ITEMS_ALIGN_CLASS = {
+  start: 'justify-start',
+  center: 'justify-center-safe',
+  end: 'justify-end-safe',
+};
 
 // Default allowed-mode lists per orientation. Vertical defaults to all three;
 // horizontal omits 'rail' because labels-hidden-but-same-height is rarely the
@@ -243,10 +253,12 @@ const ChromeSlot = ({
   mode,
   orientation,
   activeItemId,
+  itemsAlign,
   registerController,
 }) => {
   if (!entries || entries.length === 0) return null;
   const isVertical = orientation === 'vertical';
+  const isItemsSlot = slotName === 'items';
   return (
     <div
       className={clsx(
@@ -254,7 +266,8 @@ const ChromeSlot = ({
         isVertical
           ? 'flex flex-col gap-1 px-2 py-2'
           : 'flex flex-row items-center gap-2 px-2',
-        slotName === 'items' && (isVertical ? 'flex-1 overflow-y-auto' : 'flex-1'),
+        isItemsSlot && (isVertical ? 'flex-1 overflow-y-auto' : 'flex-1'),
+        isItemsSlot && ITEMS_ALIGN_CLASS[itemsAlign],
       )}
     >
       {entries.map((entry, i) => {
@@ -284,6 +297,7 @@ const InternalToggle = ({
   side,
   onToggle,
   allowedModes,
+  position,
 }) => {
   if (config?.show === false) return null;
 
@@ -299,16 +313,44 @@ const InternalToggle = ({
   // "closed" intuitively.
   const flipped = mode !== 'expanded';
   const ariaExpanded = mode === 'expanded';
+
+  // For edge-mid, the toggle floats half-outside the chrome on its outer
+  // edge (right for vertical-left, left for vertical-right, bottom for
+  // horizontal). `edgeOffset` shifts the button along the chrome's main
+  // axis as a percent from the start edge (0–100, default 50 = centered).
+  let edgeStyle;
+  if (position === 'edge-mid') {
+    const rawOffset =
+      typeof config?.edgeOffset === 'number' ? config.edgeOffset : 50;
+    const offset = Math.max(0, Math.min(100, rawOffset));
+    if (orientation === 'vertical') {
+      edgeStyle = {
+        top: `${offset}%`,
+        [side === 'left' ? 'right' : 'left']: '-12px',
+        transform: 'translateY(-50%)',
+      };
+    } else {
+      edgeStyle = {
+        left: `${offset}%`,
+        bottom: '-12px',
+        transform: 'translateX(-50%)',
+      };
+    }
+  }
+
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={ariaExpanded}
       aria-label={config?.ariaLabel || 'Toggle navigation'}
+      style={edgeStyle}
       className={clsx(
-        'kbtn kbtn-ghost kbtn-sm kbtn-square self-center',
-        flipped && orientation === 'vertical' && 'rotate-180',
-        flipped && orientation === 'horizontal' && 'rotate-180',
+        'kbtn kbtn-ghost kbtn-sm kbtn-square',
+        position === 'edge-mid'
+          ? 'absolute z-10 bg-base-100 border border-base-300 shadow-sm'
+          : 'self-center',
+        flipped && 'rotate-180',
       )}
     >
       <Icon name={icon} size={18} />
@@ -330,6 +372,9 @@ const BundleChromeComponent = forwardRef(({ id, config }, ref) => {
         : 'left'
       : 'left';
   const layout = LAYOUTS.includes(config.layout) ? config.layout : 'push';
+  const itemsAlign = ITEMS_ALIGNS.includes(config.itemsAlign)
+    ? config.itemsAlign
+    : 'center';
 
   // Allowed-mode list — filter user-supplied list to the canonical three
   // and fall back to per-orientation defaults if nothing usable is given.
@@ -477,6 +522,24 @@ const BundleChromeComponent = forwardRef(({ id, config }, ref) => {
   const stripClass = STRIP_CLASS[orientation][mode] || STRIP_CLASS[orientation].expanded;
   const overlayClass = layout === 'overlay' ? OVERLAY_CLASS[orientationKey] : '';
 
+  const togglePosition = TOGGLE_POSITIONS.includes(config.internalToggle?.position)
+    ? config.internalToggle.position
+    : 'bottom';
+  const toggleEl = (
+    <InternalToggle
+      config={config.internalToggle}
+      mode={mode}
+      orientation={orientation}
+      side={side}
+      allowedModes={safeAllowedModes}
+      position={togglePosition}
+      onToggle={() => {
+        const next = nextToggleMode(mode, safeAllowedModes);
+        setModeState(next);
+      }}
+    />
+  );
+
   return (
     <Provider store={store}>
       <WidgetAPI ref={ref} api={apiRef.current}>
@@ -493,12 +556,14 @@ const BundleChromeComponent = forwardRef(({ id, config }, ref) => {
               CHROME_MODE_CLASS[mode],
               stripClass,
               overlayClass,
+              togglePosition === 'edge-mid' && 'relative',
               orientation === 'vertical' && 'flex flex-col h-full border-base-300',
               orientation === 'vertical' && side === 'left' && 'border-r',
               orientation === 'vertical' && side === 'right' && 'border-l',
               orientation === 'horizontal' && 'flex flex-row items-stretch border-b border-base-300 w-full',
             )}
           >
+            {togglePosition === 'top' && toggleEl}
             <ChromeSlot
               entries={config.top || []}
               slotName="top"
@@ -513,6 +578,7 @@ const BundleChromeComponent = forwardRef(({ id, config }, ref) => {
               mode={mode}
               orientation={orientation}
               activeItemId={activeItemId}
+              itemsAlign={itemsAlign}
               registerController={registerController}
             />
             <ChromeSlot
@@ -523,17 +589,8 @@ const BundleChromeComponent = forwardRef(({ id, config }, ref) => {
               activeItemId={activeItemId}
               registerController={registerController}
             />
-            <InternalToggle
-              config={config.internalToggle}
-              mode={mode}
-              orientation={orientation}
-              side={side}
-              allowedModes={safeAllowedModes}
-              onToggle={() => {
-                const next = nextToggleMode(mode, safeAllowedModes);
-                setModeState(next);
-              }}
-            />
+            {togglePosition === 'bottom' && toggleEl}
+            {togglePosition === 'edge-mid' && toggleEl}
           </nav>
         </div>
       </WidgetAPI>
@@ -645,6 +702,18 @@ const validateInternalToggle = toggle => {
     );
     return false;
   }
+  if (toggle.edgeOffset != null) {
+    if (
+      typeof toggle.edgeOffset !== 'number' ||
+      toggle.edgeOffset < 0 ||
+      toggle.edgeOffset > 100
+    ) {
+      console.error(
+        'BundleChrome Widget Error: internalToggle.edgeOffset must be a number between 0 and 100.',
+      );
+      return false;
+    }
+  }
   if (toggle.ariaLabel != null && typeof toggle.ariaLabel !== 'string') {
     console.error(
       'BundleChrome Widget Error: internalToggle.ariaLabel must be a string.',
@@ -692,6 +761,12 @@ const validateConfig = (config = {}) => {
   if (config.defaultMode != null && !CHROME_MODES.includes(config.defaultMode)) {
     console.error(
       `BundleChrome Widget Error: defaultMode must be one of ${CHROME_MODES.join(', ')}.`,
+    );
+    return false;
+  }
+  if (config.itemsAlign != null && !ITEMS_ALIGNS.includes(config.itemsAlign)) {
+    console.error(
+      `BundleChrome Widget Error: itemsAlign must be one of ${ITEMS_ALIGNS.join(', ')}.`,
     );
     return false;
   }

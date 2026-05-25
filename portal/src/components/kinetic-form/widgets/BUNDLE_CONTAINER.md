@@ -41,6 +41,12 @@ An object of configurations for the widget.
 >
 > The `slotPath` is auto-derived from the container's mount position relative to other BundleContainers — a top-level container with `id: 'main'` gets slot `main`; a nested container with the same id gets slot `main.main`. This prevents URL recursion when a form's container loads the same form (which has the same container id).
 >
+> **On unmount, a container with `urlSync` deletes its own URL slot.** This is what makes "clear the top container" leave a clean URL: when the top container blanks, the form inside unmounts, nested children unmount in turn, and each one prunes its own slot from the hash. Without this, descendant slots become orphans — visible in the URL but unattached to any mounted container.
+>
+> The cleanup write is silent (`history.replaceState`) — it modifies the current URL entry in place rather than pushing a new browser history entry, so a single user action that unmounts several containers produces at most one new history entry (the one from the action itself, not one per cleanup).
+>
+> **Trade-off worth knowing about:** because the cleanups replace the current URL entry, the URL state *before* the action loses the children's slots too. If a user clicks "back" after a clear/navigation that unmounted children, the previous history entry no longer contains those child slots — the children will re-mount at their own `initialPath` (or blank), not at the URL state they had before. If full state restoration via back is something you want, that'll need a different design (treating clear as a recorded navigation rather than a silent state flip).
+>
 > **`hideFormChrome`** — *boolean*  
 > When `true`, forms loaded inside this container render without their page wrapper — no icon / form name heading, no settings-share link, no gutter, no max-width centering, no bordered content card. The form's fields render directly inside the container so the host page can own all the surrounding layout.
 >
@@ -155,13 +161,23 @@ bundle.widgets.BundleContainer({
 });
 
 // Refresh the counter every time the inbox container's inner page changes.
-// `bundle.utils.onWidgetEvent` is preferred over window.addEventListener
-// because it deduplicates listeners — calling it again replaces the prior
-// handler instead of stacking up another one.
-bundle.utils.onWidgetEvent('bundle:container:navigated', e => {
-  if (e.detail.id !== 'inbox') return; // ignore other containers
-  bundle.widgets.BundleCounter.get('unread').refresh();
-});
+// Use `subscribeWidgetEvent` (NOT `onWidgetEvent`) for container events:
+// the bundle dispatches `bundle:container:navigated` and many forms may
+// legitimately want to listen — `onWidgetEvent` would have them all clobber
+// each other since it dedupes by event name alone. `subscribeWidgetEvent`
+// dedupes by (event name + your label), so each form's listener replaces
+// cleanly on re-mount but different forms coexist.
+//
+// The label `'inbox-counter-refresh'` is unique to this listener. See
+// UTILS.md for guidance on picking labels.
+bundle.utils.subscribeWidgetEvent(
+  'bundle:container:navigated',
+  'inbox-counter-refresh',
+  e => {
+    if (e.detail.id !== 'inbox') return; // ignore other containers
+    bundle.widgets.BundleCounter.get('unread').refresh();
+  },
+);
 ```
 
 **What "navigated" means in plain terms.** The container shows whatever bundle page is at its current URL inside the container — the kapp list, an inbox, a form, etc. "Navigated" just means the container's current URL changed: the user moved from the inbox to a specific message, or from the form back to the list, or anything similar. It does **not** fire when the *outer* page (the one hosting the container) moves around.
@@ -242,4 +258,6 @@ window.dispatchEvent(
 - **Recursion is allowed.** Configuring a container to load the same page it's on works fine — but if that loaded page also contains a container that loads the same page, you'll create an infinite loop. The bundle does not guard against this; it's the form designer's responsibility.
 - **Display Mode is ignored inside containers.** A form with `Display Mode = fullscreen` renders normally when loaded inside a container — the container's host page owns chrome.
 - **Form page chrome is opt-out.** A form loaded into a container shows its standard page wrapper (icon, form name, settings link for space admins, gutter, max-width container, bordered card) by default. To suppress it, either set `hideFormChrome: true` on the container (affects every form loaded into this container) or set the form's `Form Chrome` attribute to `bare` (affects this form everywhere it's loaded into any container).
+- **Per-container theme.** When the container's inner path resolves to a kapp (`/kapps/:slug/...`), it automatically wears that kapp's `Theme` attribute on top of the space theme. The merged theme is applied as inline CSS variables on a wrapper around the inner page, so the contained kapp can look completely different from the host page without affecting the rest of the portal. The outer page (chrome, sibling widgets, anything outside the container) continues to wear whatever theme the top-level URL implies.
+- **Theme escape on portaled content.** Modals, toasts, panels, and dropdown/popover content that render into top-level portals (e.g. the global `ModalSlot`, `Toaster`, `#app-panels`, ark-ui `Portal`-based menus) are not descendants of the container's themed wrapper. They inherit the **global** theme, not the container's overlay. This is a known limitation we plan to address; if your contained kapp opens a modal, expect that modal to show the outer page's colors today.
 - **API addressing collision.** If two containers have the same `id`, both respond to events targeting that id, and `BundleContainer.get(id)` returns whichever was registered most recently. URL slots are auto-namespaced by mount position so they don't collide on the URL — but API and event addressing still does. The widget logs a `console.warn` at registration time when it detects this.

@@ -55,6 +55,8 @@ items:  [ entry, … ]   (vertical: middle strip;   horizontal: middle of header
 bottom: [ entry, … ]   (vertical: bottom of strip; horizontal: rightmost cluster)
 ```
 
+`itemsAlign: 'start' | 'center' | 'end'` controls how entries sit within the `items` slot's stretched track. Defaults to `'center'` — entries cluster in the middle of the space between `top` and `bottom` (vertical) or `left`/`right` clusters (horizontal). Use `'start'` to anchor entries adjacent to `top`, or `'end'` to anchor them adjacent to `bottom`. The `center` and `end` alignments use CSS `safe` positioning, so when entries overflow the track they fall back to start-aligned and remain reachable in the scroll region.
+
 ## Slot entry kinds
 
 ```js
@@ -92,10 +94,20 @@ bottom: [ entry, … ]   (vertical: bottom of strip; horizontal: rightmost clust
 internalToggle: {
   show: true,                     // default true
   icon: 'chevron',                // default; auto-flips with side / orientation
-  position: 'top',                // 'top' | 'bottom' | 'edge-mid'
+  position: 'bottom',             // 'top' | 'bottom' (default) | 'edge-mid'
+  edgeOffset: 50,                 // only used with position: 'edge-mid'
   ariaLabel: 'Collapse navigation',
 }
 ```
+
+- `position: 'top'` renders the toggle before the `top` slot.
+- `position: 'bottom'` (default) renders it after the `bottom` slot.
+- `position: 'edge-mid'` floats the toggle on the chrome's outer edge (right
+  side for `vertical-left`, left for `vertical-right`, bottom for `horizontal`),
+  half-overlapping the boundary so it reads as a tab. `edgeOffset` is a
+  percent (0–100, default 50) along the chrome's main axis — top-to-bottom
+  for vertical, left-to-right for horizontal. Example: `edgeOffset: 20`
+  pins the toggle 20% down from the top of a vertical chrome.
 
 ## Mode contract for hosted widgets
 
@@ -154,6 +166,9 @@ window.bundle.widgets.BundleChrome({
     modes: ['expanded', 'hidden'],
     defaultMode: 'expanded',
 
+    // Items slot alignment (default 'center')
+    itemsAlign: 'center',
+
     // Layout
     layout: 'push',
     contentSelector: '.kd-app-content',
@@ -165,7 +180,8 @@ window.bundle.widgets.BundleChrome({
     internalToggle: {
       show: true,
       icon: 'chevron',
-      position: 'top',
+      position: 'edge-mid',       // 'top' | 'bottom' | 'edge-mid'
+      edgeOffset: 20,             // % along main axis (edge-mid only)
       ariaLabel: 'Collapse navigation',
     },
 

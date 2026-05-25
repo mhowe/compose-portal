@@ -134,9 +134,18 @@ bundle.utils.clearToasts();
 
 ### Widget Events
 
-Several chrome widgets ([BundleLogo](BUNDLE_LOGO.md), [BundleLink](BUNDLE_LINK.md), [BundleAvatar](BUNDLE_AVATAR.md), [BundleSearch](BUNDLE_SEARCH.md)) can be configured with `clickAction: { type: 'event', name: '<name>' }`. When the widget is clicked, it dispatches a `CustomEvent` with that name on `window`. These helpers let your form-side code listen for those events safely across re-renders.
+Two different listening helpers live here, for two different situations. Picking the right one matters — using the wrong one is what causes "my listener stopped firing after I navigated somewhere" bugs. The quick rule:
 
-#### Functions
+- **Your form OWNS the event name** (you defined it via `clickAction: { type: 'event', name: '<name>' }` on a chrome widget) → use [`onWidgetEvent`](#owned-events--onwidgetevent).
+- **The bundle dispatches the event and your form is just one of possibly many listeners** (e.g. `bundle:container:navigated`) → use [`subscribeWidgetEvent`](#broadcast-events--subscribewidgetevent).
+
+---
+
+#### Owned events — `onWidgetEvent`
+
+Several chrome widgets ([BundleLogo](BUNDLE_LOGO.md), [BundleLink](BUNDLE_LINK.md), [BundleAvatar](BUNDLE_AVATAR.md), [BundleSearch](BUNDLE_SEARCH.md)) can be configured with `clickAction: { type: 'event', name: '<name>' }`. When the widget is clicked, it dispatches a `CustomEvent` with that name on `window`. Your form is both the publisher (the widget you placed) and the subscriber (the handler you wrote), so it owns that event name end-to-end. `onWidgetEvent` is built for this case.
+
+##### Functions
 
 **`onWidgetEvent(name, handler)`** — *Function*  
 Registers a handler for the given event name. **Replaces** any prior handler registered under the same name — safe to call on every form load without piling up listeners. Returns a cleanup function.
@@ -144,11 +153,17 @@ Registers a handler for the given event name. **Replaces** any prior handler reg
 **`offWidgetEvent(name)`** — *Function*  
 Removes the handler registered for an event name. No-op when nothing is registered.
 
-#### Why use `onWidgetEvent` instead of `window.addEventListener`?
+##### Pick a unique event name
 
-Form bundle scripts re-run on every form mount. Naive use of `window.addEventListener` adds a *new* listener each time, so after N mounts your handler fires N times per click. `onWidgetEvent` maintains one handler per event name — calling it again replaces the prior handler.
+`onWidgetEvent` dedupes by event name alone — only **one** handler is active per event name across the entire app. If two different forms register handlers for the same name, the later registration wins and the earlier form's handler stops working with no warning.
 
-#### Event detail payload
+So when you choose the `name` for your `clickAction: { type: 'event', name: '<name>' }`, pick something specific to your form's purpose — `'kapps-landing-help-clicked'`, not `'click'` or `'submit'`. If you ever find yourself wanting the same event name to drive logic in multiple forms, that's the signal to use `subscribeWidgetEvent` (below) instead.
+
+##### Why not `window.addEventListener` for this case?
+
+Form bundle scripts re-run on every form mount. Naive use of `window.addEventListener` adds a *new* listener each time, so after N mounts your handler fires N times per click. `onWidgetEvent` maintains one handler per event name — calling it again replaces the prior handler, which is exactly what you want when your form owns the event.
+
+##### Event detail payload
 
 Every widget-dispatched event has a `detail` object with:
 
@@ -158,17 +173,77 @@ Every widget-dispatched event has a `detail` object with:
 | `id`     | `string` | The widget instance's id (the `id` you passed when initializing). Useful to disambiguate instances.        |
 | `config` | `object` | The exact `clickAction` config that fired the event.                                                       |
 
-#### Examples
+##### Examples
 
 ```js
 // Listen for a logo click event
-bundle.utils.onWidgetEvent('logo-clicked', e => {
+bundle.utils.onWidgetEvent('kapps-landing-logo-clicked', e => {
   console.log('Logo clicked:', e.detail);
-  // e.detail = { widget: 'BundleLogo', id: 'main-logo', config: { type: 'event', name: 'logo-clicked' } }
+  // e.detail = { widget: 'BundleLogo', id: 'main-logo', config: { type: 'event', name: 'kapps-landing-logo-clicked' } }
 });
 
 // Stop listening
-bundle.utils.offWidgetEvent('logo-clicked');
+bundle.utils.offWidgetEvent('kapps-landing-logo-clicked');
+```
+
+---
+
+#### Broadcast events — `subscribeWidgetEvent`
+
+For events the **bundle itself** dispatches — chiefly [`bundle:container:navigated`](BUNDLE_CONTAINER.md#listen-for-navigation--bundlecontainernavigated-outbound) — multiple forms in your space may legitimately want to listen. A kapps-landing form might show/hide a section based on whether a container is blank; an analytics helper might log every navigation; a nested admin form might react to its own container's path changing. They all want the same event, and they shouldn't clobber each other.
+
+`subscribeWidgetEvent` is built for this. It dedupes by `(event name + your label)` — so a given form's listener replaces cleanly on re-mount, but different forms with different labels coexist.
+
+##### Functions
+
+**`subscribeWidgetEvent(name, label, handler)`** — *Function*  
+Subscribes a handler to a broadcast event with a per-listener label. Re-registering with the same `(name, label)` pair replaces the prior handler; different labels add separate handlers. Returns a cleanup function.
+
+**`unsubscribeWidgetEvent(name, label)`** — *Function*  
+Removes a handler registered for `(name, label)`. No-op when nothing is registered.
+
+##### Pick a unique label
+
+Your `label` is the second argument and identifies **this specific listener**. Two different listeners that pass the same `(name, label)` will clobber each other — the later one wins and the earlier one silently stops firing. That's the exact bug you came here to avoid.
+
+A good label is:
+
+- **Descriptive of the form AND its purpose** — `'kapps-landing-section-toggle'`, not `'main'` or `'handler'`.
+- **Unique across your space** — if another form (or another developer, or an AI-generated form) could plausibly pick the same label by coincidence, pick a more specific one.
+- **Stable across re-mounts of the same form** — use the same label every time your form's bundle script runs, so re-mounting cleanly replaces your prior listener instead of piling on a new one.
+
+If you have two listeners in the same form for the same event (e.g. one toggles a section and one logs to analytics), give them different labels: `'kapps-landing-section-toggle'` and `'kapps-landing-analytics'`.
+
+##### Example — show/hide a section based on container state
+
+```js
+// Inside the form that hosts a BundleContainer:
+bundle.utils.subscribeWidgetEvent(
+  'bundle:container:navigated',
+  'kapps-landing-section-toggle',
+  e => {
+    if (e.detail.id !== 'kapp-container-url') return;
+    if (e.detail.path === '') {
+      K('section[Layout Container]').show();
+    } else {
+      K('section[Layout Container]').hide();
+    }
+  },
+);
+```
+
+A separate admin form, nested deeper, can listen for the SAME event with a different label and the two listeners do not interfere:
+
+```js
+// Inside an admin form rendered by a nested container:
+bundle.utils.subscribeWidgetEvent(
+  'bundle:container:navigated',
+  'admin-form-breadcrumb-update',
+  e => {
+    if (e.detail.id !== 'admin-content') return;
+    updateBreadcrumb(e.detail.path);
+  },
+);
 ```
 
 ---

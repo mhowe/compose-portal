@@ -19,12 +19,15 @@ Widgets are small, standalone React apps that can be rendered inside Kinetic for
     - [BundleBanner](BUNDLE_BANNER.md)
     - [BundleCounter](BUNDLE_COUNTER.md)
     - [Activity](ACTIVITY.md)
+    - [Attributes](ATTRIBUTES.md)
     - [Categories](CATEGORIES.md)
     - [Chart](CHART.md)
     - [Forms](FORMS.md)
     - [Kapps](KAPPS.md)
     - [Profile](PROFILE.md)
     - [SubmissionDetails](SUBMISSION_DETAILS.md)
+    - [TeamMembers](TEAM_MEMBERS.md)
+    - [Teams](TEAMS.md)
     - [Theme](THEME.md)
   - **Form-Field Widgets**
     - [Markdown](MARKDOWN.md)
@@ -185,6 +188,12 @@ A label-with-badge pair — text plus a count badge whose color can change with 
 
 [BundleCounter Documentation &#x2B9E;](BUNDLE_COUNTER.md)
 
+#### Attributes
+
+Edits attributes on any Kinetic resource type the user can modify — space, user profile, team, kapp, category, or form. Configured via a `type` plus a `target` that either points at a specific record (e.g. `{ kappSlug, formSlug }`), resolves to the current kapp via `BundleContainer`/URL context (`target: 'current'`), or auto-renders a styled picker (`target: 'picker'`). Per-attribute overrides, ordering, and `classNames` slots follow the same shape as Profile's `userProfileAttributes`.
+
+[Attributes Documentation &#x2B9E;](ATTRIBUTES.md)
+
 #### Categories
 
 Renders the current kapp's categories as cards (background image / side image / stacked / icon-only variants) and lets users drill into nested categories via a `Parent` attribute convention, with a breadcrumb on the detail view. Built for catalog-style wayfinding to forms; pairs with the Forms widget to compose a category-detail page. Slot-keyed `classNames` for per-region styling — same pattern as Profile.
@@ -214,6 +223,18 @@ Renders the kapps a user can see as pills, square tiles, or rich cards — ideal
 Renders a single Kinetic submission — metadata header, milestones, an activities feed, and an actions row — for a submissionId resolved from config, a URL parameter, or set later through the widget's API. Section grammar mirrors the Activity widget's `render` arrays so designers can move between the two.
 
 [SubmissionDetails Documentation &#x2B9E;](SUBMISSION_DETAILS.md)
+
+#### TeamMembers
+
+Lists, adds, and removes members of a Kinetic team. The team is resolved from `config.team` — an explicit slug or name, a built-in picker, or `'current'` to follow a sibling Teams widget's selection. Adding a member uses a typeahead-style search: either Kinetic's built-in `username` / `email` `startsWith` search (default `userLookup.mode: 'direct'`) or a Kinetic integration the designer points the widget at (`'integration'` — same plumbing as BundleMenu's integration-sourced items). Removals route through the bundle's confirm modal; 403s surface the platform's policy denial message verbatim.
+
+[TeamMembers Documentation &#x2B9E;](TEAM_MEMBERS.md)
+
+#### Teams
+
+A breadcrumb-driven browser for Kinetic teams: list, create, rename, describe, and delete teams under an optional `parentName` prefix (or all top-level teams when omitted). Selection — the deepest segment of the breadcrumb — is published to redux so sibling widgets (TeamMembers, future Attributes `target: 'current'` for `type: 'team'`) can follow without explicit wiring. Mutations are gated by the platform's security policies; 403 messages surface verbatim so users learn *which* policy denied the action.
+
+[Teams Documentation &#x2B9E;](TEAMS.md)
 
 #### Theme
 

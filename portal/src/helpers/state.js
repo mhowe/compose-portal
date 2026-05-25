@@ -150,6 +150,25 @@ export const appActions = regRedux(
         Object.assign(state.kappCache[slug], partial);
       }
     },
+    // Shallow-merge a partial record into a specific category nested under
+    // a specific kapp in the cache. Mirrors updateKappData; pairs with
+    // updateCategory for keeping redux in sync after a targeted save
+    // without round-tripping the whole kapp. Payload shape:
+    //   { kappSlug: 'services', categorySlug: 'hr', attributesMap: {...}, ... }
+    updateKappCategoryData(state, { kappSlug, categorySlug, ...partial } = {}) {
+      if (
+        !kappSlug ||
+        !categorySlug ||
+        !partial ||
+        Object.keys(partial).length === 0
+      ) {
+        return;
+      }
+      const kapp = state.kappCache[kappSlug];
+      if (!kapp || !Array.isArray(kapp.categories)) return;
+      const cat = kapp.categories.find(c => c.slug === categorySlug);
+      if (cat) Object.assign(cat, partial);
+    },
     // Drops a kapp from the cache, forcing the next consumer to re-fetch.
     // Forward-looking: pairs with a future bundle.refreshKapp(slug) helper.
     invalidateKapp(state, slug) {
@@ -315,14 +334,19 @@ export const containerActions = regRedux(
 export const selectContainerKappSlug = slot => state =>
   slot ? state.containers?.[slot]?.kappSlug ?? null : null;
 
-// Cross-widget selection state — lets the Forms widget auto-bind to whatever
-// the Categories widget has drilled into without explicit wiring. Keyed by
-// resolved kapp slug so two unrelated kapps on one page each track their own
-// selection. Categories publishes on its `currentSlug` change and clears on
-// unmount; Forms reads via selectCategorySelection.
+// Cross-widget selection state — lets sibling widgets auto-bind to whatever
+// another widget has drilled into, without explicit wiring through the
+// designer's form bundle code.
+//
+// `categorySelection` is keyed by resolved kapp slug (Categories publishes,
+// Forms reads). `teamSelection` is keyed by Teams widget id (Teams publishes,
+// TeamMembers / Attributes read for `team: 'current'`). Different keying
+// because multiple Teams widgets on one page each have their own breadcrumb
+// state and shouldn't share, whereas Categories↔Forms naturally pairs per
+// kapp.
 export const widgetActions = regRedux(
   'widgets',
-  { categorySelection: {} },
+  { categorySelection: {}, teamSelection: {} },
   {
     setCategorySelection(state, { kappSlug, categorySlug }) {
       if (!kappSlug) return;
@@ -331,6 +355,20 @@ export const widgetActions = regRedux(
       } else {
         state.categorySelection[kappSlug] = categorySlug;
       }
+    },
+    // Payload: { widgetId, team }. `team` is either null (clear) or
+    // `{ name, slug }`. Clearing is also achievable by passing
+    // `clearTeamSelection(widgetId)` below.
+    setTeamSelection(state, { widgetId, team }) {
+      if (!widgetId) return;
+      if (team == null) {
+        delete state.teamSelection[widgetId];
+      } else {
+        state.teamSelection[widgetId] = team;
+      }
+    },
+    clearTeamSelection(state, widgetId) {
+      if (widgetId) delete state.teamSelection[widgetId];
     },
   },
 );
@@ -342,6 +380,17 @@ export const widgetActions = regRedux(
  */
 export const selectCategorySelection = kappSlug => state =>
   kappSlug ? state.widgets?.categorySelection?.[kappSlug] ?? null : null;
+
+/**
+ * Selector — reads the currently-selected team published by a specific Teams
+ * widget instance, or null when nothing is selected (e.g. user is browsing
+ * the root level). Returns `{ name, slug }` when set. Consumed by
+ * TeamMembers (and a future Attributes `target: 'current'` mode for
+ * `type: 'team'`) to follow Teams' breadcrumb selection without designer
+ * wiring beyond a `teamsWidgetId` config prop.
+ */
+export const selectTeamSelection = widgetId => state =>
+  widgetId ? state.widgets?.teamSelection?.[widgetId] ?? null : null;
 
 // Layout state — controls bundle-level chrome (Header, etc.). Pages set
 // chromeHidden to render full-bleed (e.g. forms with Display Mode = fullscreen)

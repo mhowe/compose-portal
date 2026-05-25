@@ -137,13 +137,18 @@ export const App = ({
     }
   }, [loggedIn, space, functionsReady]);
 
-  // Recompute the cascade-merged theme any time space or kapp data changes.
-  // Both records contribute a layer; kapp overrides space. The current kapp
-  // record comes from the cache (populated by the space fetch), so no
-  // separate fetchKapp is needed here.
+  // The theme cascade is URL-driven, not slug-driven. state.app.kappSlug is
+  // sticky on purpose (so /profile, /settings, etc. still know which kapp the
+  // user just came from), but the page should only *wear* a kapp's theme when
+  // the user is actually under /kapps/:slug. Resolving the theme target off
+  // urlKappSlug means navigating back to /kapps drops the kapp layer and the
+  // space theme takes over.
+  const themeKapp = useSelector(state =>
+    urlKappSlug ? state.app.kappCache?.[urlKappSlug] || null : null,
+  );
   useEffect(() => {
-    themeActions.setTheme({ space, kapp });
-  }, [space, kapp]);
+    themeActions.setTheme({ space, kapp: themeKapp });
+  }, [space, themeKapp]);
 
   // Clear toasts and confirmation modals whenever we change routes
   useRouteChange((pathname, state) => {
