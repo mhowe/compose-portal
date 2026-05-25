@@ -59,6 +59,7 @@
 @source inline("flex-{auto,initial,none,full,0,1,wrap}");
 @source inline("flex{,-c}-{ss,sc,se,st,cs,cc,ce,ct,es,ec,ee,et,bs,bc,be,bt}")
 @source inline("kbtn{,-{primary,seconday,accent,neutral,info,success,warning,error,outline,ghost,xs,sm,md,lg,xl,circle,block}}");
+@source inline("kinput{,-{primary,secondary,accent,neutral,info,success,warning,error,bordered,ghost,xs,sm,md,lg,xl}}");
 @source inline("kbadge{,-{primary,seconday,accent,neutral,info,success,warning,error,outline,ghost,xs,sm,md,lg,xl}}");
 @source inline("kalert{,-{info,success,warning,error,outline,soft,xs,sm,md,lg,xl,vertical,horizontal}}");
 @source inline("kbanner{,-{error,warning,success,info,neutral}}");
