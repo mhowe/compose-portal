@@ -873,8 +873,9 @@ const ProfileContent = ({ id, config = {} }) => {
       ))}
 
       <button
-        type="submit"
+        type="button"
         className={cn('saveButton')}
+        onClick={save}
         disabled={!dirty || saving}
       >
         {saving ? 'Saving…' : 'Save'}
