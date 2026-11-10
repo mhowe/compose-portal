@@ -53,9 +53,13 @@ export const AIBuilderSettings = ({ config = {}, id } = {}) => {
    * Fetch the current settings state from the companion service.
    * @returns {Promise<Object>} `{ api_key_configured, api_key_preview,
    *   api_key_source, model, model_source, max_tokens, max_tokens_source,
-   *   max_iterations, max_iterations_source, available_models }`. The API key
-   *   itself is never returned — only a masked preview. The `*_source` fields
-   *   are one of `'settings' | 'env' | 'default'` (or `'none'` for `api_key`).
+   *   max_iterations, max_iterations_source, compaction_enabled,
+   *   compaction_enabled_source, compaction_mode, compaction_mode_source,
+   *   compaction_trigger_tokens, compaction_trigger_tokens_source,
+   *   compaction_keep_recent, compaction_keep_recent_source, compaction_model,
+   *   compaction_model_source, available_models }`. The API key itself is never
+   *   returned — only a masked preview. The `*_source` fields are one of
+   *   `'settings' | 'env' | 'default'` (or `'none'` for `api_key`).
    */
   const fetch_ = async () => {
     const resp = await fetch(settingsUrl);
@@ -66,20 +70,32 @@ export const AIBuilderSettings = ({ config = {}, id } = {}) => {
   };
 
   /**
-   * Save changes. Send only fields you want to update.
-   * - `api_key`: a candidate API key (validated against Anthropic before
-   *   saving). Pass `null` or `''` to clear the stored key (falls back to env).
-   * - `model`: a model id (e.g., `'claude-sonnet-4-6'`). Validated against
+   * Save changes. Send only fields you want to update. For any field, pass
+   * `null` or `''` to clear the override (falls back to env/default).
+   * - `api_key`: a candidate API key (validated against Anthropic before saving).
+   * - `model`: a Claude model id (e.g., `'claude-sonnet-4-6'`). Validated against
    *   the live model list returned by Anthropic.
    * - `max_tokens`: positive integer, output cap per Claude API call (per
-   *   tool-use round, not per conversation). Pass `null` or `''` to clear.
-   * - `max_iterations`: positive integer, max agent-loop iterations per user
-   *   turn. Pass `null` or `''` to clear.
+   *   tool-use round, not per conversation).
+   * - `max_iterations`: positive integer, max agent-loop iterations per user turn.
+   * - `compaction_enabled`: boolean (or string `'true'`/`'false'`). Master
+   *   switch for the async-after-turn conversation compactor.
+   * - `compaction_mode`: `'chain'` (faithful — each range summarized once,
+   *   summaries accumulate) or `'rolling'` (one rolling summary; lossy
+   *   compounding). Default `'chain'`.
+   * - `compaction_trigger_tokens`: positive integer. When the most recent
+   *   response's measured prompt size meets or exceeds this, compaction runs.
+   * - `compaction_keep_recent`: positive integer. Messages kept live after
+   *   compaction (snapped backward to a turn boundary).
+   * - `compaction_model`: Claude model id used by the summarizer. Defaults to a
+   *   cheap Haiku; validated against the live model list like `model`.
    *
    * @returns {Promise<Object>} `{ success: boolean, errors?: string[],
    *   current: { api_key_configured, api_key_preview, model, max_tokens,
-   *   max_iterations } }`. Even on partial failure (one field saved, one
-   *   rejected), `current` reflects the post-save state.
+   *   max_iterations, compaction_enabled, compaction_mode,
+   *   compaction_trigger_tokens, compaction_keep_recent, compaction_model } }`.
+   *   Even on partial failure (one field saved, one rejected), `current`
+   *   reflects the post-save state.
    */
   const save = async (updates = {}) => {
     const resp = await fetch(settingsUrl, {

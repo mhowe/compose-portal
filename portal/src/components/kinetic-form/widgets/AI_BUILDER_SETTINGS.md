@@ -25,6 +25,11 @@ bundle.widgets.AIBuilderSettings.get('settings');
 | `model` | string | The Claude model id (e.g. `claude-sonnet-4-6`). Validated against Anthropic's live model list before save. |
 | `max_tokens` | integer | Output cap **per Claude API call** (i.e. per tool-use round, not per conversation). Default `4096`. Hard ceiling `64000`. |
 | `max_iterations` | integer | Max agent-loop iterations **per user turn** (one user message can trigger up to this many tool-use rounds before the agent must produce a final reply). Default `10`. Hard ceiling `50`. |
+| `compaction_enabled` | boolean | Master switch for the async-after-turn conversation compactor. Default `true`. |
+| `compaction_mode` | enum | `'chain'` (default) — each range summarized exactly once; summaries accumulate. `'rolling'` — one rolling summary; bounded context but lossy compounding. |
+| `compaction_trigger_tokens` | integer | When the **measured prompt size** of the most recent response meets or exceeds this, compaction runs in the background. Default `80000`. Tune from the `context_tokens` value the companion logs every turn. |
+| `compaction_keep_recent` | integer | Messages kept live after compaction, snapped backward to a clean turn boundary. Default `30`. |
+| `compaction_model` | string | Claude model id used by the summarizer. Default `claude-haiku-4-5-20251001` (cheap Haiku — no reason to burn the main model on a summary). Validated against the live model list. |
 
 The API key is **never returned** by the widget — `fetch()` returns a masked preview (`****...4Pk2`) and a boolean indicating whether one is configured. Production migrations will replace the local-file storage backend with encrypted kapp-attribute storage; the widget API doesn't change.
 
@@ -32,7 +37,7 @@ The API key is **never returned** by the widget — `fetch()` returns a masked p
 
 ### Storage backend
 
-Settings live in a local JSON file on the companion service's disk (`data/settings.json`, gitignored, `chmod 0600`). Updates take effect immediately for the next chat request — no restart required. The companion service falls back to env vars (`ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_MAX_TOKENS`, `CLAUDE_MAX_ITERATIONS`) when no value is in the settings file, and to hardcoded defaults if no env var is set.
+Settings live in a local JSON file on the companion service's disk (`data/settings.json`, gitignored, `chmod 0600`). Updates take effect immediately for the next chat request — no restart required. The companion service falls back to env vars (`ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `CLAUDE_MAX_TOKENS`, `CLAUDE_MAX_ITERATIONS`, `AI_COMPACTION_ENABLED`, `AI_COMPACTION_MODE`, `AI_COMPACTION_TRIGGER_TOKENS`, `AI_COMPACTION_KEEP_RECENT`, `AI_COMPACTION_MODEL`) when no value is in the settings file, and to hardcoded defaults if no env var is set.
 
 ### Parameters
 
@@ -56,7 +61,7 @@ Instance id used by `bundle.widgets.AIBuilderSettings.get(id)`. Required if you 
 
 | Method | Description |
 |---|---|
-| `fetch()` | Returns current settings — `{ api_key_configured, api_key_preview, api_key_source, model, model_source, max_tokens, max_tokens_source, max_iterations, max_iterations_source, available_models }`. The `*_source` fields are `'settings' \| 'env' \| 'default'` (or `'none'` for `api_key`). `available_models` is fetched live from Anthropic's `/v1/models` API; null if unreachable or no key configured. |
+| `fetch()` | Returns current settings — every value paired with its `*_source` (`'settings' \| 'env' \| 'default'`, or `'none'` for `api_key`): `api_key_configured`, `api_key_preview`, `model`, `max_tokens`, `max_iterations`, `compaction_enabled`, `compaction_mode`, `compaction_trigger_tokens`, `compaction_keep_recent`, `compaction_model` — plus `available_models` fetched live from Anthropic's `/v1/models` API (null if unreachable or no key configured). |
 | `save(updates)` | Persists updates. Send only the fields you want to change. Pass `null` or `''` for any field to clear its override (falls back to env/default). Returns `{ success, errors?, current }`. |
 | `testApiKey(key)` | Validates a candidate API key against Anthropic without saving. Returns `{ valid, error?, model_count? }`. Useful for an inline "Test" button. |
 
@@ -87,6 +92,13 @@ Instance id used by `bundle.widgets.AIBuilderSettings.get(id)`. Required if you 
   // Per-turn limits — populate the form fields with the resolved values.
   K('field[Max Tokens]').value(String(current.max_tokens));
   K('field[Max Iterations]').value(String(current.max_iterations));
+
+  // Compaction.
+  K('field[Compaction Enabled]').value(current.compaction_enabled ? 'true' : 'false');
+  K('field[Compaction Mode]').value(current.compaction_mode);
+  K('field[Compaction Trigger Tokens]').value(String(current.compaction_trigger_tokens));
+  K('field[Compaction Keep Recent]').value(String(current.compaction_keep_recent));
+  K('field[Compaction Model]').value(current.compaction_model);
 })();
 ```
 
@@ -114,6 +126,16 @@ Instance id used by `bundle.widgets.AIBuilderSettings.get(id)`. Required if you 
   const maxIterationsInput = K('field[Max Iterations]').value();
   updates.max_iterations =
     maxIterationsInput === '' ? null : Number(maxIterationsInput);
+
+  // Compaction — empty input clears (falls back to env/default).
+  const enabledInput = K('field[Compaction Enabled]').value();
+  if (enabledInput !== '') updates.compaction_enabled = enabledInput === 'true';
+  updates.compaction_mode = K('field[Compaction Mode]').value() || null;
+  const triggerInput = K('field[Compaction Trigger Tokens]').value();
+  updates.compaction_trigger_tokens = triggerInput === '' ? null : Number(triggerInput);
+  const keepInput = K('field[Compaction Keep Recent]').value();
+  updates.compaction_keep_recent = keepInput === '' ? null : Number(keepInput);
+  updates.compaction_model = K('field[Compaction Model]').value() || null;
 
   const result = await settings.save(updates);
   if (result.success) {
@@ -162,5 +184,5 @@ K('content[Test API Key Button]').element()[0].addEventListener('click', async (
 
 - **Encrypted kapp-attribute storage** (v0.6.5b) — replace the local JSON file with values encrypted at rest in a Kinetic kapp attribute. Same widget API; different backend.
 - **Per-user API key delegation** — when shipped, customers might want each user to bring their own key rather than sharing one. The settings model already accommodates this (per-tenant deployment isolates keys); per-user is a deeper rework.
-- **More tunables** — `max_tokens`, `max_iterations`, `temperature`, per-user/per-project budget caps. Add to the settings shape; widget API stays compatible.
+- **More tunables** — `temperature`, per-user/per-project budget caps. Add to the settings shape; widget API stays compatible.
 - **Cost dashboards** integrated as a sibling widget reading the same data store.
