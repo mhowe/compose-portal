@@ -116,6 +116,15 @@ An object of configurations for the widget. All fields optional.
 >
 > Comparison is case-insensitive. Applied client-side against the cached forms, so toggling `status` between two widgets that share the same kapp cache does not re-fetch.
 >
+> **`type`** — *string or array of strings*
+> Filter forms by their native `type` field — the kapp's form types (`'Service'`, `'Data'`, `'Approval'`, etc., whatever the kapp defines). Accepts:
+>
+> - A single value: `'Service'`
+> - An array: `['Service', 'Data']` — a form matches if its type is any one of them
+> - Omitted (the default): **no type filter — every type is returned**
+>
+> Comparison is case-insensitive. Form types are customer-defined per kapp, so there's no fixed list the value is validated against (unlike `status`); any non-empty string is accepted. Like `status`, the filter is applied **client-side** against the shared forms cache — a `type` filter on one widget never re-fetches or narrows the cache that sibling Forms/Categories widgets read from.
+>
 > **`filterAttribute`** — *string*
 > Attribute name to require as truthy. Useful for "Featured" subsets. Example: `filterAttribute: 'Featured'` shows only forms whose `Featured` attribute is `'true'` (or `'yes'`, `'1'`, `'on'`).
 >
@@ -273,6 +282,35 @@ bundle.widgets.Forms({
     // show one when set, set to null to skip the icon column entirely.
   },
   id: 'sidebar-forms',
+});
+```
+
+#### Admin browse — every Service & Data form in the kapp, as a pleasant clickable list
+
+```js
+bundle.widgets.Forms({
+  container: K('content[AdminForms]').element(),
+  config: {
+    presentation: 'list',
+    // No type filter → all types. With one → only those types. Case-insensitive.
+    type: ['Service', 'Data'],
+    status: 'all', // admins want to see Inactive forms too
+    showDescription: true,
+    // Dress the rows up a little — classNames layers on top of the defaults.
+    classNames: {
+      listItem: 'border border-base-200 mb-1 shadow-sm hover:shadow-md',
+      listTitle: 'font-medium',
+    },
+    // Fire an event on click so a sibling can render that form's submissions.
+    clickAction: { type: 'event', name: 'admin:form-selected' },
+  },
+  id: 'admin-forms',
+});
+
+// elsewhere on the same form — onWidgetEvent replaces any prior handler for
+// this name, so it's safe across form re-mounts (see UTILS.md):
+bundle.utils.onWidgetEvent('admin:form-selected', e => {
+  const form = e.detail.form; // { slug, name, type, ... } — render submissions
 });
 ```
 

@@ -270,6 +270,41 @@ const matchesStatus = (form, statuses) => {
 };
 
 /* ------------------------------------------------------------------ */
+/* Type normalization                                                 */
+/*                                                                    */
+/* `type` filters the cached forms by their native `type` field — the */
+/* kapp's form types ('Service', 'Data', 'Approval', etc.), which are */
+/* customer-defined and so open-ended (no fixed enum to validate).    */
+/* Accepts:                                                           */
+/*   - 'Service'              → single type (string)                  */
+/*   - ['Service','Data']     → multiple types (array)                */
+/*   - null/undefined/[]      → no filter (every type returned)       */
+/* Comparison is case-insensitive against form.type. Applied          */
+/* client-side against the shared forms cache (same as status), so a  */
+/* type filter on one widget never re-fetches or narrows the cache    */
+/* other Forms/Categories widgets read from.                          */
+/* ------------------------------------------------------------------ */
+
+const normalizeTypeFilter = raw => {
+  if (raw == null) return null; // no filter
+  if (typeof raw === 'string') {
+    const v = raw.trim();
+    return v.length > 0 ? [v] : null;
+  }
+  if (Array.isArray(raw)) {
+    const vals = raw.filter(s => typeof s === 'string' && s.trim().length > 0);
+    return vals.length > 0 ? vals : null;
+  }
+  return null;
+};
+
+const matchesType = (form, types) => {
+  if (!types) return true; // no filter
+  const formType = lc(form?.type);
+  return types.some(t => lc(t) === formType);
+};
+
+/* ------------------------------------------------------------------ */
 /* Sort + filter                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -314,6 +349,7 @@ const filterForms = (
   list,
   {
     statuses,
+    types,
     filterAttribute,
     viewFilterAttribute,
     categorySlug,
@@ -323,6 +359,7 @@ const filterForms = (
   list.filter(
     f =>
       matchesStatus(f, statuses) &&
+      matchesType(f, types) &&
       matchesFilter(f, filterAttribute) &&
       matchesFilter(f, viewFilterAttribute) &&
       (uncategorized ? isUncategorized(f) : isInCategory(f, categorySlug)),
@@ -720,6 +757,7 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
     categorySlug: explicitCategorySlug = null,
     initialView: rawInitialView = 'all',
     status: rawStatus,
+    type: rawType,
     filterAttribute = null,
     limit = null,
     orderBy: rawOrderBy = 'name',
@@ -818,6 +856,7 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
   );
 
   const statuses = useMemo(() => normalizeStatusFilter(rawStatus), [rawStatus]);
+  const types = useMemo(() => normalizeTypeFilter(rawType), [rawType]);
 
   const cn = useMemo(() => makeCn(SLOT_DEFAULTS, config), [config]);
 
@@ -833,12 +872,14 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
     console.log('effectiveCategorySlug:', effectiveCategorySlug ?? '(none)');
     console.log('slice:', slice);
     console.log('statuses:', statuses ?? '(no filter)');
+    console.log('types:', types ?? '(no filter)');
     if (forms.length > 0) {
       console.table(
         forms.map(f => ({
           slug: f.slug,
           name: f.name,
           status: f.status ?? '',
+          type: f.type ?? '',
           icon: (iconAttribute && readAttribute(f, iconAttribute)) ?? '',
           image: (imageAttribute && readAttribute(f, imageAttribute)) ?? '',
           categories: (Array.isArray(f.categorizations)
@@ -860,6 +901,7 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
     effectiveCategorySlug,
     slice,
     statuses,
+    types,
     iconAttribute,
     imageAttribute,
   ]);
@@ -873,6 +915,7 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
       sortForms(
         filterForms(forms, {
           statuses,
+          types,
           filterAttribute,
           viewFilterAttribute: slice.viewFilterAttribute,
           categorySlug: slice.categorySlug,
@@ -884,6 +927,7 @@ const FormsContent = ({ config: rawConfig, instanceId }) => {
     [
       forms,
       statuses,
+      types,
       filterAttribute,
       slice,
       orderBy,
@@ -1059,6 +1103,35 @@ const validateStatus = status => {
   return false;
 };
 
+// `type` has no fixed enum — form types are customer-defined per kapp — so we
+// only assert the shape: a non-empty string, or an array of non-empty strings.
+const validateType = type => {
+  if (type == null) return true;
+  const ok = v => typeof v === 'string' && v.trim().length > 0;
+  if (typeof type === 'string') {
+    if (!ok(type)) {
+      console.error(
+        'Forms Widget Error: type must be a non-empty string (or an array of non-empty strings).',
+      );
+      return false;
+    }
+    return true;
+  }
+  if (Array.isArray(type)) {
+    if (!type.every(ok)) {
+      console.error(
+        'Forms Widget Error: type array entries must each be a non-empty string.',
+      );
+      return false;
+    }
+    return true;
+  }
+  console.error(
+    'Forms Widget Error: type must be a string or array of strings.',
+  );
+  return false;
+};
+
 const validateInitialView = initialView => {
   if (initialView == null) return true;
   if (typeof initialView === 'string') {
@@ -1166,6 +1239,7 @@ const validateConfig = (config = {}) => {
     }
   }
   if (!validateStatus(config.status)) return false;
+  if (!validateType(config.type)) return false;
   if (
     config.formClickAction != null &&
     typeof config.formClickAction !== 'function'

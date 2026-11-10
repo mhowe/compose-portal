@@ -165,13 +165,22 @@ Form bundle scripts re-run on every form mount. Naive use of `window.addEventLis
 
 ##### Event detail payload
 
-Every widget-dispatched event has a `detail` object with:
+Every widget-dispatched event has a `detail` object that **always** includes these two fields:
 
 | Field    | Type     | Description                                                                                              |
 | -------- | -------- | -------------------------------------------------------------------------------------------------------- |
 | `widget` | `string` | The widget's name, e.g. `'BundleLogo'`. Useful when the same event name is dispatched by multiple widgets. |
 | `id`     | `string` | The widget instance's id (the `id` you passed when initializing). Useful to disambiguate instances.        |
-| `config` | `object` | The exact `clickAction` config that fired the event.                                                       |
+
+Beyond those two, **each widget adds whatever payload fits what it does** — the detail carries the thing you'd most likely act on. So the extra field varies by widget:
+
+| Widget                              | Extra field | Type     | What it carries                                                        |
+| ----------------------------------- | ----------- | -------- | ---------------------------------------------------------------------- |
+| Chrome widgets (BundleLogo, BundleLink, BundleAvatar, BundleSearch) | `config`    | `object` | The exact `clickAction` config that fired the event.                   |
+| [Forms](FORMS.md)                   | `form`      | `object` | The clicked form record (`{ slug, name, type, status, … }`).           |
+| [Kapps](KAPPS.md)                   | `kapp`      | `object` | The clicked kapp record (`{ slug, name, … }`).                         |
+
+When you write a handler, key off `e.detail.widget` if one event name could be fired by more than one widget, and read whichever payload field that widget documents. Check the individual widget's reference doc for the exact shape it dispatches.
 
 ##### Examples
 
